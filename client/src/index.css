@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #EFF2ED;
+  --color-ink: #1B2621;
+  --color-route-teal: #0F7A73;
+  --color-signal-coral: #E2543C;
+  --color-transit-gold: #D9A83B;
+  --color-slate: #46607A;
+  --color-line-gray: #CBD2C9;
+
+  --font-display: 'Overpass', sans-serif;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --animate-draw-line: drawLine 0.8s ease-out forwards;
+  
+  @keyframes drawLine {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-ink font-sans antialiased min-h-screen flex flex-col selection:bg-route-teal/20 selection:text-ink;
+  }
+  
+  #root {
+    @apply flex flex-col flex-grow;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #EFF2ED;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD2C9;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #46607A;
+}
+
+/* Custom wayfinding elements */
+.route-line {
+  height: 2px;
+  background: #CBD2C9;
+  position: relative;
+}
+
+.route-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #0F7A73;
+  width: 100%;
+  animation: drawLine 0.8s ease-out forwards;
+}
+
+/* Leaflet Map custom styles to match paper/ink theme */
+.leaflet-container {
+  background: #EFF2ED !important;
+  border: 1px solid #CBD2C9;
+  border-radius: 0.375rem;
+}
+
+.leaflet-tile {
+  filter: grayscale(1) sepia(0.2) contrast(0.9) brightness(1.05);
+}
+
+.leaflet-bar {
+  border: 1px solid #CBD2C9 !important;
+  box-shadow: none !important;
+}
+
+.leaflet-bar a {
+  background-color: #EFF2ED !important;
+  color: #1B2621 !important;
+  border-bottom: 1px solid #CBD2C9 !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #CBD2C9 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #EFF2ED !important;
+  color: #1B2621 !important;
+  border: 1px solid #CBD2C9;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 12px rgba(27, 38, 33, 0.08) !important;
+}
+
+.leaflet-popup-tip {
+  background: #EFF2ED !important;
+}
