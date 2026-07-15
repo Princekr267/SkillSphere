@@ -282,21 +282,22 @@ export const FreelancerDashboard: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-paper font-sans">
       
       {/* Dashboard Title + Tab Switcher */}
-      <div className="mb-8 border-b border-line-gray pb-0 flex items-end justify-between">
+      <div className="mb-8 border-b-2 border-ink pb-0 flex items-end justify-between">
         <div className="pb-6">
           <span className="text-[10px] font-mono text-slate uppercase tracking-widest block mb-1">Provider Node Workspace</span>
           <h1 className="text-2xl font-black font-display text-ink uppercase tracking-tight">Freelancer Dashboard</h1>
         </div>
-        <div className="flex items-end space-x-1">
+        <div className="flex items-end space-x-2">
           {(['profile', 'applications'] as Tab[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-xs font-bold font-display uppercase tracking-widest border-b-2 transition-colors ${
+              className={`px-4 py-2 text-xs font-bold font-display uppercase tracking-widest border-2 border-b-0 border-ink transition-all ${
                 activeTab === tab
-                  ? 'border-route-teal text-route-teal'
-                  : 'border-transparent text-slate hover:text-ink'
-              }`}
+                  ? 'bg-route-teal text-white translate-y-0.5'
+                  : 'bg-paper text-ink hover:bg-line-gray/20'
+              } sketch-border`}
+              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
             >
               {tab === 'profile' ? 'My Profile' : 'My Applications'}
             </button>
@@ -312,10 +313,10 @@ export const FreelancerDashboard: React.FC = () => {
 
       {/* Alert Banner */}
       {message && (
-        <div className={`mb-6 p-4 rounded-sm border-l-4 flex items-center space-x-3 text-xs ${
+        <div className={`mb-6 p-4 border-2 border-ink sketch-border flex items-center space-x-3 text-xs ${
           message.type === 'success' 
-            ? 'bg-white border-line-gray border-l-route-teal text-ink' 
-            : 'bg-white border-line-gray border-l-signal-coral text-ink'
+            ? 'bg-paper border-l-4 border-l-route-teal text-ink' 
+            : 'bg-paper border-l-4 border-l-signal-coral text-ink'
         }`}>
           {message.type === 'success' ? <Check className="h-4.5 w-4.5 text-route-teal flex-shrink-0" /> : <AlertCircle className="h-4.5 w-4.5 text-signal-coral flex-shrink-0" />}
           <span>{message.text}</span>
@@ -329,8 +330,8 @@ export const FreelancerDashboard: React.FC = () => {
         <div className="space-y-8 lg:col-span-1">
           
           {/* Card 1: Avatar and main stats */}
-          <div className="bg-white border border-line-gray rounded-sm p-6 flex flex-col items-start text-left">
-            <div className="h-16 w-16 bg-slate/10 border border-slate/30 flex items-center justify-center text-ink text-2xl font-black font-display uppercase mb-4 rounded-sm overflow-hidden flex-shrink-0">
+          <div className="bg-paper border-2 border-ink sketch-card p-6 flex flex-col items-start text-left rotate-[-0.5deg]">
+            <div className="h-16 w-16 bg-paper border-2 border-ink flex items-center justify-center text-ink text-2xl font-black font-display uppercase mb-4 rounded-sm overflow-hidden flex-shrink-0 sketch-border">
               {user.avatar ? (
                 <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
               ) : (
@@ -338,11 +339,11 @@ export const FreelancerDashboard: React.FC = () => {
               )}
             </div>
             <h2 className="text-lg font-bold text-ink uppercase font-display tracking-tight">{user.name}</h2>
-            <span className="text-[10px] font-mono text-slate uppercase tracking-wider mt-1 bg-line-gray/25 px-2 py-0.5 rounded">
+            <span className="text-[10px] font-mono text-ink bg-paper border border-ink px-2 py-0.5 sketch-badge uppercase tracking-wider mt-1">
               Freelancer Account
             </span>
             
-            <div className="w-full border-t border-line-gray my-6 pt-6 space-y-4 font-mono text-xs text-slate">
+            <div className="w-full border-t-2 border-ink my-6 pt-6 space-y-4 font-mono text-xs text-slate">
               <div className="flex items-center justify-between">
                 <span className="flex items-center space-x-2">
                   <DollarSign className="h-4 w-4 text-route-teal" />
@@ -370,13 +371,13 @@ export const FreelancerDashboard: React.FC = () => {
               <>
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="w-full mt-4 py-2.5 rounded-sm border border-line-gray hover:border-route-teal text-xs font-bold font-display uppercase tracking-widest text-slate hover:text-route-teal transition-all flex items-center justify-center space-x-2"
+                  className="w-full mt-4 py-2.5 border-2 border-ink text-xs font-bold font-display uppercase tracking-widest text-ink bg-paper sketch-button flex items-center justify-center space-x-2"
                 >
                   <Edit className="h-4 w-4" />
                   <span>Modify Settings</span>
                 </button>
                 
-                <div className="w-full mt-4 border-t border-line-gray pt-4">
+                <div className="w-full mt-4 border-t-2 border-ink pt-4">
                   <AvatarUpload />
                 </div>
               </>
@@ -385,15 +386,15 @@ export const FreelancerDashboard: React.FC = () => {
 
 
           {/* Card 2: Resume Uploader */}
-          <div className="bg-white border border-line-gray rounded-sm p-6 text-left">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 flex items-center space-x-2">
+          <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[0.5deg]">
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 flex items-center space-x-2 pl-1">
               <FileText className="h-4 w-4 text-route-teal" />
               <span>Resume Document</span>
             </h3>
 
             {user.resumeUrl ? (
               <div className="space-y-4">
-                <div className="p-3 bg-paper/50 border border-line-gray text-xs flex items-center justify-between font-mono">
+                <div className="p-3 bg-paper border-2 border-ink sketch-border text-xs flex items-center justify-between font-mono">
                   <span className="text-slate truncate max-w-[120px]">resume-node.pdf</span>
                   <a
                     href={user.resumeUrl}
@@ -404,11 +405,11 @@ export const FreelancerDashboard: React.FC = () => {
                     View File
                   </a>
                 </div>
-                <div className="border-t border-line-gray pt-3 flex gap-2">
+                <div className="border-t-2 border-ink pt-3 flex gap-2">
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading || removingResume}
-                    className="flex-1 py-2 text-xs font-bold font-display uppercase tracking-widest rounded-sm bg-paper hover:bg-line-gray/20 border border-line-gray hover:border-slate text-slate flex items-center justify-center space-x-2 transition-all disabled:opacity-50"
+                    className="flex-1 py-2 text-xs font-bold font-display uppercase tracking-widest bg-paper border-2 border-ink sketch-button flex items-center justify-center space-x-2 transition-all disabled:opacity-50"
                   >
                     <Upload className="h-3.5 w-3.5" />
                     <span>{uploading ? 'Uploading...' : 'Replace'}</span>
@@ -416,7 +417,7 @@ export const FreelancerDashboard: React.FC = () => {
                   <button
                     onClick={handleRemoveResume}
                     disabled={uploading || removingResume}
-                    className="flex-1 py-2 text-xs font-bold font-display uppercase tracking-widest rounded-sm bg-signal-coral/5 hover:bg-signal-coral/10 border border-signal-coral/30 hover:border-signal-coral text-signal-coral flex items-center justify-center space-x-2 transition-all disabled:opacity-50"
+                    className="flex-1 py-2 text-xs font-bold font-display uppercase tracking-widest bg-paper border-2 border-ink text-signal-coral hover:bg-signal-coral/10 sketch-button flex items-center justify-center space-x-2 transition-all disabled:opacity-50"
                   >
                     {removingResume ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -428,14 +429,14 @@ export const FreelancerDashboard: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-6 border-2 border-dashed border-line-gray rounded-sm bg-paper/10 hover:bg-paper/30 transition-colors">
+              <div className="text-center py-6 border-2 border-dashed border-ink sketch-border bg-paper/50">
                 <Upload className="h-6 w-6 mx-auto text-slate mb-2" />
                 <p className="text-[10px] text-slate font-mono uppercase tracking-wider">PDF, JPG, PNG (Max 10MB)</p>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="mt-3 px-4 py-2 rounded-sm bg-route-teal hover:bg-route-teal/90 text-white text-xs font-bold font-display uppercase tracking-wider transition-colors"
+                  className="mt-3 px-4 py-2 bg-route-teal border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-wider sketch-button"
                 >
                   {uploading ? 'Uploading...' : 'Upload Resume'}
                 </button>
@@ -457,42 +458,42 @@ export const FreelancerDashboard: React.FC = () => {
           
           {/* Dashboard Settings Editor */}
           {isEditing ? (
-            <div className="bg-white border border-line-gray rounded-sm p-6 text-left">
-              <h3 className="text-sm font-bold font-display text-ink uppercase tracking-widest mb-6">Modify Settings</h3>
+            <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[-0.3deg]">
+              <h3 className="text-sm font-bold font-display text-ink uppercase tracking-widest mb-6 pl-1">Modify Settings</h3>
               <form onSubmit={handleSaveProfile} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">Full Name</label>
+                    <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Full Name</label>
                     <input
                       type="text"
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-sm bg-paper/30 border border-line-gray text-ink text-sm focus:outline-none focus:border-route-teal"
+                      className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">Hourly Rate (₹)</label>
+                    <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Hourly Rate (₹)</label>
                     <input
                       type="number"
                       required
                       min={0}
                       value={hourlyRate}
                       onChange={(e) => setHourlyRate(Number(e.target.value))}
-                      className="w-full px-4 py-2.5 rounded-sm bg-paper/30 border border-line-gray text-ink text-sm focus:outline-none focus:border-route-teal"
+                      className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal font-mono"
                     />
                   </div>
                 </div>
 
                 {/* Autocomplete Location Picker */}
-                <div className="border-t border-line-gray pt-4 space-y-4">
+                <div className="border-t-2 border-ink pt-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">Change Coordinates</span>
+                    <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Change Coordinates</span>
                     <button
                       type="button"
                       onClick={handleDetectLocation}
                       disabled={fetchingGeo}
-                      className="text-xs text-route-teal hover:text-route-teal/80 flex items-center space-x-1 font-bold"
+                      className="text-xs text-route-teal hover:underline flex items-center space-x-1 font-bold"
                     >
                       <Compass className="h-3.5 w-3.5" />
                       <span>{fetchingGeo ? 'GPS Locating...' : 'Use GPS Location'}</span>
@@ -500,13 +501,13 @@ export const FreelancerDashboard: React.FC = () => {
                   </div>
 
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate z-10" />
                     <input
                       type="text"
                       value={citySearch}
                       onChange={handleCitySearchChange}
                       placeholder="Search city..."
-                      className="w-full pl-10 pr-4 py-2.5 rounded-sm bg-paper/30 border border-line-gray text-ink text-sm focus:outline-none focus:border-route-teal"
+                      className="w-full pl-10 pr-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal"
                     />
                     {searchingCity && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -515,13 +516,13 @@ export const FreelancerDashboard: React.FC = () => {
                     )}
 
                     {suggestions.length > 0 && (
-                      <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-line-gray rounded-sm shadow-md max-h-40 overflow-y-auto">
+                      <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-paper border-2 border-ink sketch-card max-h-40 overflow-y-auto">
                         {suggestions.map((sug, i) => (
                           <button
                             key={i}
                             type="button"
                             onClick={() => handleSelectCity(sug)}
-                            className="w-full text-left px-4 py-2.5 text-xs text-ink hover:bg-paper/30 transition-colors border-b border-line-gray/40 last:border-b-0"
+                            className="w-full text-left px-4 py-2 text-xs text-ink hover:bg-line-gray/20 border-b border-ink last:border-b-0"
                           >
                             {sug.display_name}
                           </button>
@@ -531,17 +532,17 @@ export const FreelancerDashboard: React.FC = () => {
                   </div>
 
                   {latitude !== null && longitude !== null && (
-                    <div className="text-xs font-mono text-slate bg-paper/50 p-2 border border-line-gray rounded-sm">
+                    <div className="text-xs font-mono text-slate bg-paper border-2 border-ink sketch-border p-2">
                       Location Lock: {latitude.toFixed(4)}, {longitude.toFixed(4)} ({city})
                     </div>
                   )}
                 </div>
 
-                <div className="flex space-x-3 pt-4 border-t border-line-gray">
+                <div className="flex space-x-3 pt-4 border-t-2 border-ink">
                   <button
                     type="submit"
                     disabled={saving || !city || latitude === null}
-                    className="px-5 py-2.5 rounded-sm text-xs font-bold font-display uppercase tracking-widest text-white bg-signal-coral hover:bg-signal-coral/95 disabled:opacity-50 transition-colors"
+                    className="px-5 py-2.5 text-white bg-signal-coral sketch-button"
                   >
                     {saving ? 'Saving...' : 'Save Settings'}
                   </button>
@@ -551,7 +552,7 @@ export const FreelancerDashboard: React.FC = () => {
                       setIsEditing(false);
                       setMessage(null);
                     }}
-                    className="px-5 py-2.5 rounded-sm text-xs font-bold font-display uppercase tracking-widest text-slate border border-line-gray hover:bg-paper/30 transition-colors"
+                    className="px-5 py-2.5 text-ink bg-paper border-2 border-ink sketch-button"
                   >
                     Cancel
                   </button>
@@ -561,23 +562,23 @@ export const FreelancerDashboard: React.FC = () => {
           ) : null}
 
           {/* Card 3: Skills Manager */}
-          <div className="bg-white border border-line-gray rounded-sm p-6 text-left">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Skills Management</h3>
+          <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[0.3deg]">
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Skills Management</h3>
             
             {skills.length > 0 ? (
               <div className="flex flex-wrap gap-2 mb-6">
                 {skills.map((s, i) => (
                   <span 
                     key={i} 
-                    className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-sm bg-paper border border-line-gray text-xs text-ink font-medium"
+                    className="inline-flex items-center space-x-2 px-3 py-1.5 border border-ink bg-paper text-xs text-ink sketch-badge"
                   >
                     <span>{s.name}</span>
-                    <span className={`px-1.5 py-0.5 rounded-sm text-[9px] font-mono uppercase font-bold ${
+                    <span className={`px-1.5 py-0.5 border border-ink text-[9px] font-mono uppercase font-bold sketch-badge ${
                       s.level === 'Expert' 
-                        ? 'bg-route-teal/15 text-route-teal' 
+                        ? 'bg-route-teal text-white' 
                         : s.level === 'Intermediate' 
-                        ? 'bg-slate/15 text-slate' 
-                        : 'bg-line-gray/30 text-slate'
+                        ? 'bg-line-gray text-ink' 
+                        : 'bg-paper text-slate'
                     }`}>
                       {s.level}
                     </span>
@@ -591,7 +592,7 @@ export const FreelancerDashboard: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate mb-6 italic font-sans">No skills listed inside your node profiles. Add skills to matching algorithms.</p>
+              <p className="text-xs text-slate mb-6 italic font-sans pl-1">No skills listed inside your node profiles. Add skills to matching algorithms.</p>
             )}
 
             <form onSubmit={handleAddSkill} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -602,14 +603,14 @@ export const FreelancerDashboard: React.FC = () => {
                   value={newSkillName}
                   onChange={(e) => setNewSkillName(e.target.value)}
                   placeholder="Skill name (e.g. React.js)"
-                  className="w-full px-3 py-2 rounded-sm bg-paper/30 border border-line-gray text-ink text-xs focus:outline-none focus:border-route-teal"
+                  className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
                 />
               </div>
               <div className="sm:col-span-1">
                 <select
                   value={newSkillLevel}
                   onChange={(e) => setNewSkillLevel(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-sm bg-paper/30 border border-line-gray text-ink text-xs focus:outline-none focus:border-route-teal"
+                  className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
                 >
                   <option value="Beginner">Beginner</option>
                   <option value="Intermediate">Intermediate</option>
@@ -618,7 +619,7 @@ export const FreelancerDashboard: React.FC = () => {
               </div>
               <button
                 type="submit"
-                className="py-2 px-4 rounded-sm bg-route-teal hover:bg-route-teal/90 text-white font-bold font-display uppercase tracking-widest text-xs flex items-center justify-center space-x-1.5"
+                className="py-2 px-4 bg-route-teal border-2 border-ink text-white font-bold font-display uppercase tracking-widest text-xs sketch-button flex items-center justify-center space-x-1.5"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add Skill</span>
@@ -627,13 +628,13 @@ export const FreelancerDashboard: React.FC = () => {
           </div>
 
           {/* Card 4: Portfolio */}
-          <div className="bg-white border border-line-gray rounded-sm p-6 text-left">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Portfolio Registry</h3>
+          <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[-0.5deg]">
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Portfolio Registry</h3>
 
             {portfolio.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {portfolio.map((item, i) => (
-                  <div key={i} className="p-4 bg-paper/20 border border-line-gray rounded-sm flex flex-col justify-between">
+                  <div key={i} className="p-4 bg-paper border-2 border-ink sketch-card flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <h4 className="font-bold text-ink text-xs uppercase tracking-tight truncate">{item.title}</h4>
@@ -661,11 +662,11 @@ export const FreelancerDashboard: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate mb-6 italic font-sans">No portfolio items logged.</p>
+              <p className="text-xs text-slate mb-6 italic font-sans pl-1">No portfolio items logged.</p>
             )}
 
-            <form onSubmit={handleAddPortfolio} className="space-y-3.5 border-t border-line-gray pt-4 font-sans">
-              <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">Add Portfolio Project</span>
+            <form onSubmit={handleAddPortfolio} className="space-y-3.5 border-t-2 border-ink pt-4 font-sans">
+              <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Add Portfolio Project</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
@@ -673,14 +674,14 @@ export const FreelancerDashboard: React.FC = () => {
                   value={portTitle}
                   onChange={(e) => setPortTitle(e.target.value)}
                   placeholder="Project Title"
-                  className="w-full px-3 py-2 rounded-sm bg-paper/30 border border-line-gray text-ink text-xs focus:outline-none focus:border-route-teal"
+                  className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
                 />
                 <input
                   type="url"
                   value={portLink}
                   onChange={(e) => setPortLink(e.target.value)}
                   placeholder="Project Link (Optional)"
-                  className="w-full px-3 py-2 rounded-sm bg-paper/30 border border-line-gray text-ink text-xs focus:outline-none focus:border-route-teal"
+                  className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
                 />
               </div>
               <textarea
@@ -689,11 +690,11 @@ export const FreelancerDashboard: React.FC = () => {
                 value={portDesc}
                 onChange={(e) => setPortDesc(e.target.value)}
                 placeholder="Brief description of work parameters..."
-                className="w-full px-3 py-2 rounded-sm bg-paper/30 border border-line-gray text-ink text-xs resize-none focus:outline-none focus:border-route-teal"
+                className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs resize-none focus:outline-none focus:border-route-teal font-sans"
               />
               <button
                 type="submit"
-                className="w-full py-2.5 bg-route-teal hover:bg-route-teal/90 text-white font-bold font-display uppercase tracking-widest text-xs flex items-center justify-center space-x-1.5 rounded-sm"
+                className="w-full py-2.5 bg-route-teal border-2 border-ink text-white font-bold font-display uppercase tracking-widest text-xs sketch-button flex items-center justify-center space-x-1.5"
               >
                 <Plus className="h-4 w-4" />
                 <span>Save Project</span>
@@ -702,13 +703,13 @@ export const FreelancerDashboard: React.FC = () => {
           </div>
 
           {/* Card 5: Certifications */}
-          <div className="bg-white border border-line-gray rounded-sm p-6 text-left">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Certifications & Credentials</h3>
+          <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[0.5deg]">
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Certifications & Credentials</h3>
 
             {certifications.length > 0 ? (
-              <div className="space-y-2 mb-6">
+              <div className="space-y-2 mb-6 font-sans">
                 {certifications.map((cert, i) => (
-                  <div key={i} className="p-3 bg-paper border border-line-gray rounded-sm text-xs flex items-center justify-between text-ink font-mono">
+                  <div key={i} className="p-3 bg-paper border-2 border-ink sketch-border text-xs flex items-center justify-between text-ink font-mono">
                     <span className="flex items-center space-x-2">
                       <Award className="h-4 w-4 text-transit-gold flex-shrink-0" />
                       <span>{cert}</span>
@@ -724,7 +725,7 @@ export const FreelancerDashboard: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate mb-6 italic font-sans">No certifications listed.</p>
+              <p className="text-xs text-slate mb-6 italic font-sans pl-1">No certifications listed.</p>
             )}
 
             <form onSubmit={handleAddCert} className="flex gap-2">
@@ -734,11 +735,11 @@ export const FreelancerDashboard: React.FC = () => {
                 value={newCertName}
                 onChange={(e) => setNewCertName(e.target.value)}
                 placeholder="AWS Developer, Electrician Level II"
-                className="flex-grow px-3 py-2 rounded-sm bg-paper/30 border border-line-gray text-ink text-xs focus:outline-none focus:border-route-teal"
+                className="flex-grow px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
               />
               <button
                 type="submit"
-                className="py-2 px-4 rounded-sm bg-route-teal hover:bg-route-teal/90 text-white font-bold font-display uppercase tracking-widest text-xs flex items-center justify-center space-x-1.5"
+                className="py-2 px-4 bg-route-teal border-2 border-ink text-white font-bold font-display uppercase tracking-widest text-xs sketch-button flex items-center justify-center space-x-1.5"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add</span>

@@ -110,3 +110,44 @@ export const adminDeleteGig = async (req: Request, res: Response): Promise<any> 
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// ─── GET /api/admin/flagged-reviews ──────────────────────────────────────────
+export const getFlaggedReviews = async (_req: Request, res: Response): Promise<any> => {
+  try {
+    const reviews = await Review.find({ isFlagged: true })
+      .populate('reviewerId', 'name email role')
+      .populate('revieweeId', 'name email role')
+      .populate('gigId', 'title')
+      .sort({ createdAt: -1 });
+
+    return res.json({ success: true, reviews });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── PUT /api/admin/reviews/:id/dismiss ──────────────────────────────────────
+export const dismissReviewFlag = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const review = await Review.findByIdAndUpdate(
+      req.params.id,
+      { isFlagged: false, fraudFlags: [] },
+      { new: true }
+    );
+    if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
+    return res.json({ success: true, review });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── DELETE /api/admin/reviews/:id ──────────────────────────────────────────
+export const deleteReview = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const review = await Review.findByIdAndDelete(req.params.id);
+    if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
+    return res.json({ success: true, message: 'Review deleted by admin' });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};

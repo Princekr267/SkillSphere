@@ -36,6 +36,7 @@ export interface IUser extends Document {
   certifications: string[];
   rating: number;
   reviewCount: number;
+  completedGigsCount?: number;
   // Client specific
   companyName?: string;
   bio?: string;
@@ -128,6 +129,10 @@ const UserSchema: Schema = new Schema(
       max: 5,
     },
     reviewCount: {
+      type: Number,
+      default: 0,
+    },
+    completedGigsCount: {
       type: Number,
       default: 0,
     },

@@ -69,7 +69,7 @@ export const createGig = async (req: AuthRequest, res: Response) => {
  */
 export const getGigs = async (req: Request, res: Response) => {
   try {
-    const { category, skills, status, search, page = '1', limit = '20' } = req.query;
+    const { category, skills, status, search, minPrice, maxPrice, minRating, page = '1', limit = '20' } = req.query;
 
     const filter: any = { status: status || 'open' };
 
@@ -83,6 +83,18 @@ export const getGigs = async (req: Request, res: Response) => {
         { title: { $regex: search as string, $options: 'i' } },
         { description: { $regex: search as string, $options: 'i' } },
       ];
+    }
+
+    if (minPrice || maxPrice) {
+      filter.budget = {};
+      if (minPrice) filter.budget.$gte = Number(minPrice);
+      if (maxPrice) filter.budget.$lte = Number(maxPrice);
+    }
+
+    if (minRating) {
+      const clients = await User.find({ role: 'client', rating: { $gte: Number(minRating) } }).select('_id');
+      const clientIds = clients.map(c => c._id);
+      filter.clientId = { $in: clientIds };
     }
 
     const pageNum = parseInt(page as string, 10);
@@ -114,7 +126,7 @@ export const getGigs = async (req: Request, res: Response) => {
  */
 export const getNearbyGigs = async (req: Request, res: Response) => {
   try {
-    const { lat, lng, radius = '50', category, skills, search } = req.query;
+    const { lat, lng, radius = '50', category, skills, search, minPrice, maxPrice, minRating } = req.query;
 
     if (!lat || !lng) {
       return res.status(400).json({ success: false, message: 'lat and lng query parameters are required' });
@@ -146,6 +158,18 @@ export const getNearbyGigs = async (req: Request, res: Response) => {
         { title: { $regex: search as string, $options: 'i' } },
         { description: { $regex: search as string, $options: 'i' } },
       ];
+    }
+
+    if (minPrice || maxPrice) {
+      filter.budget = {};
+      if (minPrice) filter.budget.$gte = Number(minPrice);
+      if (maxPrice) filter.budget.$lte = Number(maxPrice);
+    }
+
+    if (minRating) {
+      const clients = await User.find({ role: 'client', rating: { $gte: Number(minRating) } }).select('_id');
+      const clientIds = clients.map(c => c._id);
+      filter.clientId = { $in: clientIds };
     }
 
     const gigs = await Gig.find(filter)
@@ -454,8 +478,16 @@ export const releaseEscrow = async (req: AuthRequest, res: Response) => {
         const totalScore = freelancer.rating * freelancer.reviewCount + 5; // Default 5-star release bonus
         freelancer.reviewCount += 1;
         freelancer.rating = parseFloat((totalScore / freelancer.reviewCount).toFixed(2));
+        freelancer.completedGigsCount = (freelancer.completedGigsCount || 0) + 1;
         await freelancer.save();
       }
+    }
+
+    // Also update client completedGigsCount
+    const client = await User.findById(gig.clientId);
+    if (client) {
+      client.completedGigsCount = (client.completedGigsCount || 0) + 1;
+      await client.save();
     }
 
     await gig.save();

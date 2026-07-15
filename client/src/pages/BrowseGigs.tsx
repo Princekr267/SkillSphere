@@ -18,14 +18,14 @@ L.Icon.Default.mergeOptions({
 // Custom teal marker for gig pins
 const gigIcon = L.divIcon({
   className: '',
-  html: `<div style="width:14px;height:14px;background:#0F7A73;border:2px solid #1B2621;border-radius:50%;box-shadow:0 0 0 3px rgba(15,122,115,0.2)"></div>`,
+  html: `<div style="width:14px;height:14px;background:#0A7A75;border:2.5px solid #22252A;border-radius:60% 40% 50% 50% / 40% 50% 60% 50%;"></div>`,
   iconSize: [14, 14],
   iconAnchor: [7, 7],
 });
 
 const userIcon = L.divIcon({
   className: '',
-  html: `<div style="width:16px;height:16px;background:#E2543C;border:2.5px solid #1B2621;border-radius:50%;box-shadow:0 0 0 4px rgba(226,84,60,0.2)"></div>`,
+  html: `<div style="width:16px;height:16px;background:#D94B36;border:3px solid #22252A;border-radius:40% 60% 50% 55% / 55% 45% 65% 45%;"></div>`,
   iconSize: [16, 16],
   iconAnchor: [8, 8],
 });
@@ -74,6 +74,9 @@ export const BrowseGigs: React.FC = () => {
   const [category, setCategory] = useState('');
   const [radius, setRadius] = useState(50);
   const [skillFilter, setSkillFilter] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [minRating, setMinRating] = useState('');
 
   // UI state
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
@@ -81,7 +84,7 @@ export const BrowseGigs: React.FC = () => {
   const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
 
-  const fetchGigs = useCallback(async (searchVal: string, cat: string, rad: number, skills: string) => {
+  const fetchGigs = useCallback(async (searchVal: string, cat: string, rad: number, skills: string, minP: string, maxP: string, minR: string) => {
     setLoading(true);
     setError('');
     try {
@@ -89,6 +92,9 @@ export const BrowseGigs: React.FC = () => {
       if (cat) params.category = cat;
       if (skills.trim()) params.skills = skills.trim();
       if (searchVal.trim()) params.search = searchVal.trim();
+      if (minP) params.minPrice = minP;
+      if (maxP) params.maxPrice = maxP;
+      if (minR) params.minRating = minR;
 
       const res = await api.get('/gigs/nearby', { params });
       if (res.data.success) {
@@ -109,25 +115,25 @@ export const BrowseGigs: React.FC = () => {
   }, [userLat, userLng]);
 
   // Initial load
-  useEffect(() => { fetchGigs(search, category, radius, skillFilter); }, []);
+  useEffect(() => { fetchGigs(search, category, radius, skillFilter, minPrice, maxPrice, minRating); }, []);
 
   // Debounce search changes
   const handleSearchChange = (val: string) => {
     setSearch(val);
     clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => fetchGigs(val, category, radius, skillFilter), 400);
+    searchTimer.current = setTimeout(() => fetchGigs(val, category, radius, skillFilter, minPrice, maxPrice, minRating), 400);
   };
 
   const handleFilterApply = () => {
-    fetchGigs(search, category, radius, skillFilter);
+    fetchGigs(search, category, radius, skillFilter, minPrice, maxPrice, minRating);
     setShowFilters(false);
   };
 
   return (
-    <div className="flex-grow bg-paper flex flex-col" style={{ minHeight: 0 }}>
+    <div className="flex-grow bg-paper flex flex-col animate-fade-in font-sans" style={{ minHeight: 0 }}>
       
       {/* Top toolbar */}
-      <div className="border-b border-line-gray bg-white px-4 py-3 flex items-center space-x-3">
+      <div className="border-b-2 border-ink bg-paper px-4 py-3 flex items-center space-x-3">
         <div className="flex items-center space-x-2 flex-grow max-w-md">
           <Search className="h-4 w-4 text-slate flex-shrink-0" />
           <input
@@ -135,10 +141,10 @@ export const BrowseGigs: React.FC = () => {
             value={search}
             onChange={e => handleSearchChange(e.target.value)}
             placeholder="Search gigs by title or keyword..."
-            className="flex-grow text-sm text-ink bg-transparent border-b border-line-gray focus:outline-none focus:border-route-teal pb-0.5 font-sans placeholder:text-slate/50"
+            className="flex-grow text-sm text-ink bg-transparent border-b-2 border-ink focus:outline-none focus:border-route-teal pb-0.5 font-sans placeholder:text-slate/50"
           />
           {search && (
-            <button onClick={() => { setSearch(''); fetchGigs('', category, radius, skillFilter); }}>
+            <button onClick={() => { setSearch(''); fetchGigs('', category, radius, skillFilter, minPrice, maxPrice, minRating); }}>
               <X className="h-3.5 w-3.5 text-slate hover:text-signal-coral" />
             </button>
           )}
@@ -146,7 +152,7 @@ export const BrowseGigs: React.FC = () => {
 
         <button
           onClick={() => setShowFilters(f => !f)}
-          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-sm border text-xs font-bold font-display uppercase tracking-wider transition-colors ${showFilters ? 'border-route-teal text-route-teal bg-route-teal/5' : 'border-line-gray text-slate hover:border-slate'}`}
+          className="flex items-center space-x-1.5 px-3 py-1.5 border-2 border-ink text-xs font-bold font-display uppercase tracking-wider bg-paper sketch-button"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           <span>Filters</span>
@@ -159,22 +165,22 @@ export const BrowseGigs: React.FC = () => {
 
       {/* Filter panel (collapsible) */}
       {showFilters && (
-        <div className="bg-white border-b border-line-gray px-4 py-4 flex flex-wrap items-end gap-4">
+        <div className="bg-paper border-b-2 border-ink px-6 py-6 flex flex-wrap items-end gap-4 relative z-10">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink">Category</label>
+            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Category</label>
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="px-3 py-2 text-xs rounded-sm border border-line-gray bg-paper text-ink focus:outline-none focus:border-route-teal font-sans"
+              className="px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-sans"
             >
               <option value="">All Categories</option>
               {GIG_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
 
-          <div className="space-y-1 min-w-[200px]">
-            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink">
-              Radius: <span className="font-mono text-route-teal">{radius}km</span>
+          <div className="space-y-1 min-w-[150px]">
+            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">
+              Radius: <span className="font-mono text-route-teal font-bold">{radius}km</span>
             </label>
             <input
               type="range"
@@ -185,20 +191,56 @@ export const BrowseGigs: React.FC = () => {
             />
           </div>
 
-          <div className="space-y-1 flex-grow min-w-[200px]">
-            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink">Skills (comma-separated)</label>
+          <div className="space-y-1 flex-grow min-w-[150px]">
+            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Skills (comma-separated)</label>
             <input
               type="text"
               value={skillFilter}
               onChange={e => setSkillFilter(e.target.value)}
               placeholder="e.g. React, Plumber, Figma"
-              className="w-full px-3 py-2 text-xs rounded-sm border border-line-gray bg-paper text-ink focus:outline-none focus:border-route-teal font-sans"
+              className="w-full px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-sans"
             />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Min Price (₹)</label>
+            <input
+              type="number"
+              value={minPrice}
+              onChange={e => setMinPrice(e.target.value)}
+              placeholder="Min budget"
+              className="w-24 px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-mono"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Max Price (₹)</label>
+            <input
+              type="number"
+              value={maxPrice}
+              onChange={e => setMaxPrice(e.target.value)}
+              placeholder="Max budget"
+              className="w-24 px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-mono"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Min Rating</label>
+            <select
+              value={minRating}
+              onChange={e => setMinRating(e.target.value)}
+              className="px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-sans"
+            >
+              <option value="">Any Rating</option>
+              <option value="3">3.0+ ★</option>
+              <option value="4">4.0+ ★</option>
+              <option value="4.5">4.5+ ★</option>
+            </select>
           </div>
 
           <button
             onClick={handleFilterApply}
-            className="px-4 py-2 rounded-sm bg-route-teal hover:bg-route-teal/90 text-white text-xs font-bold font-display uppercase tracking-widest transition-colors"
+            className="px-4 py-2 bg-route-teal border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-widest sketch-button"
           >
             Apply Filters
           </button>
@@ -209,7 +251,7 @@ export const BrowseGigs: React.FC = () => {
       <div className="flex flex-col lg:flex-row flex-grow overflow-hidden">
         
         {/* Map Panel */}
-        <div className="lg:w-[45%] h-64 lg:h-auto border-b lg:border-b-0 lg:border-r border-line-gray relative flex-shrink-0">
+        <div className="lg:w-[45%] h-64 lg:h-auto border-b-2 lg:border-b-0 lg:border-r-2 border-ink relative flex-shrink-0 z-0">
           <MapContainer
             center={[userLat, userLng]}
             zoom={11}
@@ -243,9 +285,9 @@ export const BrowseGigs: React.FC = () => {
                   <Popup>
                     <div className="text-xs">
                       <strong className="block font-display uppercase">{gig.title}</strong>
-                      <span className="font-mono text-[11px]">₹{gig.budget.toLocaleString()}</span>
+                      <span className="font-mono text-[11px] font-bold">₹{gig.budget.toLocaleString()}</span>
                       <br />
-                      <span className="text-slate">{gig.location.city}</span>
+                      <span className="text-slate font-bold">{gig.location.city}</span>
                     </div>
                   </Popup>
                 </Marker>
@@ -254,14 +296,14 @@ export const BrowseGigs: React.FC = () => {
           </MapContainer>
 
           {/* Map legend */}
-          <div className="absolute bottom-3 left-3 bg-white border border-line-gray rounded-sm px-3 py-2 z-[1000] text-[9px] font-mono text-slate space-y-1">
+          <div className="absolute bottom-3 left-3 bg-paper border-2 border-ink sketch-card px-3 py-2 z-[1000] text-[9px] font-mono text-ink space-y-1 rotate-[0.5deg]">
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-signal-coral border border-ink inline-block flex-shrink-0"></span>
-              <span>YOUR LOCATION</span>
+              <span className="w-2.5 h-2.5 bg-signal-coral border border-ink inline-block flex-shrink-0 sketch-border"></span>
+              <span className="font-bold">YOUR LOCATION</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-route-teal border border-ink inline-block flex-shrink-0"></span>
-              <span>OPEN GIG</span>
+              <span className="w-2.5 h-2.5 bg-route-teal border border-ink inline-block flex-shrink-0 sketch-border"></span>
+              <span className="font-bold">OPEN GIG</span>
             </div>
           </div>
         </div>
@@ -276,10 +318,10 @@ export const BrowseGigs: React.FC = () => {
           ) : error ? (
             <div className="text-center py-12 text-signal-coral text-sm font-sans">{error}</div>
           ) : gigs.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12 border-2 border-dashed border-ink bg-paper/50 sketch-border">
               <MapPin className="h-8 w-8 mx-auto text-slate mb-3" />
               <h3 className="font-bold font-display text-ink uppercase tracking-tight mb-1">No Gigs Found</h3>
-              <p className="text-xs text-slate font-sans max-w-xs mx-auto">
+              <p className="text-xs text-slate font-sans max-w-xs mx-auto leading-relaxed">
                 No open gigs within {radius}km of {user?.location.city}. Try expanding the radius or removing filters.
               </p>
             </div>

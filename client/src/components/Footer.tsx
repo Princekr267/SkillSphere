@@ -6,10 +6,10 @@ export const Footer: React.FC = () => {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-ink text-paper border-t-2 border-route-teal">
+    <footer className="bg-ink text-paper border-t-4 border-ink relative">
       
       {/* Top: route line motif */}
-      <div className="relative h-1 bg-line-gray overflow-hidden">
+      <div className="relative h-[4px] bg-line-gray overflow-hidden border-b-2 border-ink">
         <div className="absolute inset-0 bg-route-teal animate-draw-line origin-left" />
       </div>
 
@@ -19,10 +19,10 @@ export const Footer: React.FC = () => {
           {/* Brand */}
           <div className="md:col-span-1 space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 bg-route-teal flex items-center justify-center rounded-sm flex-shrink-0">
+              <div className="h-8 w-8 bg-route-teal flex items-center justify-center border border-paper sketch-border flex-shrink-0">
                 <Globe className="h-4 w-4 text-white" />
               </div>
-              <span className="text-xl font-black font-display text-paper uppercase tracking-tight">
+              <span className="text-xl font-black font-display text-paper uppercase tracking-tight rotate-[-0.5deg]">
                 SkillSphere
               </span>
             </div>
@@ -33,7 +33,7 @@ export const Footer: React.FC = () => {
             <div className="flex items-center space-x-1 pt-2">
               {[0, 1, 2, 3].map(i => (
                 <React.Fragment key={i}>
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${i === 0 ? 'bg-signal-coral' : i === 3 ? 'bg-route-teal' : 'bg-paper/25'}`} />
+                  <div className={`w-2.5 h-2.5 sketch-border border flex-shrink-0 ${i === 0 ? 'bg-signal-coral border-paper' : i === 3 ? 'bg-route-teal border-paper' : 'bg-transparent border-paper/40'}`} />
                   {i < 3 && <div className="flex-grow h-[1px] bg-paper/15" />}
                 </React.Fragment>
               ))}
@@ -51,7 +51,7 @@ export const Footer: React.FC = () => {
                 { label: 'Register Now', to: '/register' },
               ].map(({ label, to }) => (
                 <li key={label}>
-                  <Link to={to} className="text-xs font-sans text-paper/60 hover:text-paper transition-colors">
+                  <Link to={to} className="text-xs font-sans text-paper/60 hover:text-paper hover:underline transition-colors">
                     {label}
                   </Link>
                 </li>
@@ -92,11 +92,11 @@ export const Footer: React.FC = () => {
               </li>
             </ul>
 
-            <div className="border border-paper/10 rounded-sm p-3 mt-4 space-y-1.5">
-              <p className="text-[9px] font-mono text-slate uppercase tracking-widest">Platform Status</p>
+            <div className="border-2 border-paper/40 sketch-border p-3 mt-4 space-y-1.5 bg-paper/5">
+              <p className="text-[9px] font-mono text-paper/60 uppercase tracking-widest">Platform Status</p>
               <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 rounded-full bg-route-teal animate-pulse flex-shrink-0" />
-                <span className="text-[10px] font-mono text-route-teal">All Systems Live</span>
+                <span className="w-2.5 h-2.5 sketch-border bg-route-teal border border-paper animate-pulse flex-shrink-0" />
+                <span className="text-[10px] font-mono text-route-teal font-bold uppercase">All Systems Live</span>
               </div>
             </div>
           </div>

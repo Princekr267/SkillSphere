@@ -50,15 +50,15 @@ export const Login: React.FC = () => {
     <div className="flex-grow flex items-center justify-start px-4 sm:px-12 md:px-24 py-16 relative bg-paper">
       
       {/* Decorative vertical route line on the left edge of page */}
-      <div className="absolute left-8 top-0 bottom-0 w-[2px] bg-line-gray hidden md:block">
-        <div className="absolute top-1/3 bottom-1/3 left-0 w-full bg-route-teal animate-draw-line"></div>
+      <div className="absolute left-8 top-0 bottom-0 w-[3px] bg-line-gray border-x border-ink hidden md:block">
+        <div className="absolute top-1/3 bottom-1/3 left-0 w-full bg-route-teal"></div>
       </div>
 
-      <div className="w-full max-w-md bg-white border border-line-gray rounded-sm p-8 relative z-10 animate-slide-up ml-0 md:ml-12">
+      <div className="w-full max-w-md bg-paper border-2 border-ink sketch-card p-8 relative z-10 animate-slide-up ml-0 md:ml-12 rotate-[-0.5deg]">
         
         {/* Brand Header - Left aligned */}
         <div className="text-left mb-8">
-          <div className="h-10 w-10 bg-route-teal flex items-center justify-center text-white font-bold rounded-sm mb-4">
+          <div className="h-10 w-10 bg-route-teal flex items-center justify-center text-white font-bold border-2 border-ink sketch-border mb-4">
             <Globe className="h-5 w-5" />
           </div>
           <h2 className="text-2xl font-black font-display text-ink uppercase tracking-tight">System Login</h2>
@@ -69,7 +69,7 @@ export const Login: React.FC = () => {
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-4 rounded-sm bg-paper border-l-4 border-l-signal-coral border border-line-gray flex items-start space-x-3 text-ink text-xs font-sans">
+          <div className="mb-6 p-4 bg-paper border-2 border-ink border-l-4 border-l-signal-coral sketch-border flex items-start space-x-3 text-ink text-xs font-sans">
             <AlertTriangle className="h-4 w-4 text-signal-coral flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -78,35 +78,35 @@ export const Login: React.FC = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6 font-sans">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">
+            <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate" />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate z-10" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@domain.com"
-                className="w-full pl-10 pr-4 py-2.5 rounded-sm bg-paper/30 border border-line-gray text-ink text-sm focus:outline-none focus:border-route-teal"
+                className="w-full pl-10 pr-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">
+            <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate" />
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate z-10" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-sm bg-paper/30 border border-line-gray text-ink text-sm focus:outline-none focus:border-route-teal"
+                className="w-full pl-10 pr-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal"
               />
             </div>
           </div>
@@ -114,7 +114,7 @@ export const Login: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-sm text-xs font-bold font-display uppercase tracking-widest text-white bg-signal-coral hover:bg-signal-coral/95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2"
+            className="w-full py-3 text-xs font-bold font-display uppercase tracking-widest text-white bg-signal-coral sketch-button flex items-center justify-center space-x-2"
           >
             {loading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -128,10 +128,10 @@ export const Login: React.FC = () => {
         </form>
 
         {/* Footer info */}
-        <div className="text-left mt-8 pt-6 border-t border-line-gray font-sans text-xs">
+        <div className="text-left mt-8 pt-6 border-t-2 border-ink font-sans text-xs">
           <p className="text-slate">
             Need a platform account?{' '}
-            <Link to="/register" className="font-bold text-route-teal hover:text-route-teal/80 transition-colors">
+            <Link to="/register" className="font-bold text-route-teal hover:underline transition-colors">
               Register Node
             </Link>
           </p>

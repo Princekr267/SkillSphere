@@ -11,6 +11,10 @@ import gigRoutes from './routes/gigRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import adminRoutes from './routes/adminRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import proposalRoutes from './routes/proposalRoutes';
+import paymentRoutes from './routes/paymentRoutes';
+import disputeRoutes from './routes/disputeRoutes';
+import aiRoutes from './routes/aiRoutes';
 import { initSocket } from './socket';
 
 
@@ -47,6 +51,10 @@ app.use('/api/gigs',    gigRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin',   adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/proposals', proposalRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/disputes', disputeRoutes);
+app.use('/api/ai', aiRoutes);
 
 
 // Root route for server verification

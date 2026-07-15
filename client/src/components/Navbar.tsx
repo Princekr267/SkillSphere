@@ -28,7 +28,7 @@ export const Navbar: React.FC = () => {
     : '/';
 
   return (
-    <nav className="bg-paper border-b border-line-gray sticky top-0 z-50">
+    <nav className="bg-paper border-b-2 border-ink sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -39,10 +39,10 @@ export const Navbar: React.FC = () => {
               className="flex items-center space-x-2 group"
               onClick={() => setMobileOpen(false)}
             >
-              <div className="h-8 w-8 bg-route-teal flex items-center justify-center text-white font-bold rounded-sm">
+              <div className="h-8 w-8 bg-route-teal flex items-center justify-center text-white font-bold border-2 border-ink sketch-border">
                 <Globe className="h-4 w-4" />
               </div>
-              <span className="text-xl font-black tracking-tight font-display text-ink uppercase">
+              <span className="text-xl font-black tracking-tight font-display text-ink uppercase rotate-[-0.5deg]">
                 SkillSphere
               </span>
             </Link>
@@ -51,8 +51,8 @@ export const Navbar: React.FC = () => {
           {/* Navigation Route Line (desktop only) */}
           <div className="flex-grow max-w-xl mx-8 hidden md:block relative">
             {/* Horizontal route line */}
-            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-line-gray"></div>
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-route-teal animate-draw-line -z-10"></div>
+            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[3px] bg-line-gray border-y border-ink"></div>
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] bg-route-teal animate-draw-line -z-10 border-y border-ink"></div>
 
             <div className="relative flex justify-around items-center">
               
@@ -63,12 +63,12 @@ export const Navbar: React.FC = () => {
                   className="flex flex-col items-center group"
                 >
                   <span className={`text-[10px] font-display uppercase tracking-widest mb-1.5 transition-colors ${
-                    user ? 'text-ink' : 'text-slate font-bold'
+                    user ? 'text-ink font-bold' : 'text-slate'
                   }`}>
                     Dashboard
                   </span>
-                  <div className={`w-3.5 h-3.5 rounded-full border-2 transition-all ${
-                    user ? 'bg-route-teal border-route-teal scale-110 shadow-sm' : 'bg-paper border-slate group-hover:border-route-teal'
+                  <div className={`w-4 h-4 border-2 transition-all sketch-border ${
+                    user ? 'bg-route-teal border-ink scale-110 shadow-sm' : 'bg-paper border-ink group-hover:bg-line-gray'
                   }`}></div>
                 </Link>
               </div>
@@ -80,9 +80,9 @@ export const Navbar: React.FC = () => {
                     Local Node
                   </span>
                   <div className="flex items-center space-x-1">
-                    <div className="w-3 h-3 rounded-full border-2 border-line-gray bg-paper"></div>
+                    <div className="w-3.5 h-3.5 border-2 border-ink bg-paper sketch-border"></div>
                     {user && (
-                      <span className="text-[9px] font-mono text-slate bg-line-gray/20 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                      <span className="text-[9px] font-mono text-ink bg-paper border border-ink px-1.5 py-0.5 sketch-badge uppercase tracking-wider">
                         {user.location.city}
                       </span>
                     )}
@@ -99,8 +99,8 @@ export const Navbar: React.FC = () => {
                     }`}>
                       Browse Gigs
                     </span>
-                    <div className={`w-3.5 h-3.5 rounded-full border-2 transition-all ${
-                      isActive('/gigs') ? 'bg-route-teal border-route-teal scale-110' : 'bg-paper border-slate group-hover:border-route-teal'
+                    <div className={`w-4 h-4 border-2 transition-all sketch-border ${
+                      isActive('/gigs') ? 'bg-route-teal border-ink scale-110' : 'bg-paper border-ink group-hover:bg-line-gray'
                     }`}></div>
                   </Link>
                 </div>
@@ -113,8 +113,8 @@ export const Navbar: React.FC = () => {
                     Platform Status
                   </span>
                   <div className="flex items-center space-x-1.5">
-                    <div className="w-3 h-3 rounded-full bg-route-teal border-2 border-route-teal animate-pulse"></div>
-                    <span className="text-[9px] font-mono text-route-teal uppercase tracking-widest">
+                    <div className="w-3.5 h-3.5 bg-route-teal border-2 border-ink sketch-border animate-pulse"></div>
+                    <span className="text-[9px] font-mono text-route-teal uppercase tracking-widest font-bold">
                       Live
                     </span>
                   </div>
@@ -130,14 +130,14 @@ export const Navbar: React.FC = () => {
             {user ? (
               <>
                 {/* User Info & Badge */}
-                <div className="flex items-center space-x-3 pr-4 border-r border-line-gray">
+                <div className="flex items-center space-x-3 pr-4 border-r-2 border-ink">
                   <div className="flex flex-col text-right">
                     <span className="text-sm font-bold text-ink font-sans">{user.name}</span>
                     <span className="text-[10px] font-mono text-slate uppercase tracking-wider">
                       {user.role}
                     </span>
                   </div>
-                  <div className="h-9 w-9 rounded-sm bg-slate/10 border border-slate/30 flex items-center justify-center text-ink font-bold font-display uppercase text-sm overflow-hidden flex-shrink-0">
+                  <div className="h-9 w-9 bg-paper border-2 border-ink flex items-center justify-center text-ink font-bold font-display uppercase text-sm overflow-hidden flex-shrink-0 sketch-border">
                     {user.avatar ? (
                       <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
                     ) : (
@@ -152,7 +152,7 @@ export const Navbar: React.FC = () => {
                 {/* Logout */}
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-slate hover:text-signal-coral hover:bg-line-gray/20 transition-all rounded"
+                  className="p-2 text-ink border-2 border-ink hover:text-signal-coral hover:bg-signal-coral/10 sketch-border transition-all"
                   title="Logout"
                 >
                   <LogOut className="h-4.5 w-4.5" />
@@ -162,13 +162,13 @@ export const Navbar: React.FC = () => {
               <>
                 <Link
                   to="/login"
-                  className="text-xs font-display uppercase tracking-widest text-slate hover:text-ink transition-colors px-3 py-2"
+                  className="text-xs font-display uppercase tracking-widest text-ink hover:underline px-3 py-2"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="text-xs font-display uppercase tracking-widest text-white bg-signal-coral hover:bg-signal-coral/90 px-4 py-2.5 rounded-sm transition-all"
+                  className="text-xs font-display uppercase tracking-widest text-white bg-signal-coral px-4 py-2.5 sketch-button transition-all"
                 >
                   Register
                 </Link>

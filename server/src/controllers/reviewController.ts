@@ -42,19 +42,65 @@ export const createReview = async (req: Request, res: Response): Promise<any> =>
       return res.status(400).json({ success: false, message: 'Invalid reviewee for this gig' });
     }
 
+    // Fraud detection heuristics
+    const fraudFlags: string[] = [];
+
+    // Heuristic A: Reviewer has no completed gigs in database history
+    const reviewerGigsCount = await Gig.countDocuments({
+      $or: [{ clientId: user._id }, { acceptedFreelancerId: user._id }],
+      status: 'completed',
+    });
+    if (reviewerGigsCount === 0) {
+      fraudFlags.push('NO_COMPLETED_GIGS_HISTORY');
+    }
+
+    // Heuristic B: Multiple reviews between same users in 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recentReviewsBetweenUsers = await Review.countDocuments({
+      reviewerId: user._id,
+      revieweeId,
+      createdAt: { $gte: thirtyDaysAgo },
+    });
+    if (recentReviewsBetweenUsers > 0) {
+      fraudFlags.push('COLLUSION_SUSPECT_30_DAYS');
+    }
+
+    const isFlagged = fraudFlags.length > 0;
+
     const review = await Review.create({
       gigId,
       reviewerId: user._id,
       revieweeId,
       rating,
       comment,
+      isFlagged,
+      fraudFlags,
     });
 
-    // Recalculate reviewee's aggregate rating
-    const allReviews = await Review.find({ revieweeId });
-    const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+    // Recalculate reviewee's weighted reputation rating
+    const allReviews = await Review.find({ revieweeId }).populate('gigId');
+    let totalWeight = 0;
+    let weightedSum = 0;
+
+    allReviews.forEach(r => {
+      // Age decay: w_time = max(0.1, 1 - ageInDays / 365)
+      const ageMs = Date.now() - new Date(r.createdAt).getTime();
+      const ageDays = Math.max(0, ageMs / (1000 * 60 * 60 * 24));
+      const wTime = Math.max(0.1, 1 - ageDays / 365.0);
+
+      // Verified Escrow payment check: w_verified = 1.0 if completed via payment, 0.5 otherwise
+      const isVerified = r.gigId && (r.gigId as any).escrowStatus === 'released';
+      const wVerified = isVerified ? 1.0 : 0.5;
+
+      const weight = wTime * wVerified;
+      weightedSum += r.rating * weight;
+      totalWeight += weight;
+    });
+
+    const smartRating = totalWeight > 0 ? weightedSum / totalWeight : 5.0;
+
     await User.findByIdAndUpdate(revieweeId, {
-      rating: Math.round(avgRating * 10) / 10,
+      rating: Math.round(smartRating * 10) / 10,
       reviewCount: allReviews.length,
     });
 

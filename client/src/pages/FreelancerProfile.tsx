@@ -76,7 +76,7 @@ export const FreelancerProfile: React.FC = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-paper font-sans">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-paper font-sans animate-fade-in">
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
@@ -89,8 +89,8 @@ export const FreelancerProfile: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Card Summary */}
-        <div className="bg-white border border-line-gray rounded-sm p-6 lg:col-span-1 flex flex-col items-center text-center">
-          <div className="h-24 w-24 rounded-full bg-slate/10 border border-slate/30 overflow-hidden flex items-center justify-center font-display text-3xl font-black text-ink uppercase mb-4">
+        <div className="bg-paper border-2 border-ink sketch-card p-6 lg:col-span-1 flex flex-col items-center text-center rotate-[-0.5deg]">
+          <div className="h-24 w-24 bg-paper border-2 border-ink overflow-hidden flex items-center justify-center font-display text-3xl font-black text-ink uppercase mb-4 sketch-border">
             {freelancer.avatar ? (
               <img src={freelancer.avatar} alt={freelancer.name} className="h-full w-full object-cover" />
             ) : (
@@ -102,11 +102,11 @@ export const FreelancerProfile: React.FC = () => {
             {freelancer.name}
           </h1>
 
-          <span className="text-[10px] font-mono text-slate uppercase tracking-wider mt-1.5 bg-line-gray/25 px-2.5 py-0.5 rounded">
+          <span className="text-[10px] font-mono text-ink uppercase tracking-widest mt-1.5 bg-paper border border-ink px-2.5 py-0.5 sketch-badge">
             {freelancer.role} node
           </span>
 
-          <div className="w-full border-t border-line-gray mt-6 pt-6 space-y-4 text-left">
+          <div className="w-full border-t-2 border-ink mt-6 pt-6 space-y-4 text-left font-mono">
             <div className="flex items-center space-x-3 text-xs text-slate">
               <MapPin className="h-4 w-4 text-route-teal flex-shrink-0" />
               <span className="font-bold text-ink uppercase">{freelancer.location.city}</span>
@@ -121,12 +121,12 @@ export const FreelancerProfile: React.FC = () => {
 
             <div className="flex items-center space-x-3 text-xs text-slate">
               <Calendar className="h-4 w-4 text-route-teal flex-shrink-0" />
-              <span>Joined {new Date(freelancer.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</span>
+              <span className="font-bold text-ink">Joined {new Date(freelancer.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</span>
             </div>
 
             {/* Overall score */}
-            <div className="border-t border-line-gray/40 pt-4 flex flex-col items-start space-y-1">
-              <span className="text-[9px] font-mono text-slate uppercase tracking-widest">Node Rep Score</span>
+            <div className="border-t-2 border-ink pt-4 flex flex-col items-start space-y-1">
+              <span className="text-[9px] font-mono text-slate uppercase tracking-widest font-bold">Node Rep Score</span>
               <div className="flex items-center space-x-2">
                 <StarRating value={freelancer.rating} size="sm" />
                 <span className="text-xs font-bold text-ink font-mono">({freelancer.reviewCount})</span>
@@ -139,9 +139,9 @@ export const FreelancerProfile: React.FC = () => {
         <div className="lg:col-span-2 space-y-8 text-left">
           
           {/* Bio */}
-          <div className="bg-white border border-line-gray rounded-sm p-6">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-3">Bio / node description</h3>
-            <p className="text-sm text-ink leading-relaxed font-sans">
+          <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[0.3deg]">
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-3 pl-1">Bio / node description</h3>
+            <p className="text-sm text-ink leading-relaxed font-sans font-bold">
               {freelancer.bio || 'No bio configured on this node.'}
             </p>
           </div>
@@ -149,16 +149,16 @@ export const FreelancerProfile: React.FC = () => {
           {/* Skills / Certs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Skills */}
-            <div className="bg-white border border-line-gray rounded-sm p-6">
-              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Skills Matrix</h3>
+            <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[-0.3deg]">
+              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Skills Matrix</h3>
               {freelancer.skills.length === 0 ? (
-                <p className="text-xs text-slate font-sans">No skills listed.</p>
+                <p className="text-xs text-slate font-sans pl-1 italic">No skills listed.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {freelancer.skills.map((s, i) => (
-                    <div key={i} className="flex items-center space-x-1 px-2.5 py-1 rounded-sm border border-line-gray bg-paper/20">
+                    <div key={i} className="flex items-center space-x-1 px-2.5 py-1 border border-ink bg-paper sketch-badge">
                       <span className="text-xs font-bold text-ink font-sans">{s.name}</span>
-                      <span className="text-[9px] font-mono text-slate uppercase px-1.5 py-0.25 bg-line-gray/25 rounded">
+                      <span className="text-[9px] font-mono text-slate uppercase px-1.5 py-0.25 bg-line-gray rounded">
                         {s.level.substring(0, 3)}
                       </span>
                     </div>
@@ -168,16 +168,16 @@ export const FreelancerProfile: React.FC = () => {
             </div>
 
             {/* Certs */}
-            <div className="bg-white border border-line-gray rounded-sm p-6">
-              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Node Credentials</h3>
+            <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[0.3deg]">
+              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Node Credentials</h3>
               {freelancer.certifications.length === 0 ? (
-                <p className="text-xs text-slate font-sans">No credentials listed.</p>
+                <p className="text-xs text-slate font-sans pl-1 italic">No credentials listed.</p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-2 font-mono">
                   {freelancer.certifications.map((c, i) => (
                     <li key={i} className="flex items-start space-x-2 text-xs text-ink font-sans">
                       <Award className="h-4 w-4 text-route-teal flex-shrink-0 mt-0.5" />
-                      <span>{c}</span>
+                      <span className="font-bold">{c}</span>
                     </li>
                   ))}
                 </ul>
@@ -186,18 +186,18 @@ export const FreelancerProfile: React.FC = () => {
           </div>
 
           {/* Portfolio */}
-          <div className="bg-white border border-line-gray rounded-sm p-6">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Portfolio nodes</h3>
+          <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[-0.5deg]">
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Portfolio nodes</h3>
             {freelancer.portfolio.length === 0 ? (
-              <p className="text-xs text-slate font-sans">No portfolio items added.</p>
+              <p className="text-xs text-slate font-sans pl-1 italic">No portfolio items added.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {freelancer.portfolio.map((p, i) => (
-                  <div key={i} className="border border-line-gray p-4 rounded-sm bg-paper/10 hover:bg-paper/30 transition-colors">
+                  <div key={i} className="border-2 border-ink p-4 bg-paper sketch-card">
                     <h4 className="font-bold text-ink text-sm font-display uppercase tracking-tight">{p.title}</h4>
                     <p className="text-xs text-slate mt-1.5 leading-relaxed font-sans">{p.description}</p>
                     {p.link && (
-                      <a href={p.link} target="_blank" rel="noopener noreferrer" className="text-[10px] font-mono text-route-teal hover:underline uppercase block mt-3">
+                      <a href={p.link} target="_blank" rel="noopener noreferrer" className="text-[10px] font-mono text-route-teal hover:underline font-bold uppercase block mt-3">
                         Visit project node →
                       </a>
                     )}
@@ -208,8 +208,8 @@ export const FreelancerProfile: React.FC = () => {
           </div>
 
           {/* Reviews section */}
-          <div className="bg-white border border-line-gray rounded-sm p-6">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Community Feedback</h3>
+          <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[0.5deg]">
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Community Feedback</h3>
             <ReviewList userId={freelancer._id} limit={20} />
           </div>
 

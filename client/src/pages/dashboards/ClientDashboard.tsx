@@ -131,21 +131,22 @@ export const ClientDashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-paper font-sans">
       
-      <div className="mb-8 border-b border-line-gray pb-0 flex items-end justify-between">
+      <div className="mb-8 border-b-2 border-ink pb-0 flex items-end justify-between">
         <div className="pb-6">
           <span className="text-[10px] font-mono text-slate uppercase tracking-widest block mb-1">Workspace Node</span>
           <h1 className="text-2xl font-black font-display text-ink uppercase tracking-tight">Client Panel</h1>
         </div>
-        <div className="flex items-end space-x-1">
+        <div className="flex items-end space-x-2">
           {(['profile', 'gigs'] as Tab[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-xs font-bold font-display uppercase tracking-widest border-b-2 transition-colors ${
+              className={`px-4 py-2 text-xs font-bold font-display uppercase tracking-widest border-2 border-b-0 border-ink transition-all ${
                 activeTab === tab
-                  ? 'border-route-teal text-route-teal'
-                  : 'border-transparent text-slate hover:text-ink'
-              }`}
+                  ? 'bg-route-teal text-white translate-y-0.5'
+                  : 'bg-paper text-ink hover:bg-line-gray/20'
+              } sketch-border`}
+              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
             >
               {tab === 'profile' ? 'My Profile' : 'Gig Manager'}
             </button>
@@ -160,10 +161,10 @@ export const ClientDashboard: React.FC = () => {
         <>
           {/* Messages */}
           {message && (
-            <div className={`mb-6 p-4 rounded-sm border-l-4 flex items-center space-x-3 text-xs ${
+            <div className={`mb-6 p-4 border-2 border-ink sketch-border flex items-center space-x-3 text-xs ${
               message.type === 'success'
-                ? 'bg-white border-line-gray border-l-route-teal text-ink'
-                : 'bg-white border-line-gray border-l-signal-coral text-ink'
+                ? 'bg-paper border-l-4 border-l-route-teal text-ink'
+                : 'bg-paper border-l-4 border-l-signal-coral text-ink'
             }`}>
               {message.type === 'success' ? <Check className="h-4.5 w-4.5 text-route-teal flex-shrink-0" /> : <AlertCircle className="h-4.5 w-4.5 text-signal-coral flex-shrink-0" />}
               <span>{message.text}</span>
@@ -174,8 +175,8 @@ export const ClientDashboard: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             {/* Left Column: Client profile */}
-            <div className="bg-white border border-line-gray rounded-sm p-6 lg:col-span-1 flex flex-col items-start text-left">
-              <div className="h-16 w-16 bg-slate/10 border border-slate/30 flex items-center justify-center text-ink text-2xl font-black font-display uppercase mb-4 rounded-sm overflow-hidden flex-shrink-0">
+            <div className="bg-paper border-2 border-ink sketch-card p-6 lg:col-span-1 flex flex-col items-start text-left rotate-[-0.5deg]">
+              <div className="h-16 w-16 bg-paper border-2 border-ink flex items-center justify-center text-ink text-2xl font-black font-display uppercase mb-4 rounded-sm overflow-hidden flex-shrink-0 sketch-border">
                 {user.avatar ? (
                   <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
                 ) : (
@@ -183,11 +184,11 @@ export const ClientDashboard: React.FC = () => {
                 )}
               </div>
               <h2 className="text-lg font-bold text-ink uppercase font-display tracking-tight">{user.name}</h2>
-              <span className="text-[10px] font-mono text-slate uppercase tracking-wider mt-1 bg-line-gray/25 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-ink bg-paper border border-ink px-2 py-0.5 sketch-badge uppercase tracking-wider mt-1">
                 Client Account
               </span>
               
-              <div className="w-full border-t border-line-gray my-6 pt-6 space-y-4">
+              <div className="w-full border-t-2 border-ink my-6 pt-6 space-y-4">
                 <div className="flex items-center space-x-3 text-xs text-slate">
                   <Building className="h-4 w-4 text-route-teal flex-shrink-0" />
                   <span className="font-bold text-ink">{user.companyName || 'No company configured'}</span>
@@ -196,7 +197,7 @@ export const ClientDashboard: React.FC = () => {
                   <MapPin className="h-4 w-4 text-route-teal flex-shrink-0" />
                   <span className="font-bold text-ink">{user.location.city}</span>
                 </div>
-                <div className="text-[10px] font-mono text-slate pt-3 border-t border-line-gray/40">
+                <div className="text-[10px] font-mono text-slate pt-3 border-t border-ink border-dashed">
                   COORDINATES: [{user.location.coordinates[0].toFixed(4)}, {user.location.coordinates[1].toFixed(4)}]
                 </div>
               </div>
@@ -205,13 +206,13 @@ export const ClientDashboard: React.FC = () => {
                 <>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="mt-2 w-full py-2.5 rounded-sm border border-line-gray hover:border-route-teal text-xs font-bold font-display uppercase tracking-widest text-slate hover:text-route-teal transition-all flex items-center justify-center space-x-2"
+                    className="mt-2 w-full py-2.5 border-2 border-ink text-xs font-bold font-display uppercase tracking-widest text-ink hover:text-route-teal bg-paper sketch-button flex items-center justify-center space-x-2"
                   >
                     <Edit className="h-4 w-4" />
                     <span>Modify Node Settings</span>
                   </button>
                   
-                  <div className="w-full mt-4 border-t border-line-gray pt-4">
+                  <div className="w-full mt-4 border-t-2 border-ink pt-4">
                     <AvatarUpload />
                   </div>
                 </>
@@ -221,52 +222,52 @@ export const ClientDashboard: React.FC = () => {
             {/* Right Column */}
             <div className="lg:col-span-2 space-y-8">
               {isEditing ? (
-                <div className="bg-white border border-line-gray rounded-sm p-6">
+                <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[0.5deg]">
                   <h3 className="text-sm font-bold font-display text-ink uppercase tracking-widest mb-6">Modify Settings</h3>
                   <form onSubmit={handleSave} className="space-y-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">Full Name</label>
+                        <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Full Name</label>
                         <input type="text" required value={name} onChange={e => setName(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-sm bg-paper/30 border border-line-gray text-ink text-sm focus:outline-none focus:border-route-teal" />
+                          className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal" />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">Company Name</label>
+                        <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Company Name</label>
                         <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-sm bg-paper/30 border border-line-gray text-ink text-sm focus:outline-none focus:border-route-teal" />
+                          className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal" />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">Bio / Description</label>
+                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Bio / Description</label>
                       <textarea rows={3} value={bio} onChange={e => setBio(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-sm bg-paper/30 border border-line-gray text-ink text-sm resize-none focus:outline-none focus:border-route-teal" />
+                        className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm resize-none focus:outline-none focus:border-route-teal" />
                     </div>
 
-                    <div className="border-t border-line-gray pt-4 space-y-4">
+                    <div className="border-t-2 border-ink pt-4 space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest">Change Location</span>
+                        <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest pl-1">Change Location</span>
                         <button type="button" onClick={handleDetectLocation} disabled={fetchingGeo}
-                          className="text-xs text-route-teal hover:text-route-teal/80 flex items-center space-x-1 font-bold">
+                          className="text-xs text-route-teal hover:underline flex items-center space-x-1 font-bold">
                           <Compass className="h-3.5 w-3.5" />
                           <span>{fetchingGeo ? 'GPS Locating...' : 'Use GPS Location'}</span>
                         </button>
                       </div>
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate" />
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate z-10" />
                         <input type="text" value={citySearch} onChange={handleCitySearchChange}
                           placeholder="Search for new city..."
-                          className="w-full pl-10 pr-4 py-2.5 rounded-sm bg-paper/30 border border-line-gray text-ink text-sm focus:outline-none focus:border-route-teal" />
+                          className="w-full pl-10 pr-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal" />
                         {searchingCity && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2">
                             <div className="w-4 h-4 border-2 border-route-teal/30 border-t-route-teal rounded-full animate-spin"></div>
                           </div>
                         )}
                         {suggestions.length > 0 && (
-                          <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-line-gray rounded-sm shadow-md max-h-40 overflow-y-auto">
+                          <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-paper border-2 border-ink sketch-card max-h-40 overflow-y-auto">
                             {suggestions.map((sug, i) => (
                               <button key={i} type="button" onClick={() => handleSelectCity(sug)}
-                                className="w-full text-left px-4 py-2 text-xs text-ink hover:bg-paper/30 transition-colors border-b border-line-gray/40 last:border-b-0">
+                                className="w-full text-left px-4 py-2 text-xs text-ink hover:bg-line-gray/20 border-b border-ink last:border-b-0">
                                 {sug.display_name}
                               </button>
                             ))}
@@ -274,19 +275,19 @@ export const ClientDashboard: React.FC = () => {
                         )}
                       </div>
                       {latitude !== null && longitude !== null && (
-                        <div className="text-xs font-mono text-slate bg-paper/50 p-2 border border-line-gray rounded-sm">
+                        <div className="text-xs font-mono text-slate bg-paper border-2 border-ink sketch-border p-2">
                           Coordinates Locked: {latitude.toFixed(4)}, {longitude.toFixed(4)} ({city})
                         </div>
                       )}
                     </div>
 
-                    <div className="flex space-x-3 pt-4 border-t border-line-gray">
+                    <div className="flex space-x-3 pt-4 border-t-2 border-ink">
                       <button type="submit" disabled={saving || !city || latitude === null}
-                        className="px-5 py-2.5 rounded-sm text-xs font-bold font-display uppercase tracking-widest text-white bg-signal-coral hover:bg-signal-coral/95 disabled:opacity-50 transition-colors">
+                        className="px-5 py-2.5 text-xs font-bold font-display uppercase tracking-widest text-white bg-signal-coral sketch-button">
                         {saving ? 'Saving...' : 'Save Settings'}
                       </button>
                       <button type="button" onClick={() => { setIsEditing(false); setMessage(null); }}
-                        className="px-5 py-2.5 rounded-sm text-xs font-bold font-display uppercase tracking-widest text-slate border border-line-gray hover:bg-paper/30 transition-colors">
+                        className="px-5 py-2.5 text-xs font-bold font-display uppercase tracking-widest text-ink bg-paper border-2 border-ink sketch-button">
                         Cancel
                       </button>
                     </div>
@@ -294,13 +295,13 @@ export const ClientDashboard: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="bg-white border border-line-gray rounded-sm p-6 text-left">
+                  <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[-0.3deg]">
                     <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-3">Organization Description</h3>
                     <p className="text-sm text-ink leading-relaxed font-sans">
                       {user.bio || 'Please update your bio description in node settings.'}
                     </p>
                   </div>
-                  <div className="bg-white border border-line-gray rounded-sm p-6 text-left">
+                  <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[0.3deg]">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest">Gig Activity</h3>
                       <button

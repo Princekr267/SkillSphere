@@ -49,17 +49,17 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
 
   return (
     <div
-      className="bg-white border border-line-gray rounded-sm p-5 hover:border-slate transition-colors flex flex-col group cursor-pointer"
+      className="bg-paper border-2 border-ink sketch-card p-5 transition-all flex flex-col group cursor-pointer"
       onClick={() => navigate(`/gigs/${gig._id}`)}
     >
       {/* Top row: category + distance */}
       <div className="flex items-center justify-between mb-3">
-        <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-sm border text-[10px] font-bold font-display uppercase tracking-wider ${catColor}`}>
+        <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 border border-ink text-[10px] font-bold font-display uppercase tracking-wider sketch-badge ${catColor}`}>
           <Tag className="h-3 w-3" />
           <span>{gig.category}</span>
         </span>
         {gig.distanceKm !== undefined && (
-          <span className="text-[10px] font-mono text-slate bg-paper px-2 py-0.5 rounded-sm border border-line-gray">
+          <span className="text-[10px] font-mono text-ink bg-paper px-2 py-0.5 border border-ink sketch-badge">
             {gig.distanceKm < 1 ? `${(gig.distanceKm * 1000).toFixed(0)}m` : `${gig.distanceKm.toFixed(1)}km`} AWAY
           </span>
         )}
@@ -72,14 +72,14 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
 
       {/* Client info with avatar */}
       <div className="flex items-center space-x-2 mb-3">
-        <div className="h-5 w-5 rounded-full bg-slate/10 border border-slate/30 overflow-hidden flex items-center justify-center font-display text-[9px] font-black text-ink uppercase flex-shrink-0">
+        <div className="h-5 w-5 bg-paper border border-ink overflow-hidden flex items-center justify-center font-display text-[9px] font-black text-ink uppercase flex-shrink-0 sketch-border">
           {gig.clientId?.avatar ? (
             <img src={gig.clientId.avatar} alt={gig.clientId.name} className="h-full w-full object-cover" />
           ) : (
             (gig.clientId?.companyName || gig.clientId?.name || '?').charAt(0)
           )}
         </div>
-        <span className="text-[11px] text-slate font-sans truncate">
+        <span className="text-[11px] text-slate font-sans font-bold truncate">
           {gig.clientId?.companyName || gig.clientId?.name || 'Unknown Client'}
         </span>
       </div>
@@ -95,12 +95,12 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
       {gig.skillsRequired.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
           {gig.skillsRequired.slice(0, 4).map((skill, i) => (
-            <span key={i} className="px-2 py-0.5 rounded-sm bg-paper border border-line-gray text-[10px] font-mono text-slate uppercase">
+            <span key={i} className="px-2 py-0.5 bg-paper border border-ink text-[10px] font-mono text-slate uppercase sketch-badge">
               {skill}
             </span>
           ))}
           {gig.skillsRequired.length > 4 && (
-            <span className="px-2 py-0.5 rounded-sm bg-paper border border-line-gray text-[10px] font-mono text-slate">
+            <span className="px-2 py-0.5 bg-paper border border-ink text-[10px] font-mono text-slate sketch-badge">
               +{gig.skillsRequired.length - 4}
             </span>
           )}
@@ -108,7 +108,7 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
       )}
 
       {/* Footer: budget + city + applicants */}
-      <div className="flex items-center justify-between pt-3 border-t border-line-gray/60 mt-auto">
+      <div className="flex items-center justify-between pt-3 border-t-2 border-ink mt-auto">
         <div className="flex items-center space-x-3">
           <span className="flex items-center space-x-1 font-mono text-sm font-bold text-ink">
             <DollarSign className="h-3.5 w-3.5 text-route-teal" />
@@ -131,7 +131,7 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
             e.stopPropagation();
             onApply(gig);
           }}
-          className="mt-4 w-full py-2 rounded-sm bg-signal-coral hover:bg-signal-coral/90 text-white text-xs font-bold font-display uppercase tracking-widest transition-colors"
+          className="mt-4 w-full py-2 bg-signal-coral text-white text-xs font-bold font-display uppercase tracking-widest sketch-button"
         >
           View & Apply
         </button>

@@ -6,6 +6,8 @@ export interface IReview extends Document {
   revieweeId: Types.ObjectId;
   rating: number;
   comment: string;
+  isFlagged?: boolean;
+  fraudFlags?: string[];
   createdAt: Date;
 }
 
@@ -36,6 +38,14 @@ const ReviewSchema = new Schema<IReview>(
       type: String,
       trim: true,
       maxlength: 1000,
+    },
+    isFlagged: {
+      type: Boolean,
+      default: false,
+    },
+    fraudFlags: {
+      type: [String],
+      default: [],
     },
   },
   { timestamps: true }
