@@ -9,4 +9,5 @@ const aiController_1 = require("../controllers/aiController");
 const router = express_1.default.Router();
 router.get('/recommend/:gigId', auth_1.protect, aiController_1.getRecommendedFreelancers);
 router.get('/trending-skills', aiController_1.getTrendingSkills);
+router.post('/draft-proposal', auth_1.protect, aiController_1.draftProposalCoverLetter);
 exports.default = router;

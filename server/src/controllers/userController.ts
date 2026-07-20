@@ -3,6 +3,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
+import Proposal from '../models/Proposal';
+import Payment from '../models/Payment';
 
 // Configure Cloudinary only if credentials are not default placeholders
 const isCloudinaryConfigured = (): boolean => {
@@ -266,10 +268,102 @@ export const getUserById = async (req: AuthRequest, res: Response) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
+
+    // Increment profileViews count if user is a freelancer
+    if (user.role === 'freelancer') {
+      user.profileViews = (user.profileViews || 0) + 1;
+      await user.save();
+    }
+
     res.status(200).json({ success: true, user });
   } catch (error) {
     console.error('getUserById error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching user profile' });
+  }
+};
+
+/**
+ * @desc    Update freelancer availability weekly schedule
+ * @route   PUT /api/users/profile/availability
+ * @access  Private — Freelancers only
+ */
+export const updateAvailability = async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { availability } = req.body;
+    if (!Array.isArray(availability)) {
+      return res.status(400).json({ success: false, message: 'Availability must be an array' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user || user.role !== 'freelancer') {
+      return res.status(403).json({ success: false, message: 'Only freelancers can update availability' });
+    }
+
+    user.availability = availability;
+    await user.save();
+
+    return res.json({ success: true, message: 'Availability updated successfully', user });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * @desc    Get freelancer analytics totals and chart parameters
+ * @route   GET /api/users/freelancer/analytics
+ * @access  Private — Freelancers only
+ */
+export const getFreelancerAnalytics = async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const user = req.user;
+    if (!user || user.role !== 'freelancer') {
+      return res.status(403).json({ success: false, message: 'Only freelancers can access analytics' });
+    }
+
+    const freelancerId = user._id;
+
+    // 1. Applications Count
+    const applicationCount = await Proposal.countDocuments({ freelancerId });
+
+    // 2. Total Earnings
+    const earningsAggregation = await Payment.aggregate([
+      { $match: { freelancerId, status: 'released' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]);
+    const totalEarnings = earningsAggregation[0]?.total || 0;
+
+    // 3. Monthly Earnings
+    const monthlyAggregation = await Payment.aggregate([
+      { $match: { freelancerId, status: 'released' } },
+      {
+        $group: {
+          _id: { $month: '$createdAt' },
+          total: { $sum: '$amount' },
+        },
+      },
+      { $sort: { '_id': 1 } },
+    ]);
+
+    const monthlyEarnings = Array(12).fill(0);
+    monthlyAggregation.forEach((item: any) => {
+      if (item._id >= 1 && item._id <= 12) {
+        monthlyEarnings[item._id - 1] = item.total;
+      }
+    });
+
+    return res.json({
+      success: true,
+      analytics: {
+        profileViews: user.profileViews || 0,
+        applicationCount,
+        totalEarnings,
+        monthlyEarnings,
+        rating: user.rating,
+        reviewCount: user.reviewCount,
+      },
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 

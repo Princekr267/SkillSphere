@@ -23,20 +23,19 @@ const storage = multer_1.default.diskStorage({
         cb(null, file.fieldname + '-' + uniqueSuffix + path_1.default.extname(file.originalname));
     },
 });
-// File filter to allow PDFs, images, and documents
+// File filter to allow safe MIME types (image/jpeg, image/png, application/pdf)
 const fileFilter = (req, file, cb) => {
-    const allowedExtensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'];
-    const ext = path_1.default.extname(file.originalname).toLowerCase();
-    if (allowedExtensions.includes(ext)) {
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (allowedMimeTypes.includes(file.mimetype)) {
         cb(null, true);
     }
     else {
-        cb(new Error('Unsupported file format. Please upload PDF, Word Doc, or Images (JPG/PNG).'), false);
+        cb(new Error('Unsupported file format. Please upload PDF, JPG, or PNG.'), false);
     }
 };
-// Limit file size to 10MB
+// Limit file size to 5MB
 exports.upload = (0, multer_1.default)({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 10 * 1024 * 1024 },
+    limits: { fileSize: 5 * 1024 * 1024 },
 });

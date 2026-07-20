@@ -19,8 +19,14 @@ export const AvatarUpload: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Image must be smaller than 2MB.');
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Only JPG or PNG images are supported.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be smaller than 5MB.');
       return;
     }
 
@@ -70,10 +76,10 @@ export const AvatarUpload: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-3 p-4 border border-line-gray rounded-sm bg-white w-full">
+    <div className="flex flex-col items-center space-y-3 p-4 border-2 border-ink rounded-lg bg-cream w-full transition-colors duration-200">
       <div className="relative group">
         {/* Profile Circle */}
-        <div className="h-20 w-20 rounded-full bg-slate/10 border border-slate/30 overflow-hidden flex items-center justify-center font-display text-2xl font-black text-ink uppercase">
+        <div className="h-20 w-20 rounded-full bg-cream border-2 border-ink overflow-hidden flex items-center justify-center font-display text-2xl font-black text-ink uppercase shadow-retro-sm">
           {user?.avatar ? (
             <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
           ) : (
@@ -82,14 +88,14 @@ export const AvatarUpload: React.FC = () => {
         </div>
 
         {/* Hover/Overlay Upload Label */}
-        <label className="absolute inset-0 bg-ink/60 rounded-full flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-          <Camera className="h-5 w-5 text-white" />
-          <span className="text-[8px] font-mono text-white uppercase tracking-wider mt-0.5">
+        <label className="absolute inset-0 bg-ink/80 rounded-full flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+          <Camera className="h-5 w-5 text-cream" />
+          <span className="text-[8px] font-mono text-cream uppercase tracking-wider mt-0.5">
             {uploading ? 'Uploading...' : 'Change'}
           </span>
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png"
             onChange={handleFileChange}
             disabled={uploading || removing}
             className="hidden"
@@ -99,7 +105,7 @@ export const AvatarUpload: React.FC = () => {
 
       <div className="text-center">
         <p className="text-xs font-bold text-ink uppercase font-display tracking-tight">Profile Avatar</p>
-        <p className="text-[9px] font-mono text-slate uppercase mt-0.5">JPG / PNG / WEBP · MAX 2MB</p>
+        <p className="text-[9px] font-mono text-ink/60 uppercase mt-0.5">JPG / PNG · MAX 5MB</p>
       </div>
 
       {/* Remove button — only when an avatar exists */}
@@ -108,7 +114,7 @@ export const AvatarUpload: React.FC = () => {
           type="button"
           onClick={handleRemoveAvatar}
           disabled={removing || uploading}
-          className="flex items-center space-x-1.5 text-[10px] font-mono text-signal-coral hover:text-signal-coral/80 transition-colors disabled:opacity-50"
+          className="flex items-center space-x-1.5 text-[10px] font-mono text-accent-coral hover:text-accent-coral/80 transition-colors disabled:opacity-50 cursor-pointer font-bold"
         >
           {removing ? (
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -120,21 +126,21 @@ export const AvatarUpload: React.FC = () => {
       )}
 
       {uploading && (
-        <div className="flex items-center space-x-1.5 text-[10px] font-mono text-route-teal">
+        <div className="flex items-center space-x-1.5 text-[10px] font-mono text-accent-teal font-bold">
           <Loader2 className="h-3 w-3 animate-spin" />
           <span>Uploading node photo...</span>
         </div>
       )}
 
       {error && (
-        <div className="flex items-center space-x-1.5 text-[10px] font-mono text-signal-coral">
+        <div className="flex items-center space-x-1.5 text-[10px] font-mono text-accent-coral font-bold">
           <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="flex items-center space-x-1.5 text-[10px] font-mono text-route-teal">
+        <div className="flex items-center space-x-1.5 text-[10px] font-mono text-accent-teal font-bold">
           <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" />
           <span>{success}</span>
         </div>

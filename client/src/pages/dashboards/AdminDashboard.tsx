@@ -5,6 +5,10 @@ import {
   ShieldOff, Shield, Trash2, Loader2, RefreshCw,
   Star, AlertCircle
 } from 'lucide-react';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Badge } from '../../components/ui/Badge';
 
 interface Stats {
   totalUsers: number;
@@ -39,23 +43,35 @@ interface AdminGig {
   escrowStatus: string;
   location: { city: string };
   clientId: { name: string; email: string };
+  isFlagged?: boolean;
+  flagReason?: string;
   createdAt: string;
 }
 
-const STAT_COLORS = ['border-route-teal', 'border-transit-gold', 'border-signal-coral', 'border-slate'];
+interface AdminWarning {
+  _id: string;
+  type: 'gig' | 'message';
+  targetId: string;
+  offenderId: { _id: string; name: string; email: string; role: string };
+  content: string;
+  reason: string;
+  createdAt: string;
+}
+
+const STAT_COLORS = ['border-accent-teal', 'border-accent-amber', 'border-accent-coral', 'border-accent-pink'];
 
 const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode; colorClass: string }> =
   ({ label, value, icon, colorClass }) => (
-    <div className={`bg-paper border-2 border-ink border-l-4 ${colorClass} sketch-card p-5`}>
+    <div className={`bg-cream border-2 border-ink border-l-8 ${colorClass} rounded-xl p-5 shadow-retro text-left transition-colors duration-200`}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-bold font-display uppercase tracking-widest text-slate">{label}</span>
-        <span className="text-slate">{icon}</span>
+        <span className="text-[10px] font-bold font-display uppercase tracking-widest text-ink/60">{label}</span>
+        <span className="text-ink/60">{icon}</span>
       </div>
       <p className="text-2xl font-black font-mono text-ink">{value}</p>
     </div>
   );
 
-type Tab = 'stats' | 'users' | 'gigs' | 'disputes' | 'flagged-reviews';
+type Tab = 'stats' | 'users' | 'gigs' | 'disputes' | 'flagged-reviews' | 'warnings';
 
 export const AdminDashboard: React.FC = () => {
   const [tab, setTab] = useState<Tab>('stats');
@@ -64,6 +80,7 @@ export const AdminDashboard: React.FC = () => {
   const [gigs, setGigs] = useState<AdminGig[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
   const [flaggedReviews, setFlaggedReviews] = useState<any[]>([]);
+  const [warnings, setWarnings] = useState<AdminWarning[]>([]);
   const [resolutionNotes, setResolutionNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -109,12 +126,21 @@ export const AdminDashboard: React.FC = () => {
     } finally { setLoading(false); }
   };
 
+  const fetchWarnings = async () => {
+    setLoading(true);
+    try {
+      const r = await api.get('/admin/warnings');
+      if (r.data.success) setWarnings(r.data.warnings);
+    } finally { setLoading(false); }
+  };
+
   useEffect(() => {
     if (tab === 'stats') fetchStats();
     else if (tab === 'users') fetchUsers();
     else if (tab === 'gigs') fetchGigs();
     else if (tab === 'disputes') fetchDisputes();
-    else fetchFlaggedReviews();
+    else if (tab === 'flagged-reviews') fetchFlaggedReviews();
+    else if (tab === 'warnings') fetchWarnings();
   }, [tab]);
 
   const handleToggleUser = async (userId: string) => {
@@ -180,30 +206,30 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const STATUS_COLORS: Record<string, string> = {
-    open:        'text-route-teal bg-route-teal/10',
-    in_progress: 'text-transit-gold bg-transit-gold/10',
-    completed:   'text-slate bg-slate/10',
-    cancelled:   'text-signal-coral bg-signal-coral/10',
+    open:        'text-accent-teal bg-accent-teal/10',
+    in_progress: 'text-accent-amber bg-accent-amber/10',
+    completed:   'text-ink/60 bg-ink/5',
+    cancelled:   'text-accent-coral bg-accent-coral/10',
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-paper font-sans">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
 
       {/* Header */}
       <div className="mb-8 border-b-2 border-ink pb-0 flex items-end justify-between">
-        <div className="pb-6">
-          <span className="text-[10px] font-mono text-slate uppercase tracking-widest block mb-1">Control Hub</span>
-          <h1 className="text-2xl font-black font-display text-ink uppercase tracking-tight">Admin Dashboard</h1>
+        <div className="pb-6 text-left">
+          <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Control Hub</span>
+          <h1 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Admin Dashboard</h1>
         </div>
         <div className="flex items-end space-x-2">
-          {(['stats', 'users', 'gigs', 'disputes', 'flagged-reviews'] as Tab[]).map(t => (
+          {(['stats', 'users', 'gigs', 'disputes', 'flagged-reviews', 'warnings'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 text-xs font-bold font-display uppercase tracking-widest border-2 border-b-0 border-ink transition-all ${
-                tab === t ? 'bg-route-teal text-white translate-y-0.5' : 'bg-paper text-ink hover:bg-line-gray/20'
-              } sketch-border`}
-              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
+              className={`px-4 py-2.5 text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all cursor-pointer ${
+                tab === t ? 'bg-accent-teal text-ink shadow-none translate-y-[2px]' : 'bg-cream text-ink hover:bg-accent-teal/10'
+              }`}
+              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}
             >
-              {t === 'flagged-reviews' ? 'flagged reviews' : t}
+              {t === 'flagged-reviews' ? 'reviews' : t === 'warnings' ? 'warnings' : t}
             </button>
           ))}
         </div>
@@ -211,15 +237,15 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Alert */}
       {msg && (
-        <div className="mb-4 p-3 bg-paper border-2 border-ink border-l-4 border-l-route-teal text-xs text-ink flex items-center justify-between sketch-border">
+        <div className="mb-4 p-3 bg-cream border-2 border-ink border-l-4 border-l-accent-teal text-xs text-ink flex items-center justify-between rounded-lg">
           <span>{msg}</span>
-          <button onClick={() => setMsg('')} className="text-slate hover:text-ink text-base leading-none">×</button>
+          <button onClick={() => setMsg('')} className="text-ink hover:text-accent-coral text-base leading-none cursor-pointer">×</button>
         </div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-7 w-7 text-route-teal animate-spin" />
+          <Loader2 className="h-7 w-7 text-accent-teal animate-spin" />
         </div>
       ) : (
         <>
@@ -240,62 +266,62 @@ export const AdminDashboard: React.FC = () => {
                 <StatCard label="Total Reviews"  value={stats.totalReviews}     icon={<Star className="h-5 w-5" />}       colorClass={STAT_COLORS[3]} />
               </div>
 
-              <button onClick={fetchStats} className="flex items-center space-x-2 text-xs text-slate hover:text-ink font-bold font-display uppercase tracking-wider">
-                <RefreshCw className="h-3.5 w-3.5" />
-                <span>Refresh Stats</span>
-              </button>
+              <div className="text-left">
+                <button onClick={fetchStats} className="inline-flex items-center space-x-2 text-xs text-ink/60 hover:text-ink font-bold font-display uppercase tracking-wider cursor-pointer">
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <span>Refresh Stats</span>
+                </button>
+              </div>
             </div>
           )}
 
           {/* ── USERS ─────────────────────────────────────────────────────────── */}
           {tab === 'users' && (
-            <div className="bg-paper border-2 border-ink sketch-card p-0 overflow-hidden rotate-[0.3deg]">
+            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
               <table className="w-full text-xs font-sans">
-                <thead className="bg-paper border-b-2 border-ink">
+                <thead className="bg-cream border-b-2 border-ink">
                   <tr>
                     {['User', 'Role', 'City', 'Rating', 'Status', 'Joined', 'Action'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y-2 divide-ink">
+                <tbody className="divide-y-2 divide-ink/10">
                   {users.map(u => (
-                    <tr key={u._id} className="hover:bg-line-gray/20 transition-colors">
-                      <td className="px-4 py-3">
+                    <tr key={u._id} className="hover:bg-accent-amber/5 transition-colors">
+                      <td className="px-4 py-3 text-left">
                         <div>
                           <p className="font-bold text-ink uppercase font-display text-xs">{u.name}</p>
-                          <p className="text-slate text-[10px] font-mono">{u.email}</p>
+                          <p className="text-ink/60 text-[10px] font-mono">{u.email}</p>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 border border-ink text-[10px] font-mono uppercase sketch-badge ${
-                          u.role === 'admin' ? 'bg-signal-coral/10 text-signal-coral' :
-                          u.role === 'client' ? 'bg-transit-gold/15 text-transit-gold' :
-                          'bg-route-teal/10 text-route-teal'
-                        }`}>{u.role}</span>
+                      <td className="px-4 py-3 text-left">
+                        <Badge variant={u.role === 'admin' ? 'coral' : u.role === 'client' ? 'amber' : 'teal'} className="shadow-none font-mono">
+                          {u.role}
+                        </Badge>
                       </td>
-                      <td className="px-4 py-3 font-mono text-slate text-[10px]">{u.location?.city || '—'}</td>
-                      <td className="px-4 py-3 font-mono text-[10px] text-transit-gold font-bold">{u.rating?.toFixed(1) || '—'} ★</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 border border-ink text-[10px] font-mono uppercase sketch-badge ${
-                          u.isActive === false ? 'text-signal-coral bg-signal-coral/10' : 'text-route-teal bg-route-teal/10'
-                        }`}>
+                      <td className="px-4 py-3 text-left font-mono text-ink/60 text-[10px]">{u.location?.city || '—'}</td>
+                      <td className="px-4 py-3 text-left font-mono text-[10px] text-accent-amber font-bold">{u.rating?.toFixed(1) || '—'} ★</td>
+                      <td className="px-4 py-3 text-left">
+                        <Badge variant={u.isActive === false ? 'coral' : 'teal'} className="shadow-none font-mono">
                           {u.isActive === false ? 'Banned' : 'Active'}
-                        </span>
+                        </Badge>
                       </td>
-                      <td className="px-4 py-3 font-mono text-[10px] text-slate">
+                      <td className="px-4 py-3 text-left font-mono text-[10px] text-ink/60">
                         {new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left">
                         {u.role !== 'admin' && (
-                          <button
+                          <Button
                             onClick={() => handleToggleUser(u._id)}
                             disabled={actionLoading === u._id}
-                            className={`flex items-center space-x-1 px-2.5 py-1 border-2 border-ink text-[10px] font-bold font-display uppercase tracking-wider bg-paper sketch-button`}
+                            variant={u.isActive === false ? 'primary' : 'coral'}
+                            size="sm"
+                            className="shadow-none py-1"
                           >
-                            {u.isActive === false ? <Shield className="h-3 w-3" /> : <ShieldOff className="h-3 w-3" />}
+                            {u.isActive === false ? <Shield className="h-3 w-3 mr-1" /> : <ShieldOff className="h-3 w-3 mr-1" />}
                             <span>{u.isActive === false ? 'Unban' : 'Ban'}</span>
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -303,127 +329,138 @@ export const AdminDashboard: React.FC = () => {
                 </tbody>
               </table>
               {users.length === 0 && (
-                <div className="py-8 text-center text-xs text-slate font-sans">No users found.</div>
+                <div className="py-8 text-center text-xs text-ink/60 font-sans">No users found.</div>
               )}
             </div>
           )}
 
           {/* ── GIGS ──────────────────────────────────────────────────────────── */}
           {tab === 'gigs' && (
-            <div className="bg-paper border-2 border-ink sketch-card p-0 overflow-hidden rotate-[-0.3deg]">
+            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
               <table className="w-full text-xs font-sans">
-                <thead className="bg-paper border-b-2 border-ink">
+                <thead className="bg-cream border-b-2 border-ink">
                   <tr>
                     {['Title', 'Client', 'Category', 'Budget', 'Status', 'City', 'Action'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y-2 divide-ink">
+                <tbody className="divide-y-2 divide-ink/10">
                   {gigs.map(g => (
-                    <tr key={g._id} className="hover:bg-line-gray/20 transition-colors">
-                      <td className="px-4 py-3 font-bold text-ink font-display uppercase text-xs max-w-[160px] truncate">{g.title}</td>
-                      <td className="px-4 py-3 text-[10px] text-slate font-sans">{g.clientId?.name || '—'}</td>
-                      <td className="px-4 py-3 text-[10px] text-slate font-mono">{g.category}</td>
-                      <td className="px-4 py-3 text-[10px] font-mono text-ink">₹{g.budget?.toLocaleString()}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 border border-ink text-[10px] font-mono uppercase sketch-badge ${STATUS_COLORS[g.status] || ''}`}>
-                          {g.status}
-                        </span>
+                    <tr key={g._id} className="hover:bg-accent-amber/5 transition-colors">
+                      <td className="px-4 py-3 text-left font-bold text-ink font-display uppercase text-xs max-w-[160px] truncate">
+                        <div className="flex flex-col">
+                          <span>{g.title}</span>
+                          {g.isFlagged && (
+                            <span className="inline-block self-start text-[8px] bg-accent-coral/20 text-accent-coral border border-ink font-mono px-1 rounded-sm mt-0.5" title={g.flagReason}>
+                              FLAGGED · {g.flagReason}
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-[10px] font-mono text-slate">{g.location?.city || '—'}</td>
-                      <td className="px-4 py-3">
-                        <button
+                      <td className="px-4 py-3 text-left text-[10px] text-ink/60 font-sans">{g.clientId?.name || '—'}</td>
+                      <td className="px-4 py-3 text-left text-[10px] text-ink/60 font-mono">{g.category}</td>
+                      <td className="px-4 py-3 text-left text-[10px] font-mono text-ink">₹{g.budget?.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-left">
+                        <Badge variant="outline" className={`${STATUS_COLORS[g.status] || ''} shadow-none`}>
+                          {g.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-left text-[10px] font-mono text-ink/60">{g.location?.city || '—'}</td>
+                      <td className="px-4 py-3 text-left">
+                        <Button
                           onClick={() => handleDeleteGig(g._id)}
                           disabled={actionLoading === g._id}
-                          className="flex items-center space-x-1 px-2.5 py-1 border-2 border-ink text-signal-coral bg-paper text-[10px] font-bold font-display uppercase tracking-wider sketch-button"
+                          variant="coral"
+                          size="sm"
+                          className="shadow-none py-1"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3 w-3 mr-1" />
                           <span>Delete</span>
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               {gigs.length === 0 && (
-                <div className="py-8 text-center text-xs text-slate font-sans">No gigs found.</div>
+                <div className="py-8 text-center text-xs text-ink/60 font-sans">No gigs found.</div>
               )}
             </div>
           )}
 
           {/* ── DISPUTES ──────────────────────────────────────────────────────── */}
           {tab === 'disputes' && (
-            <div className="bg-paper border-2 border-ink sketch-card p-0 overflow-hidden rotate-[0.2deg]">
+            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
               <table className="w-full text-xs font-sans">
-                <thead className="bg-paper border-b-2 border-ink">
+                <thead className="bg-cream border-b-2 border-ink">
                   <tr>
                     {['Gig / Reason', 'Raised By', 'Against', 'Evidence', 'Status / Resolution', 'Action'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y-2 divide-ink">
+                <tbody className="divide-y-2 divide-ink/10">
                   {disputes.map(d => (
-                    <tr key={d._id} className="hover:bg-line-gray/20 transition-colors">
-                      <td className="px-4 py-3 max-w-[200px]">
+                    <tr key={d._id} className="hover:bg-accent-amber/5 transition-colors">
+                      <td className="px-4 py-3 text-left max-w-[200px]">
                         <p className="font-bold text-ink uppercase font-display text-xs">{d.gigId?.title || '—'}</p>
-                        <p className="text-slate font-sans mt-1">Reason: "{d.reason}"</p>
+                        <p className="text-ink/60 font-sans mt-1">Reason: "{d.reason}"</p>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left">
                         <p className="font-bold text-ink uppercase font-display text-[10px]">{d.raisedById?.name}</p>
-                        <p className="text-slate text-[9px] font-mono">{d.raisedById?.role.toUpperCase()}</p>
+                        <p className="text-ink/60 text-[9px] font-mono">{d.raisedById?.role.toUpperCase()}</p>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left">
                         <p className="font-bold text-ink uppercase font-display text-[10px]">{d.againstId?.name}</p>
-                        <p className="text-slate text-[9px] font-mono">{d.againstId?.role.toUpperCase()}</p>
+                        <p className="text-ink/60 text-[9px] font-mono">{d.againstId?.role.toUpperCase()}</p>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left">
                         {d.evidenceUrl ? (
                           <a
                             href={d.evidenceUrl.startsWith('http') ? d.evidenceUrl : `${api.defaults.baseURL?.replace('/api', '')}${d.evidenceUrl}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-route-teal font-bold hover:underline font-mono text-[10px]"
+                            className="text-accent-teal font-bold hover:underline font-mono text-[10px]"
                           >
                             View Evidence
                           </a>
                         ) : (
-                          <span className="text-slate font-mono text-[10px]">No Evidence</span>
+                          <span className="text-ink/60 font-mono text-[10px]">No Evidence</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left">
                         <div className="space-y-1">
-                          <span className={`px-2 py-0.5 border border-ink text-[10px] font-mono uppercase sketch-badge ${
-                            d.status === 'resolved' ? 'text-route-teal bg-route-teal/10' : 'text-signal-coral bg-signal-coral/10'
-                          }`}>
+                          <Badge variant={d.status === 'resolved' ? 'teal' : 'coral'} className="shadow-none">
                             {d.status}
-                          </span>
+                          </Badge>
                           {d.resolutionNote && (
-                            <p className="text-slate text-[10px] italic">Note: "{d.resolutionNote}"</p>
+                            <p className="text-ink/60 text-[10px] italic">Note: "{d.resolutionNote}"</p>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left">
                         {d.status === 'open' ? (
                           <div className="space-y-2">
                             <textarea
                               placeholder="Resolution note..."
                               value={resolutionNotes[d._id] || ''}
                               onChange={e => setResolutionNotes(prev => ({ ...prev, [d._id]: e.target.value }))}
-                              className="w-full p-2 text-[10px] bg-paper border border-ink sketch-input text-ink resize-none focus:outline-none focus:border-route-teal"
+                              className="w-full p-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs resize-none focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
                               rows={2}
                             />
-                            <button
+                            <Button
                               onClick={() => handleResolveDispute(d._id)}
                               disabled={actionLoading === d._id}
-                              className="w-full py-1 bg-route-teal text-white border border-ink text-[10px] font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                              variant="secondary"
+                              size="sm"
+                              className="w-full py-1 shadow-none"
                             >
                               Resolve
-                            </button>
+                            </Button>
                           </div>
                         ) : (
-                          <span className="text-slate text-[10px] italic font-mono">Resolved</span>
+                          <span className="text-ink/60 text-[10px] italic font-mono">Resolved</span>
                         )}
                       </td>
                     </tr>
@@ -431,63 +468,67 @@ export const AdminDashboard: React.FC = () => {
                 </tbody>
               </table>
               {disputes.length === 0 && (
-                <div className="py-8 text-center text-xs text-slate font-sans">No disputes logged.</div>
+                <div className="py-8 text-center text-xs text-ink/60 font-sans">No disputes logged.</div>
               )}
             </div>
           )}
 
           {/* ── FLAGGED REVIEWS ────────────────────────────────────────────────── */}
           {tab === 'flagged-reviews' && (
-            <div className="bg-paper border-2 border-ink sketch-card p-0 overflow-hidden rotate-[-0.2deg]">
+            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
               <table className="w-full text-xs font-sans">
-                <thead className="bg-paper border-b-2 border-ink">
+                <thead className="bg-cream border-b-2 border-ink">
                   <tr>
                     {['Gig / Review details', 'Reviewer', 'Reviewee', 'Rating', 'Flags', 'Action'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y-2 divide-ink">
+                <tbody className="divide-y-2 divide-ink/10">
                   {flaggedReviews.map(r => (
-                    <tr key={r._id} className="hover:bg-line-gray/20 transition-colors">
-                      <td className="px-4 py-3 max-w-[220px]">
+                    <tr key={r._id} className="hover:bg-accent-amber/5 transition-colors">
+                      <td className="px-4 py-3 text-left max-w-[220px]">
                         <p className="font-bold text-ink uppercase font-display text-[10px]">{r.gigId?.title || '—'}</p>
-                        <p className="text-slate font-sans mt-1">Comment: "{r.comment || 'no comment'}"</p>
+                        <p className="text-ink/60 font-sans mt-1">Comment: "{r.comment || 'no comment'}"</p>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left">
                         <p className="font-bold text-ink uppercase font-display text-[10px]">{r.reviewerId?.name}</p>
-                        <p className="text-slate text-[9px] font-mono">{r.reviewerId?.role.toUpperCase()}</p>
+                        <p className="text-ink/60 text-[9px] font-mono">{r.reviewerId?.role.toUpperCase()}</p>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left">
                         <p className="font-bold text-ink uppercase font-display text-[10px]">{r.revieweeId?.name}</p>
-                        <p className="text-slate text-[9px] font-mono">{r.revieweeId?.role.toUpperCase()}</p>
+                        <p className="text-ink/60 text-[9px] font-mono">{r.revieweeId?.role.toUpperCase()}</p>
                       </td>
-                      <td className="px-4 py-3 font-mono text-[10px] text-transit-gold font-bold">{r.rating} ★</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left font-mono text-[10px] text-accent-amber font-bold">{r.rating} ★</td>
+                      <td className="px-4 py-3 text-left">
                         <div className="flex flex-wrap gap-1">
                           {r.fraudFlags?.map((f: string) => (
-                            <span key={f} className="px-1.5 py-0.5 border border-ink text-[9px] font-mono font-bold text-signal-coral bg-signal-coral/10 sketch-badge uppercase">
+                            <Badge key={f} variant="coral" className="shadow-none font-mono text-[8px] px-1.5 py-0">
                               {f.replace(/_/g, ' ')}
-                            </span>
+                            </Badge>
                           ))}
                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-left">
                         <div className="flex flex-col sm:flex-row gap-2">
-                          <button
+                          <Button
                             onClick={() => handleDismissFlag(r._id)}
                             disabled={actionLoading === r._id}
-                            className="px-2 py-1 bg-route-teal text-white border-2 border-ink text-[10px] font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                            variant="secondary"
+                            size="sm"
+                            className="shadow-none py-1 text-[9px]"
                           >
                             Dismiss
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() => handleDeleteReview(r._id)}
                             disabled={actionLoading === r._id}
-                            className="px-2 py-1 bg-signal-coral text-white border-2 border-ink text-[10px] font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                            variant="coral"
+                            size="sm"
+                            className="shadow-none py-1 text-[9px]"
                           >
                             Delete
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -495,7 +536,44 @@ export const AdminDashboard: React.FC = () => {
                 </tbody>
               </table>
               {flaggedReviews.length === 0 && (
-                <div className="py-8 text-center text-xs text-slate font-sans">No flagged reviews in the queue.</div>
+                <div className="py-8 text-center text-xs text-ink/60 font-sans">No flagged reviews in the queue.</div>
+              )}
+            </div>
+          )}
+
+          {/* ── SAFETY WARNINGS ────────────────────────────────────────────────── */}
+          {tab === 'warnings' && (
+            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
+              <table className="w-full text-xs font-sans">
+                <thead className="bg-cream border-b-2 border-ink">
+                  <tr>
+                    {['Date', 'Type', 'Target ID', 'Offender', 'Infracting Content', 'Reason'].map(h => (
+                      <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y-2 divide-ink/10">
+                  {warnings.map(w => (
+                    <tr key={w._id} className="hover:bg-accent-amber/5 transition-colors">
+                      <td className="px-4 py-3 text-left font-mono text-[10px] text-ink/60">{new Date(w.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                      <td className="px-4 py-3 text-left">
+                        <Badge variant={w.type === 'gig' ? 'amber' : 'coral'} className="shadow-none font-mono text-[8px]">
+                          {w.type}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-left font-mono text-[10px] text-ink/60">{w.targetId}</td>
+                      <td className="px-4 py-3 text-left">
+                        <p className="font-bold text-ink uppercase font-display text-[10px]">{w.offenderId?.name || '—'}</p>
+                        <p className="text-ink/60 text-[9px] font-mono">{w.offenderId?.email} · {w.offenderId?.role.toUpperCase()}</p>
+                      </td>
+                      <td className="px-4 py-3 text-left max-w-[250px] font-mono text-[10px] text-ink whitespace-pre-wrap break-all">{w.content}</td>
+                      <td className="px-4 py-3 text-left font-mono text-[10px] text-accent-coral font-bold">{w.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {warnings.length === 0 && (
+                <div className="py-8 text-center text-xs text-ink/60 font-sans">No safety warnings logged.</div>
               )}
             </div>
           )}

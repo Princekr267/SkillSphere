@@ -17,4 +17,5 @@ router.delete('/gigs/:id', adminController_1.adminDeleteGig);
 router.get('/flagged-reviews', adminController_1.getFlaggedReviews);
 router.put('/reviews/:id/dismiss', adminController_1.dismissReviewFlag);
 router.delete('/reviews/:id', adminController_1.deleteReview);
+router.get('/warnings', adminController_1.getWarnings);
 exports.default = router;

@@ -3,10 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteResume = exports.deleteAvatar = exports.getUserById = exports.uploadAvatar = exports.uploadResume = exports.updateUserProfile = void 0;
+exports.deleteResume = exports.deleteAvatar = exports.getFreelancerAnalytics = exports.updateAvailability = exports.getUserById = exports.uploadAvatar = exports.uploadResume = exports.updateUserProfile = void 0;
 const cloudinary_1 = require("cloudinary");
 const fs_1 = __importDefault(require("fs"));
 const User_1 = __importDefault(require("../models/User"));
+const Proposal_1 = __importDefault(require("../models/Proposal"));
+const Payment_1 = __importDefault(require("../models/Payment"));
 // Configure Cloudinary only if credentials are not default placeholders
 const isCloudinaryConfigured = () => {
     const cloud = process.env.CLOUDINARY_CLOUD_NAME;
@@ -254,6 +256,11 @@ const getUserById = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
+        // Increment profileViews count if user is a freelancer
+        if (user.role === 'freelancer') {
+            user.profileViews = (user.profileViews || 0) + 1;
+            await user.save();
+        }
         res.status(200).json({ success: true, user });
     }
     catch (error) {
@@ -262,6 +269,84 @@ const getUserById = async (req, res) => {
     }
 };
 exports.getUserById = getUserById;
+/**
+ * @desc    Update freelancer availability weekly schedule
+ * @route   PUT /api/users/profile/availability
+ * @access  Private — Freelancers only
+ */
+const updateAvailability = async (req, res) => {
+    try {
+        const { availability } = req.body;
+        if (!Array.isArray(availability)) {
+            return res.status(400).json({ success: false, message: 'Availability must be an array' });
+        }
+        const user = await User_1.default.findById(req.user._id);
+        if (!user || user.role !== 'freelancer') {
+            return res.status(403).json({ success: false, message: 'Only freelancers can update availability' });
+        }
+        user.availability = availability;
+        await user.save();
+        return res.json({ success: true, message: 'Availability updated successfully', user });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+exports.updateAvailability = updateAvailability;
+/**
+ * @desc    Get freelancer analytics totals and chart parameters
+ * @route   GET /api/users/freelancer/analytics
+ * @access  Private — Freelancers only
+ */
+const getFreelancerAnalytics = async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user || user.role !== 'freelancer') {
+            return res.status(403).json({ success: false, message: 'Only freelancers can access analytics' });
+        }
+        const freelancerId = user._id;
+        // 1. Applications Count
+        const applicationCount = await Proposal_1.default.countDocuments({ freelancerId });
+        // 2. Total Earnings
+        const earningsAggregation = await Payment_1.default.aggregate([
+            { $match: { freelancerId, status: 'released' } },
+            { $group: { _id: null, total: { $sum: '$amount' } } },
+        ]);
+        const totalEarnings = earningsAggregation[0]?.total || 0;
+        // 3. Monthly Earnings
+        const monthlyAggregation = await Payment_1.default.aggregate([
+            { $match: { freelancerId, status: 'released' } },
+            {
+                $group: {
+                    _id: { $month: '$createdAt' },
+                    total: { $sum: '$amount' },
+                },
+            },
+            { $sort: { '_id': 1 } },
+        ]);
+        const monthlyEarnings = Array(12).fill(0);
+        monthlyAggregation.forEach((item) => {
+            if (item._id >= 1 && item._id <= 12) {
+                monthlyEarnings[item._id - 1] = item.total;
+            }
+        });
+        return res.json({
+            success: true,
+            analytics: {
+                profileViews: user.profileViews || 0,
+                applicationCount,
+                totalEarnings,
+                monthlyEarnings,
+                rating: user.rating,
+                reviewCount: user.reviewCount,
+            },
+        });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+exports.getFreelancerAnalytics = getFreelancerAnalytics;
 /**
  * Helper: delete a local /uploads file if the url points to this server
  */

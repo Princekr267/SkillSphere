@@ -4,6 +4,7 @@ import { Bell, Check, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { io, Socket } from 'socket.io-client';
 import api from '../utils/api';
+import { Badge } from './ui/Badge';
 
 interface Notification {
   _id: string;
@@ -109,12 +110,12 @@ export const NotificationBell: React.FC = () => {
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-slate hover:text-ink hover:bg-line-gray/20 transition-all rounded"
+        className="relative p-2 text-ink hover:text-ink hover:bg-accent-teal/15 transition-all rounded-lg cursor-pointer"
         title="Notifications"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 h-4 w-4 bg-signal-coral text-white font-mono text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">
+          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-accent-coral text-ink border border-ink font-mono text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -122,15 +123,15 @@ export const NotificationBell: React.FC = () => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border border-line-gray rounded-sm shadow-md z-50 overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-line-gray flex items-center justify-between bg-paper">
+        <div className="absolute right-0 mt-2 w-80 bg-cream border-2 border-ink rounded-lg shadow-retro z-50 overflow-hidden text-left">
+          <div className="px-4 py-2.5 border-b-2 border-ink flex items-center justify-between bg-cream">
             <span className="text-[10px] font-bold font-display uppercase tracking-widest text-ink">
               Notifications
             </span>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-[9px] font-mono text-route-teal hover:underline uppercase tracking-wider flex items-center space-x-1"
+                className="text-[9px] font-mono text-accent-teal hover:underline uppercase tracking-wider flex items-center space-x-1 cursor-pointer font-bold"
               >
                 <Check className="h-3 w-3" />
                 <span>Mark all read</span>
@@ -138,13 +139,13 @@ export const NotificationBell: React.FC = () => {
             )}
           </div>
 
-          <div className="max-h-72 overflow-y-auto divide-y divide-line-gray/60">
+          <div className="max-h-72 overflow-y-auto divide-y-2 divide-ink/10">
             {loading && notifications.length === 0 ? (
               <div className="p-4 flex justify-center">
-                <Loader2 className="h-4 w-4 text-route-teal animate-spin" />
+                <Loader2 className="h-4 w-4 text-accent-teal animate-spin" />
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate font-sans">
+              <div className="p-6 text-center text-xs text-ink/60 font-sans">
                 You are all caught up node!
               </div>
             ) : (
@@ -152,15 +153,15 @@ export const NotificationBell: React.FC = () => {
                 <div
                   key={notif._id}
                   onClick={() => handleNotificationClick(notif)}
-                  className={`p-3.5 text-left cursor-pointer transition-colors hover:bg-paper/30 ${
-                    !notif.read ? 'bg-route-teal/5 font-semibold' : ''
+                  className={`p-3.5 text-left cursor-pointer transition-colors hover:bg-accent-amber/10 ${
+                    !notif.read ? 'bg-accent-teal/10 font-semibold' : ''
                   }`}
                 >
                   <p className="text-xs text-ink font-display uppercase tracking-tight font-bold mb-0.5">
                     {notif.title}
                   </p>
-                  <p className="text-xs text-slate font-sans leading-relaxed">{notif.body}</p>
-                  <p className="text-[9px] font-mono text-slate/50 mt-1">
+                  <p className="text-xs text-ink/75 font-sans leading-relaxed">{notif.body}</p>
+                  <p className="text-[9px] font-mono text-ink/40 mt-1">
                     {new Date(notif.createdAt).toLocaleTimeString('en-IN', {
                       hour: '2-digit',
                       minute: '2-digit',

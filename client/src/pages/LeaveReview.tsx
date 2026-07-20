@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { StarRating } from '../components/StarRating';
 import api from '../utils/api';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 import { ArrowLeft, CheckCircle2, AlertCircle, Send } from 'lucide-react';
 
 export const LeaveReview: React.FC = () => {
@@ -36,33 +38,38 @@ export const LeaveReview: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-12 flex-grow bg-paper font-sans animate-fade-in">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center space-x-1.5 text-xs text-slate hover:text-ink transition-colors mb-8 font-bold font-display uppercase tracking-wider"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        <span>Back</span>
-      </button>
+    <div className="max-w-xl mx-auto px-4 py-12 flex-grow bg-cream font-sans animate-fade-in transition-colors duration-200">
+      
+      {/* Back button */}
+      <div className="text-left">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-8 font-bold font-display uppercase tracking-wider cursor-pointer"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Back</span>
+        </button>
+      </div>
 
-      <div className="bg-paper border-2 border-ink sketch-card p-8 rotate-[-0.3deg]">
-        <span className="text-[10px] font-mono text-slate uppercase tracking-widest block mb-1">Post-Gig Feedback</span>
+      <Card className="p-8 text-left">
+        <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Post-Gig Feedback</span>
         <h1 className="text-xl font-black font-display text-ink uppercase tracking-tight mb-6">
           Leave a Review
         </h1>
 
         {done ? (
-          <div className="flex flex-col items-center py-8 space-y-4 font-sans">
-            <CheckCircle2 className="h-12 w-12 text-route-teal" />
-            <p className="text-sm font-sans text-ink text-center max-w-xs leading-relaxed font-bold">
+          <div className="flex flex-col items-center py-8 space-y-4 font-sans text-center">
+            <CheckCircle2 className="h-12 w-12 text-accent-teal" />
+            <p className="text-sm font-sans text-ink leading-relaxed font-bold max-w-xs">
               Your review has been submitted. Ratings help the community find reliable professionals.
             </p>
-            <button
+            <Button
               onClick={() => navigate(-2)}
-              className="px-5 py-2.5 bg-route-teal border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-widest sketch-button"
+              variant="secondary"
+              className="px-5 py-2.5"
             >
               Back to Dashboard
-            </button>
+            </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6 font-sans">
@@ -71,9 +78,11 @@ export const LeaveReview: React.FC = () => {
               <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink block pl-1">
                 Your Rating *
               </label>
-              <StarRating value={rating} onChange={setRating} size="lg" />
+              <div className="pl-1">
+                <StarRating value={rating} onChange={setRating} size="lg" />
+              </div>
               {rating > 0 && (
-                <p className="text-[10px] font-mono text-slate pl-1">
+                <p className="text-[10px] font-mono text-ink/60 pl-1 font-bold">
                   {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][rating]}
                 </p>
               )}
@@ -90,34 +99,35 @@ export const LeaveReview: React.FC = () => {
                 onChange={e => setComment(e.target.value)}
                 placeholder="Describe your experience working with this person…"
                 maxLength={1000}
-                className="w-full px-4 py-3 bg-paper border-2 border-ink sketch-input text-ink text-sm font-sans resize-none focus:outline-none focus:border-route-teal"
+                className="w-full px-4 py-3 bg-cream border-2 border-ink rounded-lg text-ink text-sm font-sans resize-none focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber"
               />
-              <p className="text-[10px] font-mono text-slate text-right">{comment.length}/1000</p>
+              <p className="text-[10px] font-mono text-ink/60 text-right">{comment.length}/1000</p>
             </div>
 
             {/* Alert */}
             {msg && (
-              <div className={`p-3 border-2 border-ink text-xs flex items-center space-x-2 sketch-border ${
-                msg.type === 'success' ? 'border-l-4 border-l-route-teal bg-paper text-ink' : 'border-l-4 border-l-signal-coral bg-paper text-ink'
+              <div className={`p-3 border-2 border-ink text-xs flex items-center space-x-2 rounded-lg ${
+                msg.type === 'success' ? 'border-l-4 border-l-accent-teal bg-cream text-ink' : 'border-l-4 border-l-accent-coral bg-cream text-ink'
               }`}>
                 {msg.type === 'success'
-                  ? <CheckCircle2 className="h-4 w-4 text-route-teal flex-shrink-0" />
-                  : <AlertCircle className="h-4 w-4 text-signal-coral flex-shrink-0" />}
+                  ? <CheckCircle2 className="h-4 w-4 text-accent-teal flex-shrink-0" />
+                  : <AlertCircle className="h-4 w-4 text-accent-coral flex-shrink-0" />}
                 <span>{msg.text}</span>
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={submitting || rating === 0}
-              className="w-full flex items-center justify-center space-x-2 py-3 bg-signal-coral border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-widest sketch-button"
+              variant="coral"
+              className="w-full"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-4 w-4 mr-2" />
               <span>{submitting ? 'Submitting…' : 'Submit Review'}</span>
-            </button>
+            </Button>
           </form>
         )}
-      </div>
+      </Card>
     </div>
   );
 };

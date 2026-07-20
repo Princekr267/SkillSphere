@@ -22,18 +22,22 @@ export interface IUser {
   certifications: string[];
   rating: number;
   reviewCount: number;
+  isVerified?: boolean;
+  twoFactorEnabled?: boolean;
 }
 
 interface AuthContextType {
   user: IUser | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<any>;
   register: (userData: any) => Promise<void>;
   logout: () => void;
   updateProfile: (profileData: any) => Promise<void>;
   uploadResumeFile: (file: File) => Promise<string>;
   updateUser: (updatedUser: IUser) => void;
+  verify2FA: (code: string, tempToken: string) => Promise<void>;
+  googleLogin: (credential: string, role?: string, signupData?: any) => Promise<any>;
 }
 
 
@@ -72,10 +76,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const res = await api.post('/auth/login', { email, password });
       if (res.data.success) {
+        if (res.data.twoFactorRequired) {
+          return res.data;
+        }
         localStorage.setItem('skillsphere_token', res.data.token);
         setToken(res.data.token);
         setUser(res.data.user);
       }
+      return res.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Login failed');
     } finally {
@@ -143,6 +151,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(updatedUser);
   };
 
+  const verify2FA = async (code: string, tempToken: string) => {
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/2fa/verify', { code, tempToken });
+      if (res.data.success) {
+        localStorage.setItem('skillsphere_token', res.data.token);
+        setToken(res.data.token);
+        setUser(res.data.user);
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '2FA Verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleLogin = async (credential: string, role?: string, signupData?: any) => {
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/google', { credential, role, ...signupData });
+      if (res.data.success) {
+        if (res.data.registrationRequired) {
+          return res.data;
+        }
+        if (res.data.twoFactorRequired) {
+          return res.data;
+        }
+        localStorage.setItem('skillsphere_token', res.data.token);
+        setToken(res.data.token);
+        setUser(res.data.user);
+      }
+      return res.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Google login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AuthContext.Provider
@@ -156,6 +202,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updateProfile,
         uploadResumeFile,
         updateUser,
+        verify2FA,
+        googleLogin,
       }}
     >
       {children}

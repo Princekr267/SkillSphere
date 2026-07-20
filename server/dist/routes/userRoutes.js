@@ -10,6 +10,8 @@ const upload_1 = require("../middleware/upload");
 const router = express_1.default.Router();
 // Profile updates & queries
 router.put('/profile', auth_1.protect, userController_1.updateUserProfile);
+router.put('/profile/availability', auth_1.protect, userController_1.updateAvailability);
+router.get('/freelancer/analytics', auth_1.protect, userController_1.getFreelancerAnalytics);
 router.get('/:id', auth_1.protect, userController_1.getUserById);
 // File uploads
 router.post('/upload-resume', auth_1.protect, upload_1.upload.single('resume'), userController_1.uploadResume);

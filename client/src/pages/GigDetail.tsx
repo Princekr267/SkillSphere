@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Badge } from '../components/ui/Badge';
 import {
   MapPin, DollarSign, Tag, Users, Star,
   Building, ArrowLeft, CheckCircle2, AlertCircle, Loader2, Send, MessageSquare, PenLine,
 } from 'lucide-react';
 
-interface GigDetail {
+interface IGigDetail {
   _id: string;
   title: string;
   description: string;
@@ -35,6 +39,20 @@ interface GigDetail {
     reviewCount: number;
     location: { city: string };
   };
+  milestones?: Array<{
+    _id: string;
+    title: string;
+    description: string;
+    status: 'pending' | 'completed';
+    fileUrl?: string;
+    dueDate?: string;
+    completedAt?: string;
+  }>;
+  progressLogs?: Array<{
+    _id: string;
+    message: string;
+    createdAt: string;
+  }>;
 }
 
 export const GigDetail: React.FC = () => {
@@ -42,7 +60,7 @@ export const GigDetail: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [gig, setGig] = useState<GigDetail | null>(null);
+  const [gig, setGig] = useState<IGigDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -93,6 +111,87 @@ export const GigDetail: React.FC = () => {
     }
   }, [id, user]);
 
+  const [draftingAI, setDraftingAI] = useState(false);
+
+  const handleAIDraft = async () => {
+    setDraftingAI(true);
+    try {
+      const res = await api.post('/ai/draft-proposal', { gigId: id });
+      if (res.data.success) {
+        setMessage(res.data.coverLetter);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to draft cover letter: ' + (err.response?.data?.message || 'Server error'));
+    } finally {
+      setDraftingAI(false);
+    }
+  };
+
+  // Milestone Progress Tracker States
+  const [newMilestones, setNewMilestones] = useState([{ title: '', description: '', dueDate: '' }]);
+  const [progressLogMsg, setProgressLogMsg] = useState('');
+  const [submittingMilestones, setSubmittingMilestones] = useState(false);
+  const [submittingLog, setSubmittingLog] = useState(false);
+  const [completingMilestoneId, setCompletingMilestoneId] = useState<string | null>(null);
+  const [deliverableFile, setDeliverableFile] = useState<File | null>(null);
+
+  const handleSaveMilestones = async () => {
+    if (newMilestones.some(m => !m.title || !m.description)) {
+      alert('Please fill out all milestone fields.');
+      return;
+    }
+    setSubmittingMilestones(true);
+    try {
+      const res = await api.post(`/gigs/${id}/milestones`, { milestones: newMilestones });
+      if (res.data.success) {
+        await loadData();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to save milestones.');
+    } finally {
+      setSubmittingMilestones(false);
+    }
+  };
+
+  const handleCompleteMilestone = async (milestoneId: string) => {
+    setCompletingMilestoneId(milestoneId);
+    try {
+      const formData = new FormData();
+      if (deliverableFile) {
+        formData.append('deliverable', deliverableFile);
+      }
+      const res = await api.put(`/gigs/${id}/milestones/${milestoneId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (res.data.success) {
+        setDeliverableFile(null);
+        await loadData();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to complete milestone.');
+    } finally {
+      setCompletingMilestoneId(null);
+    }
+  };
+
+  const handlePostProgressLog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!progressLogMsg.trim()) return;
+    setSubmittingLog(true);
+    try {
+      const res = await api.post(`/gigs/${id}/progress-logs`, { message: progressLogMsg.trim() });
+      if (res.data.success) {
+        setProgressLogMsg('');
+        await loadData();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to submit log entry.');
+    } finally {
+      setSubmittingLog(false);
+    }
+  };
+
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !bidAmount || !completionTime) return;
@@ -138,6 +237,19 @@ export const GigDetail: React.FC = () => {
   const handleRaiseDispute = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!disputeReason.trim()) return;
+
+    if (disputeFile) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+      if (!allowedTypes.includes(disputeFile.type)) {
+        setDisputeMsg({ type: 'error', text: 'Only PDF, JPG, or PNG files are allowed as evidence.' });
+        return;
+      }
+      if (disputeFile.size > 5 * 1024 * 1024) {
+        setDisputeMsg({ type: 'error', text: 'Evidence file size must be less than 5MB.' });
+        return;
+      }
+    }
+
     setDisputeSubmitting(true);
     setDisputeMsg(null);
     try {
@@ -166,18 +278,18 @@ export const GigDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex-grow bg-paper flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-route-teal animate-spin" />
+      <div className="flex-grow bg-cream flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 text-accent-teal animate-spin" />
       </div>
     );
   }
 
   if (error || !gig) {
     return (
-      <div className="flex-grow bg-paper flex flex-col items-center justify-center space-y-3">
-        <AlertCircle className="h-8 w-8 text-signal-coral" />
+      <div className="flex-grow bg-cream flex flex-col items-center justify-center space-y-3 min-h-[50vh] text-center px-4">
+        <AlertCircle className="h-8 w-8 text-accent-coral" />
         <p className="text-sm font-sans text-ink">{error || 'Gig not found'}</p>
-        <button onClick={() => navigate('/gigs')} className="text-xs text-route-teal hover:underline font-bold">
+        <button onClick={() => navigate('/gigs')} className="text-xs text-accent-teal hover:underline font-bold cursor-pointer">
           ← Back to Browse
         </button>
       </div>
@@ -185,30 +297,32 @@ export const GigDetail: React.FC = () => {
   }
 
   const statusColors: Record<string, string> = {
-    open: 'bg-route-teal/10 text-route-teal border-route-teal/25',
-    in_progress: 'bg-transit-gold/10 text-transit-gold border-transit-gold/25',
-    completed: 'bg-slate/10 text-slate border-slate/25',
-    cancelled: 'bg-signal-coral/10 text-signal-coral border-signal-coral/25',
+    open: 'bg-accent-teal text-ink border-ink',
+    in_progress: 'bg-accent-amber text-ink border-ink',
+    completed: 'bg-cream text-ink border-ink',
+    cancelled: 'bg-accent-coral text-ink border-ink',
   };
 
   const escrowColors: Record<string, string> = {
-    none: 'text-slate',
-    funds_deposited: 'text-transit-gold',
-    released: 'text-route-teal',
-    refunded: 'text-signal-coral',
+    none: 'bg-cream text-ink/60 border-ink/30',
+    funds_deposited: 'bg-accent-amber text-ink border-ink',
+    released: 'bg-accent-teal text-ink border-ink',
+    refunded: 'bg-accent-coral text-ink border-ink',
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow bg-paper font-sans">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow bg-cream font-sans transition-colors duration-200">
 
       {/* Back button */}
-      <button
-        onClick={() => navigate('/gigs')}
-        className="flex items-center space-x-1.5 text-xs text-slate hover:text-ink transition-colors mb-6 font-bold font-display uppercase tracking-wider"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        <span>Browse Gigs</span>
-      </button>
+      <div className="text-left">
+        <button
+          onClick={() => navigate('/gigs')}
+          className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-6 font-bold font-display uppercase tracking-wider cursor-pointer"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Browse Gigs</span>
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -216,68 +330,68 @@ export const GigDetail: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
 
           {/* Header */}
-          <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[0.3deg]">
+          <Card className="text-left">
             <div className="flex items-start justify-between gap-4 mb-4">
-              <span className={`px-2.5 py-1 border border-ink text-[10px] font-bold font-display uppercase tracking-wider sketch-badge ${statusColors[gig.status] || statusColors.open}`}>
+              <Badge variant="outline" className={`${statusColors[gig.status] || statusColors.open} shadow-none`}>
                 {gig.status.replace('_', ' ')}
-              </span>
-              <span className={`px-2 py-0.5 border border-ink text-[10px] font-mono uppercase sketch-badge ${escrowColors[gig.escrowStatus]}`}>
+              </Badge>
+              <Badge variant="outline" className={`${escrowColors[gig.escrowStatus]} shadow-none`}>
                 ESCROW: {gig.escrowStatus.replace('_', ' ')}
-              </span>
+              </Badge>
             </div>
 
             <h1 className="text-xl font-black font-display text-ink uppercase tracking-tight leading-tight mb-2">
               {gig.title}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-4 font-mono text-xs text-slate">
+            <div className="flex flex-wrap items-center gap-4 font-mono text-xs text-ink/60">
               <span className="flex items-center space-x-1.5">
-                <Tag className="h-3.5 w-3.5 text-route-teal" />
+                <Tag className="h-3.5 w-3.5 text-accent-teal" />
                 <span>{gig.category}</span>
               </span>
               <span className="flex items-center space-x-1.5">
-                <MapPin className="h-3.5 w-3.5 text-route-teal" />
+                <MapPin className="h-3.5 w-3.5 text-accent-teal" />
                 <span className="font-bold text-ink">{gig.location.city} · {gig.radiusKm}KM RADIUS</span>
               </span>
               <span className="flex items-center space-x-1.5">
-                <Users className="h-3.5 w-3.5" />
+                <Users className="h-3.5 w-3.5 text-accent-teal" />
                 <span className="font-bold text-ink">{gig.applicants.length} APPLICANTS</span>
               </span>
             </div>
-          </div>
+          </Card>
 
           {/* Description */}
-          <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[-0.3deg]">
+          <Card className="text-left">
             <h2 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Project Description</h2>
             <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap font-sans">{gig.description}</p>
-          </div>
+          </Card>
 
           {/* Skills Required */}
           {gig.skillsRequired.length > 0 && (
-            <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[0.2deg]">
+            <Card className="text-left">
               <h2 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Skills Required</h2>
               <div className="flex flex-wrap gap-2">
                 {gig.skillsRequired.map((skill, i) => (
-                  <span key={i} className="px-3 py-1.5 bg-paper border border-ink text-xs font-mono text-ink uppercase sketch-badge">
+                  <Badge key={i} variant="outline" className="text-xs font-mono bg-cream border-ink/40 shadow-none">
                     {skill}
-                  </span>
+                  </Badge>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Apply section — only for freelancers on open gigs */}
           {user?.role === 'freelancer' && gig.status === 'open' && (
-            <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[-0.2deg]">
+            <Card className="text-left">
               <h2 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">
                 {proposal ? 'Your Proposal Bid' : 'Submit Proposal Bid'}
               </h2>
 
               {applyMsg && (
-                <div className={`p-3 border-2 border-ink text-xs flex items-center space-x-2 sketch-border mb-3 ${
-                  applyMsg.type === 'success' ? 'border-l-4 border-l-route-teal bg-paper text-ink' : 'border-l-4 border-l-signal-coral bg-paper text-ink'
+                <div className={`p-3 border-2 border-ink text-xs flex items-center space-x-2 rounded-lg mb-3 ${
+                  applyMsg.type === 'success' ? 'border-l-4 border-l-accent-teal bg-cream text-ink' : 'border-l-4 border-l-accent-coral bg-cream text-ink'
                 }`}>
-                  {applyMsg.type === 'success' ? <CheckCircle2 className="h-4 w-4 text-route-teal flex-shrink-0" /> : <AlertCircle className="h-4 w-4 text-signal-coral flex-shrink-0" />}
+                  {applyMsg.type === 'success' ? <CheckCircle2 className="h-4 w-4 text-accent-teal flex-shrink-0" /> : <AlertCircle className="h-4 w-4 text-accent-coral flex-shrink-0" />}
                   <span>{applyMsg.text}</span>
                 </div>
               )}
@@ -285,68 +399,68 @@ export const GigDetail: React.FC = () => {
               {proposal ? (
                 <div className="space-y-4 font-sans text-xs">
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className={`px-2.5 py-1 border border-ink text-[10px] font-bold font-mono uppercase sketch-badge ${
-                      proposal.status === 'accepted' ? 'bg-route-teal text-white shadow-none' :
-                      proposal.status === 'rejected' ? 'bg-signal-coral text-white shadow-none' :
-                      'bg-line-gray text-ink'
-                    }`}>
+                    <Badge variant="outline" className={proposal.status === 'accepted' ? 'bg-accent-teal' : proposal.status === 'rejected' ? 'bg-accent-coral' : 'bg-accent-amber'}>
                       Status: {proposal.status.toUpperCase()}
-                    </span>
+                    </Badge>
                     <span className="font-mono text-ink font-bold">Bid Amount: ₹{proposal.bidAmount}</span>
                     <span className="font-mono text-ink font-bold">Timeline: {proposal.completionTime} days</span>
                   </div>
 
-                  <p className="text-xs text-ink font-sans border-2 border-ink p-3 sketch-border bg-paper/30 leading-relaxed font-bold">
+                  <p className="text-xs text-ink font-sans border-2 border-ink p-3 rounded-lg bg-cream/50 leading-relaxed font-bold">
                     <strong>Cover Letter:</strong> {proposal.coverLetter}
                   </p>
 
                   {/* Client Counter Offer Response UI */}
                   {proposal.status === 'negotiating' && proposal.lastProposedBy === 'client' && (
-                    <div className="border-t-2 border-ink/20 pt-3 mt-3 space-y-3 bg-route-teal/5 p-3 sketch-border">
-                      <p className="font-mono text-route-teal font-bold">
+                    <div className="border-t border-ink/20 pt-3 mt-3 space-y-3 bg-accent-teal/5 p-3 rounded-lg border-2">
+                      <p className="font-mono text-accent-teal font-bold">
                         Client countered with an offer of: <strong>₹{proposal.bidAmount}</strong>
                       </p>
                       <div className="flex space-x-2">
-                        <button
+                        <Button
                           onClick={() => handleProposalResponse('accepted')}
                           disabled={applying}
-                          className="px-3 py-1.5 bg-route-teal border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                          variant="secondary"
+                          size="sm"
                         >
                           Accept Offer
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => handleProposalResponse('rejected')}
                           disabled={applying}
-                          className="px-3 py-1.5 border-2 border-ink bg-paper text-ink text-xs font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                          variant="outline"
+                          size="sm"
                         >
                           Reject Offer
-                        </button>
+                        </Button>
                       </div>
 
                       {/* Counter Back */}
                       <div className="flex items-center space-x-2 pt-1">
-                        <input
+                        <Input
                           type="number"
                           placeholder="Counter back (₹)..."
                           value={counterInput}
                           onChange={e => setCounterInput(e.target.value)}
-                          className="px-2 py-1 text-xs bg-paper border-2 border-ink sketch-input text-ink font-mono focus:outline-none w-36"
+                          className="px-2 py-1 text-xs font-mono w-36"
                         />
-                        <button
+                        <Button
                           onClick={() => {
                             if (counterInput) handleProposalResponse('negotiate', Number(counterInput));
                           }}
                           disabled={applying || !counterInput}
-                          className="px-3 py-1 bg-transit-gold text-ink border-2 border-ink text-xs font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                          variant="primary"
+                          size="sm"
+                          className="py-1"
                         >
                           Counter Offer
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
 
                   {proposal.status === 'negotiating' && proposal.lastProposedBy === 'freelancer' && (
-                    <p className="font-mono text-slate italic">
+                    <p className="font-mono text-ink/60 italic">
                       Waiting for client response on your counter offer of ₹{proposal.bidAmount}...
                     </p>
                   )}
@@ -355,53 +469,299 @@ export const GigDetail: React.FC = () => {
                 <form onSubmit={handleApply} className="space-y-4 font-sans">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Bid Price (₹) *</label>
-                      <input
+                      <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink block pl-1">Bid Price (₹) *</label>
+                      <Input
                         required
                         type="number"
                         min="0"
                         placeholder="e.g. 4500"
                         value={bidAmount}
                         onChange={e => setBidAmount(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-xs font-mono focus:outline-none focus:border-route-teal"
+                        className="font-mono"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Estimated Days *</label>
-                      <input
+                      <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink block pl-1">Estimated Days *</label>
+                      <Input
                         required
                         type="number"
                         min="1"
                         placeholder="e.g. 5"
                         value={completionTime}
                         onChange={e => setCompletionTime(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-xs font-mono focus:outline-none focus:border-route-teal"
+                        className="font-mono"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Cover Letter *</label>
+                    <div className="flex items-center justify-between pl-1">
+                      <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink">Cover Letter *</label>
+                      <button
+                        type="button"
+                        onClick={handleAIDraft}
+                        disabled={draftingAI}
+                        className="text-[9px] font-mono text-accent-teal hover:underline uppercase tracking-wider flex items-center space-x-1 disabled:opacity-50 cursor-pointer"
+                      >
+                        {draftingAI ? (
+                          <>
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <span>Drafting...</span>
+                          </>
+                        ) : (
+                          <span>✨ AI Draft Letter</span>
+                        )}
+                      </button>
+                    </div>
                     <textarea
                       required
                       rows={4}
                       value={message}
                       onChange={e => setMessage(e.target.value)}
                       placeholder="Explain your approach, why you're suited for this job..."
-                      className="w-full px-4 py-3 bg-paper border-2 border-ink sketch-input text-ink text-xs font-sans resize-none focus:outline-none focus:border-route-teal"
+                      className="w-full px-4 py-3 bg-cream border-2 border-ink rounded-lg text-ink text-xs font-sans resize-none focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber"
                     />
                   </div>
 
-                  <button
+                  <Button
                     type="submit"
                     disabled={applying || !message.trim() || !bidAmount || !completionTime}
-                    className="flex items-center space-x-2 px-6 py-2.5 bg-signal-coral border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-widest sketch-button disabled:opacity-50"
+                    variant="coral"
                   >
-                    <Send className="h-3.5 w-3.5" />
+                    <Send className="h-3.5 w-3.5 mr-1" />
                     <span>{applying ? 'Submitting…' : 'Submit Proposal'}</span>
-                  </button>
+                  </Button>
                 </form>
               )}
+            </Card>
+          )}
+
+          {/* Progress Tracking Section */}
+          {(gig.status === 'in_progress' || gig.status === 'completed') && (
+            <div className="space-y-6">
+              
+              {/* 1. Progress Bar Card */}
+              <Card className="text-left">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xs font-bold font-display text-ink uppercase tracking-widest">Project Progress</h2>
+                  <span className="font-mono text-xs font-bold text-ink">
+                    {(() => {
+                      const completedCount = gig.milestones?.filter((m: any) => m.status === 'completed').length || 0;
+                      const totalCount = gig.milestones?.length || 0;
+                      return totalCount > 0 ? `${Math.round((completedCount / totalCount) * 100)}%` : '0%';
+                    })()}
+                  </span>
+                </div>
+                <div className="w-full bg-cream border-2 border-ink h-4 rounded-full overflow-hidden shadow-retro-sm">
+                  <div
+                    className="bg-accent-teal h-full transition-all duration-500"
+                    style={{
+                      width: `${(() => {
+                        const completedCount = gig.milestones?.filter((m: any) => m.status === 'completed').length || 0;
+                        const totalCount = gig.milestones?.length || 0;
+                        return totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+                      })()}%`
+                    }}
+                  />
+                </div>
+              </Card>
+
+              {/* 2. Milestones Card */}
+              <Card className="text-left">
+                <h2 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Milestones Tracker</h2>
+                
+                {(!gig.milestones || gig.milestones.length === 0) ? (
+                  /* 0 Milestones Setup Interface */
+                  <div className="space-y-4 font-sans text-xs">
+                    <p className="text-xs text-ink/60 pl-1 italic">No milestones defined yet for this gig.</p>
+                    {(user?._id === gig.clientId?._id || user?._id === gig.acceptedFreelancerId) && (
+                      <div className="border border-dashed border-ink p-4 bg-cream/50 rounded-xl space-y-4">
+                        <span className="text-[10px] font-mono font-bold text-ink uppercase tracking-wider block text-left">Set milestones checklist</span>
+                        
+                        {newMilestones.map((m, idx) => (
+                          <div key={idx} className="space-y-2 border-b border-ink/10 pb-3 last:border-0 last:pb-0">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <Input
+                                type="text"
+                                placeholder="Milestone Title"
+                                required
+                                value={m.title}
+                                onChange={e => {
+                                  const updated = [...newMilestones];
+                                  updated[idx].title = e.target.value;
+                                  setNewMilestones(updated);
+                                }}
+                                className="py-1.5 text-xs"
+                              />
+                              <Input
+                                type="date"
+                                value={m.dueDate}
+                                onChange={e => {
+                                  const updated = [...newMilestones];
+                                  updated[idx].dueDate = e.target.value;
+                                  setNewMilestones(updated);
+                                }}
+                                className="py-1.5 text-xs font-mono"
+                              />
+                            </div>
+                            <textarea
+                              placeholder="Milestone Description / Deliverable detail"
+                              required
+                              rows={2}
+                              value={m.description}
+                              onChange={e => {
+                                  const updated = [...newMilestones];
+                                  updated[idx].description = e.target.value;
+                                  setNewMilestones(updated);
+                              }}
+                              className="w-full px-3 py-1.5 bg-cream border-2 border-ink rounded-lg text-xs resize-none focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber"
+                            />
+                            {newMilestones.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => setNewMilestones(newMilestones.filter((_: any, i: number) => i !== idx))}
+                                className="text-[9px] font-mono text-accent-coral hover:underline uppercase cursor-pointer"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        ))}
+
+                        <div className="flex space-x-2 pt-2">
+                          <Button
+                            type="button"
+                            onClick={() => setNewMilestones([...newMilestones, { title: '', description: '', dueDate: '' }])}
+                            variant="outline"
+                            size="sm"
+                          >
+                            + Add Item
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={handleSaveMilestones}
+                            disabled={submittingMilestones}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            {submittingMilestones ? 'Saving...' : 'Lock Checklist'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Render List */
+                  <div className="space-y-4 font-sans text-xs">
+                    {gig.milestones.map((m: any) => (
+                      <div key={m._id} className="border-2 border-ink p-4 bg-cream rounded-xl flex flex-col sm:flex-row sm:items-start justify-between gap-4 shadow-retro-sm">
+                        <div className="space-y-1 text-left">
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline" className={`${
+                              m.status === 'completed' ? 'bg-accent-teal' : 'bg-accent-amber'
+                            } shadow-none font-mono text-[8px]`}>
+                              {m.status}
+                            </Badge>
+                            <span className="font-bold text-ink uppercase tracking-tight text-xs font-display">{m.title}</span>
+                          </div>
+                          <p className="text-ink/70 text-xs mt-1 font-sans">{m.description}</p>
+                          {m.dueDate && (
+                            <p className="text-[10px] font-mono text-ink/60 mt-1.5">
+                              Due Date: {new Date(m.dueDate).toLocaleDateString('en-IN')}
+                            </p>
+                          )}
+                          {m.completedAt && (
+                            <p className="text-[10px] font-mono text-accent-teal font-bold">
+                              Completed: {new Date(m.completedAt).toLocaleDateString('en-IN')}
+                            </p>
+                          )}
+                          {m.fileUrl && (
+                            <div className="pt-2">
+                              <a
+                                href={m.fileUrl.startsWith('http') ? m.fileUrl : `${api.defaults.baseURL?.replace('/api', '')}${m.fileUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block text-[10px] font-mono text-accent-teal hover:underline font-bold uppercase"
+                              >
+                                View Submitted Deliverable 📥
+                              </a>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Complete action block for assigned freelancer */}
+                        {user?._id === gig.acceptedFreelancerId && m.status === 'pending' && (
+                          <div className="flex flex-col items-stretch space-y-2 border-t sm:border-t-0 sm:border-l border-ink/10 pt-3 sm:pt-0 sm:pl-4 min-w-[160px] text-left">
+                            <label className="text-[9px] font-mono font-bold text-ink/60">Attach Deliverable (PDF/Image)</label>
+                            <input
+                              type="file"
+                              accept="image/*,application/pdf"
+                              onChange={e => {
+                                if (e.target.files?.[0]) {
+                                  setDeliverableFile(e.target.files[0]);
+                                }
+                              }}
+                              className="text-[9px] w-full text-ink/60"
+                            />
+                            <Button
+                              type="button"
+                              onClick={() => handleCompleteMilestone(m._id)}
+                              disabled={completingMilestoneId === m._id}
+                              variant="secondary"
+                              size="sm"
+                              className="w-full"
+                            >
+                              {completingMilestoneId === m._id ? 'Submitting...' : 'Mark Completed'}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              {/* 3. Progress Log / Message timeline */}
+              <Card className="text-left">
+                <h2 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Project Logs</h2>
+                
+                {/* Scrolling Logs */}
+                <div className="border-2 border-ink p-3 bg-cream/50 max-h-48 overflow-y-auto space-y-2 font-mono text-[10px] text-ink rounded-lg mb-4 text-left shadow-retro-sm">
+                  {(!gig.progressLogs || gig.progressLogs.length === 0) ? (
+                    <p className="italic text-ink/60">No logs recorded yet.</p>
+                  ) : (
+                    gig.progressLogs.map((log: any) => (
+                      <div key={log._id} className="border-b border-ink/5 pb-1 last:border-0 last:pb-0">
+                        <span className="text-ink/60 text-[9px] font-bold mr-2">
+                          [{new Date(log.createdAt).toLocaleDateString('en-IN')} {new Date(log.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}]
+                        </span>
+                        <span className="font-bold">{log.message}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Add entry form */}
+                <form onSubmit={handlePostProgressLog} className="flex items-center space-x-2">
+                  <Input
+                    type="text"
+                    required
+                    placeholder="Log progress updates message..."
+                    value={progressLogMsg}
+                    onChange={e => setProgressLogMsg(e.target.value)}
+                    className="flex-grow w-full"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={submittingLog || !progressLogMsg.trim()}
+                    variant="primary"
+                    className="px-4 flex-shrink-0"
+                  >
+                    {submittingLog ? 'Logging...' : 'Post Log'}
+                  </Button>
+                </form>
+              </Card>
+
             </div>
           )}
         </div>
@@ -410,47 +770,45 @@ export const GigDetail: React.FC = () => {
         <div className="space-y-6">
 
           {/* Budget card */}
-          {/* Budget card */}
-          <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[0.4deg]">
+          <Card className="text-left">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Budget</h3>
             <div className="flex items-baseline space-x-1 font-mono">
-              <DollarSign className="h-5 w-5 text-route-teal flex-shrink-0 mb-0.5 font-bold" />
+              <DollarSign className="h-5 w-5 text-accent-teal flex-shrink-0 mb-0.5 font-bold" />
               <span className="text-3xl font-black text-ink">₹{gig.budget.toLocaleString()}</span>
-              <span className="text-sm text-slate font-bold">/{gig.budgetType === 'hourly' ? 'hr' : 'project'}</span>
+              <span className="text-sm text-ink/60 font-bold">/{gig.budgetType === 'hourly' ? 'hr' : 'project'}</span>
             </div>
-          </div>
+          </Card>
 
           {/* Client card */}
-          <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[-0.4deg]">
+          <Card className="text-left">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Posted By</h3>
             <div className="flex items-center space-x-3 mb-4">
-              <div className="h-10 w-10 bg-paper border-2 border-ink flex items-center justify-center text-ink font-black font-display text-lg uppercase sketch-border">
+              <div className="h-10 w-10 bg-cream border-2 border-ink rounded-lg flex items-center justify-center text-ink font-black font-display text-lg uppercase shadow-retro-sm">
                 {gig.clientId.name.charAt(0)}
               </div>
               <div>
-                <h4 className="font-bold text-ink text-sm uppercase font-display tracking-tight leading-none mb-1">{gig.clientId.name}</h4>
+                <h4 className="font-bold text-ink text-sm uppercase font-display tracking-tight leading-none mb-1 text-left">{gig.clientId.name}</h4>
                 {gig.clientId.companyName && (
-                  <p className="text-xs text-slate font-sans flex items-center space-x-1 font-bold">
+                  <p className="text-xs text-ink/60 font-sans flex items-center space-x-1 font-bold text-left">
                     <Building className="h-3 w-3" />
                     <span>{gig.clientId.companyName}</span>
                   </p>
                 )}
               </div>
             </div>
-            <div className="space-y-2 text-xs font-mono text-slate border-t-2 border-ink pt-3">
+            <div className="space-y-2 text-xs font-mono text-ink/60 border-t border-ink/10 pt-3">
               <div className="flex items-center justify-between">
-                <span className="flex items-center space-x-1"><Star className="h-3 w-3 text-transit-gold" /><span>Rating</span></span>
-                <span className="font-bold text-ink">{gig.clientId.rating?.toFixed(1)} ★</span>
+                <span className="flex items-center space-x-1"><Star className="h-3.5 w-3.5 text-accent-amber" /><span>Rating</span></span>
+                <span className="font-bold text-ink">{gig.clientId.rating?.toFixed(1) || '0.0'} ★</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="flex items-center space-x-1"><MapPin className="h-3 w-3" /><span>Location</span></span>
-                <span className="font-bold text-ink uppercase">{gig.clientId.location?.city}</span>
+                <span className="flex items-center space-x-1"><MapPin className="h-3.5 w-3.5" /><span>Location</span></span>
+                <span className="font-bold text-ink uppercase">{gig.clientId.location?.city || 'Anywhere'}</span>
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Actions card: Chat + Review */}
-
           {(gig.status === 'in_progress' || gig.status === 'completed') && (
             (() => {
               const userId = user?._id;
@@ -460,63 +818,67 @@ export const GigDetail: React.FC = () => {
               if (!isParticipant) return null;
               const otherUserId = isClient ? gig.acceptedFreelancerId : gig.clientId._id;
               return (
-                <div className="bg-paper border-2 border-ink sketch-card p-6 space-y-3 rotate-[0.3deg]">
+                <Card className="space-y-3 text-left">
                   <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest pl-1">Quick Actions</h3>
                   {gig.status === 'in_progress' && (
                     <>
                       <Link
                         to={`/gigs/${gig._id}/chat`}
-                        className="flex items-center space-x-2 w-full px-4 py-2.5 bg-route-teal text-white text-xs font-bold font-display uppercase tracking-widest border-2 border-ink sketch-button"
+                        className="block w-full"
                       >
-                        <MessageSquare className="h-4 w-4" />
-                        <span>Open Chat</span>
+                        <Button variant="primary" className="w-full">
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          <span>Open Chat</span>
+                        </Button>
                       </Link>
 
-                      <button
+                      <Button
                         type="button"
                         onClick={() => setShowDisputeForm(prev => !prev)}
-                        className="flex items-center space-x-2 w-full px-4 py-2.5 bg-signal-coral text-white text-xs font-bold font-display uppercase tracking-widest border-2 border-ink sketch-button"
+                        variant="coral"
+                        className="w-full"
                       >
-                        <AlertCircle className="h-4 w-4" />
+                        <AlertCircle className="h-4 w-4 mr-2" />
                         <span>{showDisputeForm ? 'Close Dispute' : 'Raise Dispute'}</span>
-                      </button>
+                      </Button>
 
                       {showDisputeForm && (
-                        <form onSubmit={handleRaiseDispute} className="space-y-3 pt-3 border-t border-ink/20 font-sans">
+                        <form onSubmit={handleRaiseDispute} className="space-y-3 pt-3 border-t border-ink/10 font-sans">
                           {disputeMsg && (
-                            <div className={`p-2 border border-ink text-[10px] sketch-border ${
-                              disputeMsg.type === 'success' ? 'bg-route-teal/10 text-route-teal' : 'bg-signal-coral/10 text-signal-coral'
+                            <div className={`p-2 border-2 border-ink text-[10px] rounded-lg ${
+                              disputeMsg.type === 'success' ? 'bg-cream border-l-4 border-l-accent-teal text-ink' : 'bg-cream border-l-4 border-l-accent-coral text-ink'
                             }`}>
                               {disputeMsg.text}
                             </div>
                           )}
                           <div className="space-y-1">
-                            <label className="text-[9px] font-bold font-display uppercase tracking-widest text-ink pl-1">Reason for Dispute *</label>
+                            <label className="text-[9px] font-bold font-display uppercase tracking-widest text-ink block pl-1">Reason for Dispute *</label>
                             <textarea
                               required
                               rows={3}
                               value={disputeReason}
                               onChange={e => setDisputeReason(e.target.value)}
                               placeholder="Describe why you are raising a dispute..."
-                              className="w-full p-2 bg-paper border border-ink sketch-input text-ink text-xs font-sans resize-none focus:outline-none focus:border-route-teal"
+                              className="w-full p-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-xs font-sans resize-none focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9px] font-bold font-display uppercase tracking-widest text-ink pl-1">Evidence (PDF/Image)</label>
+                            <label className="text-[9px] font-bold font-display uppercase tracking-widest text-ink block pl-1">Evidence (PDF/Image · MAX 5MB)</label>
                             <input
                               type="file"
-                              accept=".pdf,.jpg,.jpeg,.png"
+                              accept="image/jpeg,image/png,application/pdf"
                               onChange={e => setDisputeFile(e.target.files?.[0] || null)}
-                              className="w-full text-[10px] text-slate file:mr-2 file:py-1 file:px-2 file:border file:border-ink file:bg-paper file:text-ink file:text-[9px] file:font-mono file:uppercase file:sketch-badge"
+                              className="w-full text-[10px] text-ink/60"
                             />
                           </div>
-                          <button
+                          <Button
                             type="submit"
                             disabled={disputeSubmitting || !disputeReason.trim()}
-                            className="w-full py-1.5 bg-signal-coral text-white text-xs font-bold font-display uppercase tracking-widest border border-ink sketch-button disabled:opacity-50"
+                            variant="coral"
+                            className="w-full py-2.5"
                           >
                             {disputeSubmitting ? 'Raising Dispute…' : 'Submit Dispute'}
-                          </button>
+                          </Button>
                         </form>
                       )}
                     </>
@@ -524,13 +886,15 @@ export const GigDetail: React.FC = () => {
                   {gig.status === 'completed' && otherUserId && (
                     <Link
                       to={`/review/${gig._id}/${otherUserId}`}
-                      className="flex items-center space-x-2 w-full px-4 py-2.5 bg-paper text-ink text-xs font-bold font-display uppercase tracking-widest border-2 border-ink sketch-button"
+                      className="block w-full"
                     >
-                      <PenLine className="h-4 w-4" />
-                      <span>Leave a Review</span>
+                      <Button variant="outline" className="w-full">
+                        <PenLine className="h-4 w-4 mr-2" />
+                        <span>Leave a Review</span>
+                      </Button>
                     </Link>
                   )}
-                </div>
+                </Card>
               );
             })()
           )}

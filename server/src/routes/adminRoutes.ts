@@ -9,6 +9,7 @@ import {
   getFlaggedReviews,
   dismissReviewFlag,
   deleteReview,
+  getWarnings,
 } from '../controllers/adminController';
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.delete('/gigs/:id',        adminDeleteGig);
 router.get('/flagged-reviews',     getFlaggedReviews);
 router.put('/reviews/:id/dismiss', dismissReviewFlag);
 router.delete('/reviews/:id',      deleteReview);
+router.get('/warnings',            getWarnings);
 
 export default router;

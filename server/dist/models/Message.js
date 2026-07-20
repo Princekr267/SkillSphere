@@ -38,6 +38,12 @@ const MessageSchema = new mongoose_1.Schema({
     gigId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Gig', required: true, index: true },
     senderId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     body: { type: String, required: true, trim: true, maxlength: 4000 },
+    read: { type: Boolean, default: false },
+    isFlagged: { type: Boolean, default: false },
+    flagReason: { type: String },
+    fileUrl: { type: String },
+    fileName: { type: String },
+    fileSize: { type: Number },
     sentAt: { type: Date, default: Date.now },
 }, { timestamps: false });
 // Compound index for fast per-gig history retrieval sorted by time

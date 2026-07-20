@@ -48,7 +48,7 @@ const createOrder = async (req, res) => {
             const options = {
                 amount: amountPaisa,
                 currency: 'INR',
-                receipt: `receipt_gig_${gig._id}_${Date.now()}`,
+                receipt: `rec_${gig._id.toString().substring(18)}_${Date.now().toString().substring(8)}`,
             };
             const order = await razorpay.orders.create(options);
             return res.status(200).json({

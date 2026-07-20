@@ -1,5 +1,14 @@
 import express from 'express';
-import { updateUserProfile, uploadResume, uploadAvatar, getUserById, deleteAvatar, deleteResume } from '../controllers/userController';
+import {
+  updateUserProfile,
+  uploadResume,
+  uploadAvatar,
+  getUserById,
+  deleteAvatar,
+  deleteResume,
+  updateAvailability,
+  getFreelancerAnalytics,
+} from '../controllers/userController';
 import { protect } from '../middleware/auth';
 import { upload } from '../middleware/upload';
 
@@ -7,6 +16,8 @@ const router = express.Router();
 
 // Profile updates & queries
 router.put('/profile', protect, updateUserProfile);
+router.put('/profile/availability', protect, updateAvailability);
+router.get('/freelancer/analytics', protect, getFreelancerAnalytics);
 router.get('/:id', protect, getUserById);
 
 // File uploads

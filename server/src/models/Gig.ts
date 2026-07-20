@@ -18,6 +18,22 @@ export interface IGigLocation {
 
 // ─── Main Gig Document Interface ─────────────────────────────────────────────
 
+export interface IMilestone {
+  _id?: Types.ObjectId;
+  title: string;
+  description: string;
+  status: 'pending' | 'completed';
+  fileUrl?: string;
+  completedAt?: Date;
+  dueDate?: Date;
+}
+
+export interface IProgressLog {
+  _id?: Types.ObjectId;
+  message: string;
+  createdAt: Date;
+}
+
 export interface IGig extends Document {
   clientId: Types.ObjectId;
   title: string;
@@ -33,6 +49,10 @@ export interface IGig extends Document {
   // Simulated escrow fields
   escrowStatus: 'none' | 'funds_deposited' | 'released' | 'refunded';
   acceptedFreelancerId?: Types.ObjectId;
+  isFlagged?: boolean;
+  flagReason?: string;
+  milestones: IMilestone[];
+  progressLogs: IProgressLog[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -150,6 +170,29 @@ const GigSchema = new Schema<IGig>(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
+    isFlagged: {
+      type: Boolean,
+      default: false,
+    },
+    flagReason: {
+      type: String,
+    },
+    milestones: [
+      {
+        title: { type: String, required: true },
+        description: { type: String, required: true },
+        status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
+        fileUrl: { type: String },
+        completedAt: { type: Date },
+        dueDate: { type: Date },
+      },
+    ],
+    progressLogs: [
+      {
+        message: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,

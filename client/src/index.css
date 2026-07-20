@@ -1,225 +1,125 @@
-@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@400;700&family=Kalam:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #FDFBF7; /* Cream/paper color */
-  --color-ink: #22252A; /* Deep ink/dark gray */
-  --color-route-teal: #0A7A75;
-  --color-signal-coral: #D94B36;
-  --color-transit-gold: #C08D28;
-  --color-slate: #4E5E6C;
-  --color-line-gray: #A2B1A0;
-
-  --font-display: 'Patrick Hand', 'Kalam', cursive;
-  --font-sans: 'IBM Plex Sans', sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
-  --font-marker: 'Kalam', cursive;
-  --font-doodle: 'Caveat', cursive;
-
-  --animate-draw-line: drawLine 0.8s ease-out forwards;
+  --color-cream: var(--color-cream);
+  --color-ink: var(--color-ink);
+  --color-accent-amber: var(--color-accent-amber);
+  --color-accent-teal: var(--color-accent-teal);
+  --color-accent-coral: var(--color-accent-coral);
+  --color-accent-pink: var(--color-accent-pink);
   
-  @keyframes drawLine {
-    from { width: 0; }
-    to { width: 100%; }
-  }
+  --color-text-on-amber: var(--color-text-on-amber);
+  --color-text-on-teal: var(--color-text-on-teal);
+  --color-text-on-coral: var(--color-text-on-coral);
+  --color-text-on-pink: var(--color-text-on-pink);
+
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+}
+
+:root {
+  --color-cream: #FFF8E7;
+  --color-ink: #1A1A1A;
+  --color-accent-amber: #FFC940;
+  --color-accent-teal: #5DCAA5;
+  --color-accent-coral: #F0997B;
+  --color-accent-pink: #ED93B1;
+  --color-text-on-amber: #1A1A1A;
+  --color-text-on-teal: #1A1A1A;
+  --color-text-on-coral: #1A1A1A;
+  --color-text-on-pink: #1A1A1A;
+}
+
+.dark {
+  --color-cream: #17140F;
+  --color-ink: #F5F0E6;
+  --color-accent-amber: #E0AE2B;
+  --color-accent-teal: #4AB38F;
+  --color-accent-coral: #D98365;
+  --color-accent-pink: #D67C9A;
+  --color-text-on-amber: #17140F;
+  --color-text-on-teal: #17140F;
+  --color-text-on-coral: #17140F;
+  --color-text-on-pink: #17140F;
 }
 
 @layer base {
   body {
-    @apply text-ink font-sans antialiased min-h-screen flex flex-col selection:bg-route-teal/20 selection:text-ink;
-    background-color: var(--color-paper);
-    /* Light graph paper background */
-    background-image: 
-      linear-gradient(rgba(162, 177, 160, 0.1) 1px, transparent 1px), 
-      linear-gradient(90deg, rgba(162, 177, 160, 0.1) 1px, transparent 1px);
-    background-size: 24px 24px;
+    @apply text-ink font-sans antialiased min-h-screen flex flex-col selection:bg-accent-amber/20 selection:text-ink transition-colors duration-200;
+    background-color: var(--color-cream);
+    /* Simple retro tiny dot background grid */
+    background-image: radial-gradient(rgba(26, 26, 26, 0.15) 1.5px, transparent 1.5px);
+    background-size: 20px 20px;
   }
   
   #root {
     @apply flex flex-col flex-grow;
   }
+
+  .dark body {
+    background-image: radial-gradient(rgba(245, 240, 230, 0.1) 1.5px, transparent 1.5px);
+  }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-paper);
+  background: var(--color-cream);
   border-left: 2px solid var(--color-ink);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-line-gray);
+  background: var(--color-accent-amber);
   border: 2px solid var(--color-ink);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-slate);
+  background: var(--color-accent-coral);
 }
 
-/* Sketchy Borders and Elements */
-.sketch-border {
-  border: 2px solid var(--color-ink);
-  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-}
-
-.sketch-border-2 {
-  border: 2px solid var(--color-ink);
-  border-radius: 15px 225px 15px 255px/255px 15px 225px 15px;
-}
-
-.sketch-border-thick {
-  border: 3px solid var(--color-ink);
-  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-}
-
-.sketch-card {
-  background-color: var(--color-paper);
-  border: 2px solid var(--color-ink);
-  border-radius: 10px 14px 8px 12px/12px 9px 14px 10px;
-  box-shadow: 4px 4px 0px var(--color-ink);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.sketch-card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px var(--color-ink);
-}
-
-.sketch-button {
-  background-color: var(--color-paper);
-  border: 2px solid var(--color-ink);
-  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-  font-family: var(--font-display);
-  box-shadow: 3px 3px 0px var(--color-ink);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-  cursor: pointer;
-}
-
-.sketch-button:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0px var(--color-ink);
-}
-
-.sketch-button:active {
-  transform: translate(1.5px, 1.5px);
-  box-shadow: 1px 1px 0px var(--color-ink);
-}
-
-.sketch-button-thick {
-  background-color: var(--color-paper);
-  border: 3px solid var(--color-ink);
-  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-  font-family: var(--font-display);
-  box-shadow: 4px 4px 0px var(--color-ink);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-  cursor: pointer;
-}
-
-.sketch-button-thick:hover {
-  transform: translate(-1.5px, -1.5px);
-  box-shadow: 5.5px 5.5px 0px var(--color-ink);
-}
-
-.sketch-button-thick:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px var(--color-ink);
-}
-
-.sketch-input {
-  background-color: var(--color-paper);
-  border: 2px solid var(--color-ink);
-  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.sketch-input:focus {
-  border-color: var(--color-route-teal);
-  box-shadow: 0 0 0 1px var(--color-route-teal);
-}
-
-.sketch-badge {
-  border: 1.5px solid var(--color-ink);
-  border-radius: 120px 20px 100px 20px/20px 120px 20px 100px;
-}
-
-/* Highlighter effects */
-.marker-yellow {
-  background: linear-gradient(104deg, rgba(192, 141, 40, 0.22) 0%, rgba(192, 141, 40, 0.15) 100%);
-  border-radius: 200px 12px 240px 10px/10px 200px 12px 240px;
-}
-
-.marker-coral {
-  background: linear-gradient(104deg, rgba(217, 75, 54, 0.18) 0%, rgba(217, 75, 54, 0.12) 100%);
-  border-radius: 220px 10px 180px 14px/14px 220px 10px 180px;
-}
-
-.marker-teal {
-  background: linear-gradient(104deg, rgba(10, 122, 117, 0.18) 0%, rgba(10, 122, 117, 0.12) 100%);
-  border-radius: 190px 14px 210px 12px/12px 190px 14px 210px;
-}
-
-/* Custom wayfinding elements */
-.route-line {
-  height: 3px;
-  background: var(--color-line-gray);
-  border: 1px solid var(--color-ink);
-  position: relative;
-}
-
-.route-line::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: -1px;
-  height: 3px;
-  background: var(--color-route-teal);
-  width: 100%;
-  animation: drawLine 0.8s ease-out forwards;
-}
-
-/* Leaflet Map custom styles to match paper/ink theme */
+/* Leaflet Map custom styles to match Retro-pop theme */
 .leaflet-container {
-  background: var(--color-paper) !important;
+  background: var(--color-cream) !important;
   border: 2px solid var(--color-ink);
-  border-radius: 8px 12px 8px 12px/12px 8px 12px 8px;
+  border-radius: 12px;
 }
 
 .leaflet-tile {
-  filter: grayscale(1) sepia(0.3) contrast(0.95) brightness(1.02);
+  filter: grayscale(0.8) contrast(1.1) brightness(0.95);
 }
 
 .leaflet-bar {
   border: 2px solid var(--color-ink) !important;
   box-shadow: none !important;
-  border-radius: 4px;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .leaflet-bar a {
-  background-color: var(--color-paper) !important;
+  background-color: var(--color-cream) !important;
   color: var(--color-ink) !important;
   border-bottom: 2px solid var(--color-ink) !important;
 }
 
 .leaflet-bar a:hover {
-  background-color: var(--color-line-gray) !important;
+  background-color: var(--color-accent-amber) !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background: var(--color-paper) !important;
+  background: var(--color-cream) !important;
   color: var(--color-ink) !important;
   border: 2px solid var(--color-ink);
-  border-radius: 8px;
-  box-shadow: 3px 3px 0px var(--color-ink) !important;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0px var(--color-ink) !important;
 }
 
 .leaflet-popup-tip {
-  background: var(--color-paper) !important;
+  background: var(--color-cream) !important;
   border: 2px solid var(--color-ink);
 }
-

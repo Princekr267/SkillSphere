@@ -15,6 +15,7 @@ import proposalRoutes from './routes/proposalRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import disputeRoutes from './routes/disputeRoutes';
 import aiRoutes from './routes/aiRoutes';
+import bookingRoutes from './routes/bookingRoutes';
 import { initSocket } from './socket';
 
 
@@ -55,6 +56,7 @@ app.use('/api/proposals', proposalRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 
 // Root route for server verification

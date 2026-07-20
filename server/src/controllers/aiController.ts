@@ -169,3 +169,91 @@ export const getTrendingSkills = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, message: 'Server error fetching trending skills' });
   }
 };
+
+// @desc    Draft a cover letter using AI
+// @route   POST /api/ai/draft-proposal
+// @access  Private (Freelancers only)
+export const draftProposalCoverLetter = async (req: AuthRequest, res: Response) => {
+  try {
+    const { gigId } = req.body;
+    if (!gigId) {
+      return res.status(400).json({ success: false, message: 'Gig ID is required' });
+    }
+
+    const gig = await Gig.findById(gigId);
+    if (!gig) {
+      return res.status(404).json({ success: false, message: 'Gig not found' });
+    }
+
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    const apiKey = process.env.HUGGINGFACE_API_KEY;
+    const prompt = `Write a professional cover letter for a freelancer applying to this gig.
+Gig Title: ${gig.title}
+Gig Description: ${gig.description}
+Freelancer Name: ${user.name}
+Freelancer Skills: ${user.skills.map((s: any) => s.name).join(', ')}
+
+Instructions: Write a short, engaging, and professional cover letter in the first person. Do not include placeholders, brackets, dates, or headers. Keep it under 200 words.`;
+
+    if (apiKey && !apiKey.includes('placeholder')) {
+      try {
+        const hfUrl = 'https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct';
+        const response = await fetch(hfUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            inputs: prompt,
+            parameters: {
+              max_new_tokens: 250,
+              temperature: 0.7,
+            }
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          let draftedText = '';
+          if (Array.isArray(data) && data[0]?.generated_text) {
+            draftedText = data[0].generated_text;
+            if (draftedText.startsWith(prompt)) {
+              draftedText = draftedText.substring(prompt.length).trim();
+            }
+            draftedText = draftedText.replace(/^Cover Letter:\s*/i, '').trim();
+            return res.status(200).json({ success: true, coverLetter: draftedText, source: 'ai' });
+          }
+        } else {
+          const errText = await response.text();
+          console.warn('Huggingface draft proposal API failed. Fallback to simulation. Error:', errText);
+        }
+      } catch (err) {
+        console.warn('Huggingface draft proposal request failed. Fallback to simulation:', err);
+      }
+    }
+
+    // Simulation fallback
+    const skillsList = user.skills.map((s: any) => s.name).join(', ') || 'freelancing';
+    const fallbackText = `Dear Client,
+
+I am writing to express my strong interest in your gig "${gig.title}". 
+
+As a professional freelancer with expertise in ${skillsList}, I am confident that I can deliver high-quality results for this project. Based on your description: "${gig.description.substring(0, 120)}...", I understand the requirements and am ready to start immediately.
+
+I look forward to discussing how I can help you achieve your goals.
+
+Best regards,
+${user.name}`;
+
+    return res.status(200).json({ success: true, coverLetter: fallbackText, source: 'simulation' });
+
+  } catch (error: any) {
+    console.error('draftProposalCoverLetter error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Server error drafting cover letter' });
+  }
+};

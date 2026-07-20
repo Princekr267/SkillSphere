@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface INotification extends Document {
   userId: Types.ObjectId;
-  type: 'new_application' | 'application_accepted' | 'application_rejected' | 'new_message' | 'new_review' | 'escrow_released';
+  type: 'new_application' | 'application_accepted' | 'application_rejected' | 'new_message' | 'new_review' | 'escrow_released' | 'gig_flagged' | 'message_flagged';
   title: string;
   body: string;
   link: string;
@@ -20,7 +20,7 @@ const NotificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: ['new_application', 'application_accepted', 'application_rejected', 'new_message', 'new_review', 'escrow_released'],
+      enum: ['new_application', 'application_accepted', 'application_rejected', 'new_message', 'new_review', 'escrow_released', 'gig_flagged', 'message_flagged'],
       required: true,
     },
     title: {

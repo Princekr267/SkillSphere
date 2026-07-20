@@ -3,10 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteReview = exports.dismissReviewFlag = exports.getFlaggedReviews = exports.adminDeleteGig = exports.getAllGigsAdmin = exports.toggleUserStatus = exports.getAllUsers = exports.getStats = void 0;
+exports.getWarnings = exports.deleteReview = exports.dismissReviewFlag = exports.getFlaggedReviews = exports.adminDeleteGig = exports.getAllGigsAdmin = exports.toggleUserStatus = exports.getAllUsers = exports.getStats = void 0;
 const User_1 = __importDefault(require("../models/User"));
 const Gig_1 = __importDefault(require("../models/Gig"));
 const Review_1 = __importDefault(require("../models/Review"));
+const Warning_1 = __importDefault(require("../models/Warning"));
 // ─── GET /api/admin/stats ───────────────────────────────────────────────────
 const getStats = async (_req, res) => {
     try {
@@ -88,7 +89,7 @@ const getAllGigsAdmin = async (req, res) => {
         const [gigs, total] = await Promise.all([
             Gig_1.default.find()
                 .populate('clientId', 'name email companyName')
-                .select('title status budget budgetType category location createdAt escrowStatus')
+                .select('title status budget budgetType category location createdAt escrowStatus isFlagged flagReason')
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit),
@@ -155,3 +156,16 @@ const deleteReview = async (req, res) => {
     }
 };
 exports.deleteReview = deleteReview;
+// ─── GET /api/admin/warnings ────────────────────────────────────────────────
+const getWarnings = async (_req, res) => {
+    try {
+        const warnings = await Warning_1.default.find()
+            .populate('offenderId', 'name email role')
+            .sort({ createdAt: -1 });
+        return res.json({ success: true, warnings });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+exports.getWarnings = getWarnings;

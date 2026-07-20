@@ -3,11 +3,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.releaseEscrow = exports.updateApplicantStatus = exports.applyToGig = exports.deleteGig = exports.updateGig = exports.getMyApplications = exports.getMyGigs = exports.getGigById = exports.getNearbyGigs = exports.getGigs = exports.createGig = exports.GIG_CATEGORIES = void 0;
+exports.uploadMessageAttachment = exports.addProgressLog = exports.updateMilestone = exports.addMilestones = exports.releaseEscrow = exports.updateApplicantStatus = exports.applyToGig = exports.deleteGig = exports.updateGig = exports.getMyApplications = exports.getMyGigs = exports.getGigById = exports.getNearbyGigs = exports.getGigs = exports.createGig = exports.GIG_CATEGORIES = void 0;
 const Gig_1 = __importDefault(require("../models/Gig"));
 const User_1 = __importDefault(require("../models/User"));
 const Notification_1 = __importDefault(require("../models/Notification"));
 const socket_1 = require("../socket");
+const moderationService_1 = require("../services/moderationService");
+const Warning_1 = __importDefault(require("../models/Warning"));
+const cloudinary_1 = require("cloudinary");
+const fs_1 = __importDefault(require("fs"));
+const isCloudinaryConfigured = () => {
+    const cloud = process.env.CLOUDINARY_CLOUD_NAME;
+    const key = process.env.CLOUDINARY_API_KEY;
+    const secret = process.env.CLOUDINARY_API_SECRET;
+    return !!(cloud && key && secret &&
+        cloud !== 'placeholder_cloud_name' &&
+        key !== 'placeholder_api_key' &&
+        secret !== 'placeholder_api_secret');
+};
+if (isCloudinaryConfigured()) {
+    cloudinary_1.v2.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+}
 // ─── GIG CATEGORIES ──────────────────────────────────────────────────────────
 exports.GIG_CATEGORIES = [
     'Technology & Development',
@@ -37,6 +57,11 @@ const createGig = async (req, res) => {
                 message: 'Please provide title, description, category, and budget',
             });
         }
+        // Moderation scan
+        const scanText = `${title} ${description}`;
+        const moderation = await (0, moderationService_1.moderateText)(scanText);
+        const isFlagged = moderation.isToxic;
+        const flagReason = moderation.reason || '';
         const gig = await Gig_1.default.create({
             clientId: user._id,
             title: title.trim(),
@@ -49,7 +74,26 @@ const createGig = async (req, res) => {
             radiusKm: Number(radiusKm) || 25,
             status: 'open',
             escrowStatus: 'none',
+            isFlagged,
+            flagReason,
         });
+        if (isFlagged) {
+            await Warning_1.default.create({
+                type: 'gig',
+                targetId: gig._id,
+                offenderId: user._id,
+                content: `Title: ${gig.title} | Desc: ${gig.description}`,
+                reason: flagReason,
+            });
+            const notif = await Notification_1.default.create({
+                userId: user._id,
+                type: 'gig_flagged',
+                title: 'Gig Flagged for Moderation',
+                body: `Your gig "${gig.title.substring(0, 30)}" has been flagged by platform safety: ${flagReason}`,
+                link: `/client-dashboard`,
+            });
+            (0, socket_1.sendNotification)(user._id.toString(), notif);
+        }
         res.status(201).json({ success: true, gig });
     }
     catch (error) {
@@ -186,6 +230,34 @@ const getGigById = async (req, res) => {
             .populate('applicants.freelancerId', 'name skills hourlyRate rating location avatar');
         if (!gig) {
             return res.status(404).json({ success: false, message: 'Gig not found' });
+        }
+        // Automated 24-hour deadline reminder checks
+        if (gig.status === 'in_progress' && gig.acceptedFreelancerId && gig.milestones.length > 0) {
+            const now = new Date();
+            for (const m of gig.milestones) {
+                if (m.status === 'pending' && m.dueDate) {
+                    const timeDiff = new Date(m.dueDate).getTime() - now.getTime();
+                    const hoursDiff = timeDiff / (1000 * 3600);
+                    if (hoursDiff > 0 && hoursDiff <= 24) {
+                        // Check if reminder was already dispatched in notifications database to prevent duplicates
+                        const existingNotif = await Notification_1.default.findOne({
+                            userId: gig.acceptedFreelancerId,
+                            title: 'Milestone Deadline Nearing',
+                            body: new RegExp(m.title, 'i')
+                        });
+                        if (!existingNotif) {
+                            const notif = await Notification_1.default.create({
+                                userId: gig.acceptedFreelancerId,
+                                type: 'gig_flagged',
+                                title: 'Milestone Deadline Nearing',
+                                body: `Reminder: The milestone "${m.title}" is due soon (in ${Math.round(hoursDiff)} hours)!`,
+                                link: `/gig/${gig._id}`,
+                            });
+                            (0, socket_1.sendNotification)(gig.acceptedFreelancerId.toString(), notif);
+                        }
+                    }
+                }
+            }
         }
         res.status(200).json({ success: true, gig });
     }
@@ -473,3 +545,184 @@ const releaseEscrow = async (req, res) => {
     }
 };
 exports.releaseEscrow = releaseEscrow;
+/**
+ * @desc    Add milestones to a gig
+ * @route   POST /api/gigs/:id/milestones
+ * @access  Private — Participants only
+ */
+const addMilestones = async (req, res) => {
+    try {
+        const { milestones } = req.body;
+        if (!Array.isArray(milestones) || milestones.length === 0) {
+            return res.status(400).json({ success: false, message: 'Please provide milestones list array' });
+        }
+        const gig = await Gig_1.default.findById(req.params.id);
+        if (!gig)
+            return res.status(404).json({ success: false, message: 'Gig not found' });
+        const userIdStr = req.user?._id.toString();
+        const isParticipant = gig.clientId.toString() === userIdStr ||
+            gig.acceptedFreelancerId?.toString() === userIdStr;
+        if (!isParticipant) {
+            return res.status(403).json({ success: false, message: 'Not authorised to set milestones' });
+        }
+        gig.milestones = milestones.map(m => ({
+            title: m.title,
+            description: m.description,
+            status: 'pending',
+            dueDate: m.dueDate ? new Date(m.dueDate) : undefined,
+        }));
+        gig.progressLogs.push({
+            message: `${req.user?.name} defined new milestones list tracker.`,
+            createdAt: new Date(),
+        });
+        await gig.save();
+        // Notify other user
+        const otherUserId = gig.clientId.toString() === userIdStr ? gig.acceptedFreelancerId : gig.clientId;
+        if (otherUserId) {
+            const notif = await Notification_1.default.create({
+                userId: otherUserId,
+                type: 'new_application',
+                title: 'Project Milestones Setup',
+                body: `${req.user?.name} has added progress milestones tracking to "${gig.title.substring(0, 30)}"`,
+                link: `/gig/${gig._id}`,
+            });
+            (0, socket_1.sendNotification)(otherUserId.toString(), notif);
+        }
+        return res.json({ success: true, gig });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+exports.addMilestones = addMilestones;
+/**
+ * @desc    Mark a milestone completed and attach optional deliverable file
+ * @route   PUT /api/gigs/:id/milestones/:milestoneId
+ * @access  Private — Accepted freelancer only
+ */
+const updateMilestone = async (req, res) => {
+    try {
+        const gig = await Gig_1.default.findById(req.params.id);
+        if (!gig)
+            return res.status(404).json({ success: false, message: 'Gig not found' });
+        if (gig.acceptedFreelancerId?.toString() !== req.user?._id.toString()) {
+            return res.status(403).json({ success: false, message: 'Only the assigned freelancer can complete milestones' });
+        }
+        // Find milestone in array subdocuments
+        const milestone = gig.milestones.id(req.params.milestoneId);
+        if (!milestone)
+            return res.status(404).json({ success: false, message: 'Milestone not found' });
+        // File upload deliverable logic
+        let deliverableUrl = milestone.fileUrl;
+        if (req.file) {
+            if (isCloudinaryConfigured()) {
+                try {
+                    const result = await cloudinary_1.v2.uploader.upload(req.file.path, {
+                        folder: 'skillsphere_deliverables',
+                    });
+                    deliverableUrl = result.secure_url;
+                    fs_1.default.unlinkSync(req.file.path);
+                }
+                catch (cloudError) {
+                    console.error('Cloudinary deliverable upload error, local fallback:', cloudError);
+                    const serverUrl = `${req.protocol}://${req.get('host')}`;
+                    deliverableUrl = `${serverUrl}/uploads/${req.file.filename}`;
+                }
+            }
+            else {
+                const serverUrl = `${req.protocol}://${req.get('host')}`;
+                deliverableUrl = `${serverUrl}/uploads/${req.file.filename}`;
+            }
+        }
+        milestone.status = 'completed';
+        milestone.completedAt = new Date();
+        if (deliverableUrl) {
+            milestone.fileUrl = deliverableUrl;
+        }
+        gig.progressLogs.push({
+            message: `Freelancer completed milestone: "${milestone.title}".`,
+            createdAt: new Date(),
+        });
+        await gig.save();
+        // Notify client
+        const notif = await Notification_1.default.create({
+            userId: gig.clientId,
+            type: 'gig_flagged',
+            title: 'Milestone Completed!',
+            body: `${req.user?.name} completed "${milestone.title}". Deliverables are attached.`,
+            link: `/gig/${gig._id}`,
+        });
+        (0, socket_1.sendNotification)(gig.clientId.toString(), notif);
+        // If all milestones completed, send a release reminder
+        const allCompleted = gig.milestones.every(m => m.status === 'completed');
+        if (allCompleted) {
+            const releaseNotif = await Notification_1.default.create({
+                userId: gig.clientId,
+                type: 'gig_flagged',
+                title: 'Release Escrow Funds',
+                body: `All milestones completed for "${gig.title}". Review deliverables and release payment escrow.`,
+                link: `/gig/${gig._id}`,
+            });
+            (0, socket_1.sendNotification)(gig.clientId.toString(), releaseNotif);
+        }
+        return res.json({ success: true, gig });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+exports.updateMilestone = updateMilestone;
+/**
+ * @desc    Add custom message progress log entry
+ * @route   POST /api/gigs/:id/progress-logs
+ * @access  Private — Participants only
+ */
+const addProgressLog = async (req, res) => {
+    try {
+        const { message } = req.body;
+        if (!message)
+            return res.status(400).json({ success: false, message: 'Message is required' });
+        const gig = await Gig_1.default.findById(req.params.id);
+        if (!gig)
+            return res.status(404).json({ success: false, message: 'Gig not found' });
+        const userIdStr = req.user?._id.toString();
+        const isParticipant = gig.clientId.toString() === userIdStr ||
+            gig.acceptedFreelancerId?.toString() === userIdStr;
+        if (!isParticipant) {
+            return res.status(403).json({ success: false, message: 'Not authorised to log progress' });
+        }
+        gig.progressLogs.push({
+            message: `${req.user?.name}: ${message}`,
+            createdAt: new Date(),
+        });
+        await gig.save();
+        return res.json({ success: true, gig });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+exports.addProgressLog = addProgressLog;
+/**
+ * @desc    Upload an attachment for a chat message
+ * @route   POST /api/gigs/messages/upload
+ * @access  Private
+ */
+const uploadMessageAttachment = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Please upload a file' });
+        }
+        const fileUrl = `/uploads/${req.file.filename}`;
+        res.status(200).json({
+            success: true,
+            fileUrl,
+            fileName: req.file.originalname,
+            fileSize: req.file.size,
+        });
+    }
+    catch (error) {
+        res.status(500).json({ success: false, message: 'Attachment upload failed', error: error.message });
+    }
+};
+exports.uploadMessageAttachment = uploadMessageAttachment;

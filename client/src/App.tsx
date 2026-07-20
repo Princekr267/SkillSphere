@@ -14,6 +14,8 @@ import { GigDetail } from './pages/GigDetail';
 import { GigChat } from './pages/GigChat';
 import { LeaveReview } from './pages/LeaveReview';
 import { FreelancerProfile } from './pages/FreelancerProfile';
+import { VerifyEmail } from './pages/VerifyEmail';
+import { ResetPassword } from './pages/ResetPassword';
 import { NotFound } from './pages/NotFound';
 import './App.css';
 
@@ -56,6 +58,8 @@ const AppContent: React.FC = () => {
           {/* Public Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected Dashboards */}
           <Route

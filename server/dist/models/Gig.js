@@ -141,6 +141,29 @@ const GigSchema = new mongoose_1.Schema({
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
     },
+    isFlagged: {
+        type: Boolean,
+        default: false,
+    },
+    flagReason: {
+        type: String,
+    },
+    milestones: [
+        {
+            title: { type: String, required: true },
+            description: { type: String, required: true },
+            status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
+            fileUrl: { type: String },
+            completedAt: { type: Date },
+            dueDate: { type: Date },
+        },
+    ],
+    progressLogs: [
+        {
+            message: { type: String, required: true },
+            createdAt: { type: Date, default: Date.now },
+        },
+    ],
 }, {
     timestamps: true,
 });

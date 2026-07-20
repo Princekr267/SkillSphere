@@ -37,6 +37,15 @@ export interface IUser extends Document {
   rating: number;
   reviewCount: number;
   completedGigsCount?: number;
+  availability?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
+  profileViews?: number;
+  isVerified?: boolean;
+  verificationToken?: string;
+  verificationTokenExpires?: Date;
+  resetPasswordToken?: string;
+  resetPasswordTokenExpires?: Date;
+  twoFactorEnabled?: boolean;
+  twoFactorSecret?: string;
   // Client specific
   companyName?: string;
   bio?: string;
@@ -136,6 +145,17 @@ const UserSchema: Schema = new Schema(
       type: Number,
       default: 0,
     },
+    availability: [
+      {
+        dayOfWeek: { type: Number, required: true },
+        startTime: { type: String, required: true },
+        endTime: { type: String, required: true },
+      },
+    ],
+    profileViews: {
+      type: Number,
+      default: 0,
+    },
     // Client fields
     companyName: {
       type: String,
@@ -145,6 +165,20 @@ const UserSchema: Schema = new Schema(
       type: String,
       maxlength: 500,
     },
+    // Verification & Security
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: String,
+    verificationTokenExpires: Date,
+    resetPasswordToken: String,
+    resetPasswordTokenExpires: Date,
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    twoFactorSecret: String,
   },
   {
     timestamps: true,

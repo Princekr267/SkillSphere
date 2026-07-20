@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import User from '../models/User';
 import Gig from '../models/Gig';
 import Review from '../models/Review';
+import Warning from '../models/Warning';
 
 // ─── GET /api/admin/stats ───────────────────────────────────────────────────
 export const getStats = async (_req: Request, res: Response): Promise<any> => {
@@ -87,7 +88,7 @@ export const getAllGigsAdmin = async (req: Request, res: Response): Promise<any>
     const [gigs, total] = await Promise.all([
       Gig.find()
         .populate('clientId', 'name email companyName')
-        .select('title status budget budgetType category location createdAt escrowStatus')
+        .select('title status budget budgetType category location createdAt escrowStatus isFlagged flagReason')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
@@ -147,6 +148,19 @@ export const deleteReview = async (req: Request, res: Response): Promise<any> =>
     const review = await Review.findByIdAndDelete(req.params.id);
     if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
     return res.json({ success: true, message: 'Review deleted by admin' });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── GET /api/admin/warnings ────────────────────────────────────────────────
+export const getWarnings = async (_req: Request, res: Response): Promise<any> => {
+  try {
+    const warnings = await Warning.find()
+      .populate('offenderId', 'name email role')
+      .sort({ createdAt: -1 });
+
+    return res.json({ success: true, warnings });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });
   }

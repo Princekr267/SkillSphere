@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Badge } from '../../components/ui/Badge';
 
 import {
   Plus, Tag, DollarSign, MapPin, Users, ChevronDown,
@@ -20,10 +24,10 @@ const GIG_CATEGORIES = [
 ];
 
 const STATUS_COLORS: Record<string, string> = {
-  open:        'bg-route-teal/10 text-route-teal border-route-teal/30',
-  in_progress: 'bg-transit-gold/10 text-transit-gold border-transit-gold/30',
-  completed:   'bg-slate/10 text-slate border-slate/30',
-  cancelled:   'bg-signal-coral/10 text-signal-coral border-signal-coral/30',
+  open:        'bg-accent-teal text-ink border-ink',
+  in_progress: 'bg-accent-amber text-ink border-ink',
+  completed:   'bg-cream text-ink border-ink',
+  cancelled:   'bg-accent-coral text-ink border-ink',
 };
 
 const ESCROW_LABELS: Record<string, string> = {
@@ -220,7 +224,7 @@ export const ClientGigManager: React.FC = () => {
             email: user?.email,
           },
           theme: {
-            color: '#0F7A73',
+            color: '#FFC940',
           },
         };
 
@@ -260,20 +264,6 @@ export const ClientGigManager: React.FC = () => {
       setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to post gig.' });
     } finally {
       setPosting(false);
-    }
-  };
-
-  const handleApplicantAction = async (gigId: string, applicantId: string, status: 'accepted' | 'rejected') => {
-    setActionLoading(`${gigId}-${applicantId}-${status}`);
-    setMessage(null);
-    try {
-      await api.put(`/gigs/${gigId}/applicants/${applicantId}`, { status });
-      setMessage({ type: 'success', text: `Applicant ${status}. ${status === 'accepted' ? 'Simulated escrow funds deposited.' : ''}` });
-      fetchGigs();
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Action failed.' });
-    } finally {
-      setActionLoading(null);
     }
   };
 
@@ -323,48 +313,50 @@ export const ClientGigManager: React.FC = () => {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between border-b-2 border-ink pb-4">
+      <div className="flex items-center justify-between border-b-2 border-ink pb-4 text-left">
         <div>
-          <span className="text-[10px] font-mono text-slate uppercase tracking-widest block">Active Station</span>
-          <h2 className="text-lg font-black font-display text-ink uppercase tracking-tight">Gig Manager</h2>
+          <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block">Active Station</span>
+          <h2 className="text-lg font-display font-black text-ink uppercase tracking-tight">Gig Manager</h2>
         </div>
-        <button
+        <Button
           onClick={() => setShowPostForm(f => !f)}
-          className="flex items-center space-x-1.5 px-4 py-2.5 bg-signal-coral text-white text-xs font-bold font-display uppercase tracking-widest sketch-button"
+          variant="coral"
+          size="md"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 mr-1" />
           <span>Post Gig</span>
-        </button>
+        </Button>
       </div>
 
       {/* Alert banner */}
       {message && (
-        <div className={`p-3 border-2 border-ink sketch-border text-xs flex items-center space-x-2 ${
-          message.type === 'success' ? 'border-l-4 border-l-route-teal bg-paper text-ink' : 'border-l-4 border-l-signal-coral bg-paper text-ink'
+        <div className={`p-3 border-2 border-ink text-xs flex items-center space-x-2 rounded-lg ${
+          message.type === 'success' ? 'border-l-4 border-l-accent-teal bg-cream text-ink' : 'border-l-4 border-l-accent-coral bg-cream text-ink'
         }`}>
-          {message.type === 'success' ? <CheckCircle2 className="h-4 w-4 text-route-teal flex-shrink-0" /> : <XCircle className="h-4 w-4 text-signal-coral flex-shrink-0" />}
-          <span className="flex-grow">{message.text}</span>
-          <button onClick={() => setMessage(null)}><X className="h-3.5 w-3.5 text-slate hover:text-ink" /></button>
+          {message.type === 'success' ? <CheckCircle2 className="h-4 w-4 text-accent-teal flex-shrink-0" /> : <XCircle className="h-4 w-4 text-accent-coral flex-shrink-0" />}
+          <span className="flex-grow text-left">{message.text}</span>
+          <button onClick={() => setMessage(null)} className="cursor-pointer">
+            <X className="h-4 w-4 text-ink hover:text-accent-coral" />
+          </button>
         </div>
       )}
 
       {/* Post New Gig Form */}
       {showPostForm && (
-        <div className="bg-paper border-2 border-ink sketch-card p-6 rotate-[-0.5deg]">
+        <Card className="animate-fade-in">
           <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-6 pl-1">Post a New Gig</h3>
           <form onSubmit={handlePostGig} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Gig Title *</label>
-                <input required value={title} onChange={e => setTitle(e.target.value)}
+                <Input required value={title} onChange={e => setTitle(e.target.value)}
                   placeholder="e.g. Need a React developer for dashboard rebuild"
-                  className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal font-sans"
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Category *</label>
                 <select required value={category} onChange={e => setCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal font-sans"
+                  className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
                 >
                   {GIG_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -373,27 +365,26 @@ export const ClientGigManager: React.FC = () => {
                 <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Search Radius</label>
                 <div className="flex items-center space-x-3">
                   <input type="range" min="5" max="200" step="5" value={radiusKm}
-                    onChange={e => setRadiusKm(Number(e.target.value))} className="flex-grow accent-route-teal" />
-                  <span className="text-xs font-mono text-route-teal w-12 font-bold">{radiusKm}km</span>
+                    onChange={e => setRadiusKm(Number(e.target.value))} className="flex-grow accent-accent-teal cursor-pointer" />
+                  <span className="text-xs font-mono text-accent-teal w-12 font-bold">{radiusKm}km</span>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Budget (₹) *</label>
-                <input required type="number" min="0" value={budget} onChange={e => setBudget(e.target.value)}
-                  placeholder="e.g. 5000"
-                  className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal font-mono"
+                <Input required type="number" min="0" value={budget} onChange={e => setBudget(e.target.value)}
+                  placeholder="e.g. 5000" className="font-mono"
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Budget Type</label>
                 <div className="flex space-x-3">
                   {(['fixed', 'hourly'] as const).map(type => (
-                    <button key={type} type="button" onClick={() => setBudgetType(type)}
-                      className={`flex-1 py-2 border-2 border-ink text-xs font-bold font-display uppercase tracking-widest sketch-button ${
-                        budgetType === type ? 'bg-route-teal text-white shadow-none' : 'bg-paper text-ink'
-                      }`}>
+                    <Button key={type} type="button" onClick={() => setBudgetType(type)}
+                      variant={budgetType === type ? 'primary' : 'outline'}
+                      className="flex-grow py-2 shadow-none"
+                    >
                       {type}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -403,7 +394,7 @@ export const ClientGigManager: React.FC = () => {
               <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Description *</label>
               <textarea required rows={4} value={description} onChange={e => setDescription(e.target.value)}
                 placeholder="Describe the work, deliverables, timeline, and any specific requirements..."
-                className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm resize-none focus:outline-none focus:border-route-teal font-sans"
+                className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm resize-none focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
               />
             </div>
 
@@ -411,121 +402,119 @@ export const ClientGigManager: React.FC = () => {
               <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Skills Required (press Enter or comma to add)</label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {skills.map((s, i) => (
-                  <span key={i} className="inline-flex items-center space-x-1.5 px-2.5 py-1 border border-ink bg-paper text-xs font-mono text-ink sketch-badge">
+                  <Badge key={i} variant="teal" className="flex items-center space-x-1 shadow-none">
                     <span>{s}</span>
-                    <button type="button" onClick={() => setSkills(prev => prev.filter((_, idx) => idx !== i))}>
-                      <X className="h-3 w-3 text-slate hover:text-signal-coral" />
+                    <button type="button" onClick={() => setSkills(prev => prev.filter((_, idx) => idx !== i))} className="cursor-pointer">
+                      <X className="h-3 w-3 text-ink hover:text-accent-coral" />
                     </button>
-                  </span>
+                  </Badge>
                 ))}
               </div>
-              <input type="text" value={skillInput} onChange={e => setSkillInput(e.target.value)}
+              <Input type="text" value={skillInput} onChange={e => setSkillInput(e.target.value)}
                 onKeyDown={handleAddSkill}
                 placeholder="React.js, Electrician, Figma, etc."
-                className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal font-sans"
               />
             </div>
 
             <div className="flex space-x-3 pt-4 border-t-2 border-ink">
-              <button type="submit" disabled={posting}
-                className="px-6 py-2.5 bg-signal-coral text-white text-xs font-bold font-display uppercase tracking-widest sketch-button disabled:opacity-50"
-              >
+              <Button type="submit" disabled={posting} variant="coral">
                 {posting ? 'Posting…' : 'Publish Gig'}
-              </button>
-              <button type="button" onClick={() => setShowPostForm(false)}
-                className="px-6 py-2.5 border-2 border-ink bg-paper text-ink text-xs font-bold font-display uppercase tracking-widest sketch-button"
-              >
+              </Button>
+              <Button type="button" onClick={() => setShowPostForm(false)} variant="outline">
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
       )}
 
       {/* Gig list */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-7 w-7 text-route-teal animate-spin" />
+          <Loader2 className="h-7 w-7 text-accent-teal animate-spin" />
         </div>
       ) : gigs.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-ink sketch-border bg-paper/50">
-          <Tag className="h-8 w-8 mx-auto text-slate mb-2" />
+        <div className="text-center py-12 border-2 border-dashed border-ink rounded-xl bg-cream/50 shadow-retro-sm">
+          <Tag className="h-8 w-8 mx-auto text-ink/40 mb-2" />
           <h3 className="font-bold font-display text-ink uppercase tracking-tight text-sm mb-1">No Gigs Yet</h3>
-          <p className="text-xs text-slate font-sans max-w-xs mx-auto">Post your first gig to start receiving applications from nearby freelancers.</p>
+          <p className="text-xs text-ink/60 font-sans max-w-xs mx-auto">Post your first gig to start receiving applications from nearby freelancers.</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {gigs.map((gig, index) => (
+          {gigs.map((gig) => (
             <div 
               key={gig._id} 
-              className="bg-paper border-2 border-ink sketch-card p-0 overflow-hidden"
-              style={{ transform: `rotate(${(index % 2 === 0 ? 0.3 : -0.3)}deg)` }}
+              className="bg-cream border-2 border-ink rounded-xl overflow-hidden shadow-retro"
             >
               {/* Gig header row */}
               <div
-                className="p-5 flex items-center justify-between cursor-pointer hover:bg-line-gray/20 transition-colors"
+                className="p-5 flex items-center justify-between cursor-pointer hover:bg-accent-amber/10 transition-colors"
                 onClick={() => handleToggleExpand(gig._id)}
               >
                 <div className="flex items-center space-x-4 min-w-0">
                   <div>
                     {expandedGig === gig._id
-                      ? <ChevronDown className="h-4 w-4 text-slate" />
-                      : <ChevronRight className="h-4 w-4 text-slate" />
+                      ? <ChevronDown className="h-4 w-4 text-ink" />
+                      : <ChevronRight className="h-4 w-4 text-ink" />
                     }
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 text-left">
                     <h3 className="font-bold font-display text-ink text-sm uppercase tracking-tight truncate">{gig.title}</h3>
                     <div className="flex items-center space-x-3 mt-1">
-                      <span className="text-[10px] font-mono text-slate flex items-center space-x-1">
-                        <DollarSign className="h-3 w-3 text-route-teal" />
+                      <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
+                        <DollarSign className="h-3 w-3 text-accent-teal" />
                         <span>₹{gig.budget.toLocaleString()}/{gig.budgetType === 'hourly' ? 'hr' : 'project'}</span>
                       </span>
-                      <span className="text-[10px] font-mono text-slate flex items-center space-x-1">
-                        <MapPin className="h-3 w-3 text-route-teal" />
+                      <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
+                        <MapPin className="h-3 w-3 text-accent-teal" />
                         <span>{gig.location.city}</span>
                       </span>
-                      <span className="text-[10px] font-mono text-slate flex items-center space-x-1">
-                        <Users className="h-3 w-3 text-route-teal" />
-                        <span>{gigProposals[gig._id]?.length || gig.applicants.length} applied</span>
+                      <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
+                        <Users className="h-3 w-3 text-accent-teal" />
+                        <span>{gigProposals[gig._id]?.length || gig.applicants?.length || 0} applied</span>
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-3 flex-shrink-0">
-                  <span className={`px-2.5 py-1 border-2 border-ink text-[10px] font-bold font-display uppercase tracking-wider sketch-badge ${STATUS_COLORS[gig.status] || STATUS_COLORS.open}`}>
+                  <Badge variant="outline" className={`${STATUS_COLORS[gig.status] || STATUS_COLORS.open} shadow-none`}>
                     {gig.status.replace('_', ' ')}
-                  </span>
+                  </Badge>
                   {gig.escrowStatus !== 'none' && (
-                    <span className="text-[10px] font-mono text-transit-gold font-bold hidden sm:block">
+                    <Badge variant="amber" className="hidden sm:inline-flex shadow-none">
                       {ESCROW_LABELS[gig.escrowStatus]}
-                    </span>
+                    </Badge>
                   )}
                   {gig.status === 'in_progress' && gig.escrowStatus === 'funds_deposited' && (
                     <div className="flex space-x-2">
-                      <button
+                      <Button
                         onClick={e => { e.stopPropagation(); handleReleaseEscrow(gig._id); }}
                         disabled={!!actionLoading}
-                        className="flex items-center space-x-1 px-2.5 py-1 border-2 border-ink bg-route-teal text-white text-[10px] font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                        variant="secondary"
+                        size="sm"
+                        className="shadow-none py-1.5"
                       >
-                        <Banknote className="h-3 w-3" />
+                        <Banknote className="h-3.5 w-3.5 mr-1" />
                         <span>Release Funds</span>
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={e => { e.stopPropagation(); handleRefundEscrow(gig._id); }}
                         disabled={!!actionLoading}
-                        className="flex items-center space-x-1 px-2.5 py-1 border-2 border-ink bg-signal-coral text-white text-[10px] font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                        variant="coral"
+                        size="sm"
+                        className="shadow-none py-1.5"
                       >
-                        <XCircle className="h-3 w-3" />
+                        <XCircle className="h-3.5 w-3.5 mr-1" />
                         <span>Refund</span>
-                      </button>
+                      </Button>
                     </div>
                   )}
                   {gig.status === 'open' && (
                     <button
                       onClick={e => { e.stopPropagation(); handleDeleteGig(gig._id); }}
                       disabled={actionLoading === `delete-${gig._id}`}
-                      className="text-slate hover:text-signal-coral transition-colors p-1"
+                      className="text-ink/60 hover:text-accent-coral transition-colors p-1 cursor-pointer"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -535,34 +524,30 @@ export const ClientGigManager: React.FC = () => {
 
               {/* Expanded: Proposals */}
               {expandedGig === gig._id && (
-                <div className="border-t-2 border-ink px-5 py-4 bg-paper/50">
-                  <h4 className="text-[10px] font-bold font-display uppercase tracking-widest text-ink mb-4">
+                <div className="border-t-2 border-ink px-5 py-4 bg-cream/40">
+                  <h4 className="text-[10px] font-bold font-display uppercase tracking-widest text-ink mb-4 text-left">
                     Proposals Received ({gigProposals[gig._id]?.length || 0})
                   </h4>
                   {!gigProposals[gig._id] ? (
-                    <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-route-teal" /></div>
+                    <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-accent-teal" /></div>
                   ) : gigProposals[gig._id].length === 0 ? (
-                    <p className="text-xs text-slate font-sans italic">No proposals yet. Your gig is visible to freelancers within {gig.radiusKm}km.</p>
+                    <p className="text-xs text-ink/60 font-sans italic text-left">No proposals yet. Your gig is visible to freelancers within {gig.radiusKm}km.</p>
                   ) : (
                     <div className="space-y-4">
-                      {gigProposals[gig._id].map((prop, propIdx) => (
-                        <div 
-                          key={prop._id} 
-                          className="bg-paper border-2 border-ink sketch-card p-4"
-                          style={{ transform: `rotate(${(propIdx % 2 === 0 ? -0.4 : 0.4)}deg)` }}
-                        >
+                      {gigProposals[gig._id].map((prop) => (
+                        <Card key={prop._id} className="p-4 shadow-retro-sm">
                           <div className="flex items-start justify-between gap-4 mb-3">
-                            <div>
+                            <div className="text-left">
                               <h5 className="text-sm font-display uppercase tracking-tight">
                                 <Link
                                   to={`/profile/${prop.freelancerId?._id}`}
-                                  className="font-bold text-ink hover:text-route-teal hover:underline transition-colors"
+                                  className="font-bold text-ink hover:text-accent-teal hover:underline transition-colors"
                                 >
                                   {prop.freelancerId?.name || 'Freelancer'}
                                 </Link>
                               </h5>
 
-                              <div className="flex items-center space-x-3 mt-1 text-[10px] font-mono text-slate">
+                              <div className="flex items-center space-x-3 mt-1 text-[10px] font-mono text-ink/60">
                                 <span>Bid: ₹{prop.bidAmount}</span>
                                 <span>Time: {prop.completionTime} days</span>
                                 {prop.freelancerId?.rating && (
@@ -576,22 +561,18 @@ export const ClientGigManager: React.FC = () => {
                                 )}
                               </div>
                             </div>
-                            <span className={`px-2 py-1 border border-ink text-[10px] font-bold font-mono uppercase sketch-badge ${
-                              prop.status === 'accepted' ? 'bg-route-teal text-white shadow-none' :
-                              prop.status === 'rejected' ? 'bg-signal-coral text-white shadow-none' :
-                              'bg-line-gray text-ink'
-                            }`}>
-                              {prop.status.toUpperCase()}
-                            </span>
+                            <Badge variant="outline" className={prop.status === 'accepted' ? 'bg-accent-teal' : prop.status === 'rejected' ? 'bg-accent-coral' : 'bg-accent-amber'}>
+                              {prop.status}
+                            </Badge>
                           </div>
 
-                          <p className="text-xs text-ink font-sans leading-relaxed bg-paper border-2 border-ink sketch-border p-3 mb-3">
+                          <p className="text-xs text-ink font-sans leading-relaxed bg-cream border-2 border-ink rounded-lg p-3 mb-3 text-left">
                             {prop.coverLetter}
                           </p>
 
                           {/* Negotiation context */}
                           {prop.status === 'negotiating' && (
-                            <p className="text-[10px] font-mono text-route-teal font-bold mb-3">
+                            <p className="text-[10px] font-mono text-accent-teal font-bold mb-3 text-left">
                               Last proposed by {prop.lastProposedBy === 'client' ? 'you' : 'freelancer'}: ₹{prop.bidAmount}
                             </p>
                           )}
@@ -601,105 +582,109 @@ export const ClientGigManager: React.FC = () => {
                             <div className="flex flex-col space-y-2 mt-3 pt-3 border-t border-ink/20">
                               <div className="flex space-x-2">
                                 {(prop.status === 'pending' || (prop.status === 'negotiating' && prop.lastProposedBy === 'freelancer')) && (
-                                  <button
+                                  <Button
                                     onClick={() => handleProposalAction(prop._id, gig._id, 'accepted')}
                                     disabled={!!actionLoading}
-                                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-route-teal border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                                    variant="secondary"
+                                    size="sm"
                                   >
-                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                                     <span>Accept Bid</span>
-                                  </button>
+                                  </Button>
                                 )}
-                                <button
+                                <Button
                                   onClick={() => handleProposalAction(prop._id, gig._id, 'rejected')}
                                   disabled={!!actionLoading}
-                                  className="flex items-center space-x-1.5 px-3 py-1.5 border-2 border-ink bg-paper text-ink text-xs font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                                  variant="outline"
+                                  size="sm"
                                 >
-                                  <XCircle className="h-3.5 w-3.5" />
+                                  <XCircle className="h-3.5 w-3.5 mr-1" />
                                   <span>Reject</span>
-                                </button>
+                                </Button>
                               </div>
 
                               {/* Counter Offer Input */}
                               <div className="flex items-center space-x-2 pt-2">
-                                <input
+                                <Input
                                   type="number"
                                   placeholder="Counter offer (₹)..."
                                   value={counterOffers[prop._id] || ''}
                                   onChange={e => setCounterOffers(prev => ({ ...prev, [prop._id]: e.target.value }))}
-                                  className="px-2.5 py-1 text-xs bg-paper border-2 border-ink sketch-input text-ink font-mono focus:outline-none w-40"
+                                  className="w-40 px-2.5 py-1 text-xs"
                                 />
-                                <button
+                                <Button
                                   onClick={() => {
                                     const val = counterOffers[prop._id];
                                     if (val) handleProposalAction(prop._id, gig._id, 'negotiate', Number(val));
                                   }}
                                   disabled={!!actionLoading || !counterOffers[prop._id]}
-                                  className="px-3 py-1 bg-transit-gold text-ink border-2 border-ink text-xs font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                                  variant="primary"
+                                  size="sm"
+                                  className="py-1"
                                 >
                                   Counter Offer
-                                </button>
+                                </Button>
                               </div>
                             </div>
                           )}
 
                           {/* Escrow payment trigger */}
                           {prop.status === 'accepted' && gig.status === 'open' && gig.escrowStatus === 'none' && (
-                            <div className="mt-3 pt-3 border-t border-ink/20">
-                              <p className="text-[10px] font-mono text-slate mb-2">Proposal accepted. Fund the escrow to launch project:</p>
-                              <button
+                            <div className="mt-3 pt-3 border-t border-ink/20 text-left">
+                              <p className="text-[10px] font-mono text-ink/60 mb-2">Proposal accepted. Fund the escrow to launch project:</p>
+                              <Button
                                 onClick={() => handleFundEscrow(prop)}
                                 disabled={!!actionLoading}
-                                className="flex items-center space-x-2 px-4 py-2 bg-signal-coral border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-wider sketch-button disabled:opacity-50"
+                                variant="coral"
                               >
-                                <Banknote className="h-4 w-4" />
+                                <Banknote className="h-4 w-4 mr-1.5" />
                                 <span>Pay & Fund Escrow (₹{prop.bidAmount})</span>
-                              </button>
+                              </Button>
                             </div>
                           )}
-                        </div>
+                        </Card>
                       ))}
                     </div>
                   )}
 
                   {/* AI recommendations section */}
                   {gig.status === 'open' && (
-                    <div className="mt-6 pt-6 border-t-2 border-dashed border-ink/30">
-                      <h4 className="text-[10px] font-bold font-display uppercase tracking-widest text-route-teal mb-3 flex items-center space-x-1.5">
+                    <div className="mt-6 pt-6 border-t-2 border-dashed border-ink/30 text-left">
+                      <h4 className="text-[10px] font-bold font-display uppercase tracking-widest text-accent-teal mb-3 flex items-center space-x-1.5">
                         <Users className="h-3.5 w-3.5" />
                         <span>AI-Recommended Candidates (Smart Match)</span>
                       </h4>
                       {recLoading[gig._id] ? (
-                        <div className="flex items-center space-x-2 py-2 text-xs text-slate font-sans">
-                          <Loader2 className="h-4 w-4 animate-spin text-route-teal animate-spin" />
+                        <div className="flex items-center space-x-2 py-2 text-xs text-ink/60 font-sans">
+                          <Loader2 className="h-4 w-4 animate-spin text-accent-teal" />
                           <span>Finding matches...</span>
                         </div>
                       ) : !recommendations[gig._id] || recommendations[gig._id].length === 0 ? (
-                        <p className="text-xs text-slate font-sans italic">No top recommendation matches found within your parameters.</p>
+                        <p className="text-xs text-ink/60 font-sans italic">No top recommendation matches found within your parameters.</p>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {recommendations[gig._id].map((rec, recIdx) => (
-                            <div key={rec.freelancer._id} className="bg-paper border-2 border-ink sketch-card p-3 flex flex-col justify-between" style={{ transform: `rotate(${(recIdx % 2 === 0 ? 0.3 : -0.3)}deg)` }}>
+                          {recommendations[gig._id].map((rec) => (
+                            <Card key={rec.freelancer._id} className="p-3 flex flex-col justify-between shadow-retro-sm">
                               <div>
                                 <div className="flex items-center justify-between">
-                                  <Link to={`/profile/${rec.freelancer._id}`} className="font-bold text-xs uppercase font-display text-ink hover:text-route-teal hover:underline">
+                                  <Link to={`/profile/${rec.freelancer._id}`} className="font-bold text-xs uppercase font-display text-ink hover:text-accent-teal hover:underline">
                                     {rec.freelancer.name}
                                   </Link>
-                                  <span className="text-[10px] font-mono font-bold text-route-teal bg-route-teal/10 border border-ink px-1.5 py-0.5 sketch-badge">
+                                  <Badge variant="teal" className="text-[8px] font-mono shadow-none">
                                     Score: {Math.round(rec.finalScore * 100)}%
-                                  </span>
+                                  </Badge>
                                 </div>
-                                <p className="text-[9px] font-mono text-slate mt-1">
+                                <p className="text-[9px] font-mono text-ink/60 mt-1">
                                   Rating: {rec.freelancer.rating?.toFixed(1) || '—'} ★ ({rec.freelancer.reviewCount || 0} reviews)
                                 </p>
-                                <p className="text-[9px] font-mono text-slate">
+                                <p className="text-[9px] font-mono text-ink/60">
                                   Distance: {rec.scores.distanceKm} km away
                                 </p>
                                 <div className="flex flex-wrap gap-1 mt-2">
                                   {rec.freelancer.skills.map((s: any) => (
-                                    <span key={s.name} className="text-[8px] font-mono bg-paper border border-ink/40 px-1 py-0.2 sketch-badge">
+                                    <Badge key={s.name} variant="outline" className="text-[7px] px-1 py-0.2 shadow-none border border-ink/40">
                                       {s.name}
-                                    </span>
+                                    </Badge>
                                   ))}
                                 </div>
                               </div>
@@ -709,12 +694,12 @@ export const ClientGigManager: React.FC = () => {
                                 </span>
                                 <Link
                                   to={`/profile/${rec.freelancer._id}`}
-                                  className="text-[9px] font-bold font-display uppercase tracking-wider text-route-teal hover:underline"
+                                  className="text-[9px] font-bold font-display uppercase tracking-wider text-accent-teal hover:underline"
                                 >
                                   View Profile →
                                 </Link>
                               </div>
-                            </div>
+                            </Card>
                           ))}
                         </div>
                       )}

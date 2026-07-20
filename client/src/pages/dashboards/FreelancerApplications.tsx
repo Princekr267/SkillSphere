@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, DollarSign, Tag, Loader2, ExternalLink } from 'lucide-react';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
 
 interface MyApplication {
   _id: string;
@@ -24,16 +27,16 @@ interface MyApplication {
 }
 
 const APP_STATUS_STYLES: Record<string, string> = {
-  pending:  'bg-transit-gold/10 text-transit-gold border-transit-gold/30',
-  accepted: 'bg-route-teal/10 text-route-teal border-route-teal/30',
-  rejected: 'bg-signal-coral/10 text-signal-coral border-signal-coral/30',
+  pending:  'bg-accent-amber text-ink',
+  accepted: 'bg-accent-teal text-ink',
+  rejected: 'bg-accent-coral text-ink',
 };
 
 const GIG_STATUS_STYLES: Record<string, string> = {
-  open:        'text-route-teal',
-  in_progress: 'text-transit-gold',
-  completed:   'text-slate',
-  cancelled:   'text-signal-coral',
+  open:        'text-accent-teal',
+  in_progress: 'text-accent-amber',
+  completed:   'text-ink/60',
+  cancelled:   'text-accent-coral',
 };
 
 export const FreelancerApplications: React.FC = () => {
@@ -59,66 +62,63 @@ export const FreelancerApplications: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-7 w-7 text-route-teal animate-spin" />
+        <Loader2 className="h-7 w-7 text-accent-teal animate-spin" />
       </div>
     );
   }
 
   if (error) {
-    return <p className="text-xs text-signal-coral font-sans py-6">{error}</p>;
+    return <p className="text-xs text-accent-coral font-sans py-6">{error}</p>;
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="border-b-2 border-ink pb-4">
-        <span className="text-[10px] font-mono text-slate uppercase tracking-widest block">Track Record</span>
-        <h2 className="text-lg font-black font-display text-ink uppercase tracking-tight">My Applications</h2>
+      <div className="border-b-2 border-ink pb-4 text-left">
+        <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block">Track Record</span>
+        <h2 className="text-lg font-display font-black text-ink uppercase tracking-tight">My Applications</h2>
       </div>
 
       {applications.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-ink sketch-border bg-paper/50">
-          <Tag className="h-8 w-8 mx-auto text-slate mb-2" />
+        <div className="text-center py-12 border-2 border-dashed border-ink rounded-xl bg-cream/50 shadow-retro-sm">
+          <Tag className="h-8 w-8 mx-auto text-ink/40 mb-2" />
           <h3 className="font-bold font-display text-ink uppercase tracking-tight text-sm mb-1">No Applications Yet</h3>
-          <p className="text-xs text-slate font-sans max-w-xs mx-auto mb-4">
+          <p className="text-xs text-ink/60 font-sans max-w-xs mx-auto mb-4">
             Browse nearby gigs and submit applications to start building your track record.
           </p>
-          <button
+          <Button
             onClick={() => navigate('/gigs')}
-            className="px-4 py-2 bg-route-teal border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-widest sketch-button"
+            variant="primary"
+            size="md"
           >
             Browse Gigs
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-4">
-          {applications.map((app, index) => (
-            <div
-              key={app._id}
-              className="bg-paper border-2 border-ink sketch-card p-5"
-              style={{ transform: `rotate(${(index % 2 === 0 ? 0.3 : -0.3)}deg)` }}
-            >
+          {applications.map((app) => (
+            <Card key={app._id}>
               <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
+                <div className="text-left">
                   <h3 className="font-bold font-display text-ink uppercase tracking-tight text-sm leading-tight mb-1">
                     {app.title}
                   </h3>
-                  <p className="text-[11px] text-slate font-sans font-bold">
+                  <p className="text-[11px] text-ink/60 font-sans font-bold">
                     {app.clientId?.companyName || app.clientId?.name || 'Client'}
                   </p>
                 </div>
-                <span className={`flex-shrink-0 px-2.5 py-1 border border-ink text-[10px] font-bold font-mono uppercase sketch-badge ${APP_STATUS_STYLES[app.myApplication?.status] || APP_STATUS_STYLES.pending}`}>
-                  {app.myApplication?.status?.toUpperCase()}
-                </span>
+                <Badge variant="outline" className={`${APP_STATUS_STYLES[app.myApplication?.status] || APP_STATUS_STYLES.pending} shadow-none flex-shrink-0`}>
+                  {app.myApplication?.status}
+                </Badge>
               </div>
 
               {/* Gig meta */}
-              <div className="flex flex-wrap items-center gap-4 font-mono text-[10px] text-slate mb-4">
+              <div className="flex flex-wrap items-center gap-4 font-mono text-[10px] text-ink/60 mb-4">
                 <span className="flex items-center space-x-1">
                   <Tag className="h-3 w-3" />
                   <span>{app.category}</span>
                 </span>
                 <span className="flex items-center space-x-1">
-                  <DollarSign className="h-3 w-3 text-route-teal" />
+                  <DollarSign className="h-3 w-3 text-accent-teal" />
                   <span className="font-bold text-ink">₹{app.budget.toLocaleString()}{app.budgetType === 'hourly' ? '/hr' : ''}</span>
                 </span>
                 <span className="flex items-center space-x-1">
@@ -129,7 +129,7 @@ export const FreelancerApplications: React.FC = () => {
                   GIG: {app.status.replace('_', ' ')}
                 </span>
                 {app.escrowStatus !== 'none' && (
-                  <span className="text-transit-gold uppercase font-bold">
+                  <span className="text-accent-amber uppercase font-bold">
                     ESCROW: {app.escrowStatus.replace('_', ' ')}
                   </span>
                 )}
@@ -137,8 +137,8 @@ export const FreelancerApplications: React.FC = () => {
 
               {/* My cover message */}
               {app.myApplication?.message && (
-                <div className="bg-paper border-2 border-ink p-3 sketch-border mb-4">
-                  <p className="text-[10px] font-mono text-slate uppercase tracking-wider mb-1">Your Cover Message</p>
+                <div className="bg-cream border-2 border-ink p-3 rounded-lg mb-4 text-left">
+                  <p className="text-[10px] font-mono text-ink/50 uppercase tracking-wider mb-1">Your Cover Message</p>
                   <p className="text-xs text-ink font-sans leading-relaxed line-clamp-3">
                     {app.myApplication.message}
                   </p>
@@ -147,18 +147,18 @@ export const FreelancerApplications: React.FC = () => {
 
               {/* Applied at + view link */}
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono text-slate">
+                <span className="text-[10px] font-mono text-ink/60">
                   APPLIED: {new Date(app.myApplication?.appliedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </span>
                 <button
                   onClick={() => navigate(`/gigs/${app._id}`)}
-                  className="flex items-center space-x-1 text-xs text-route-teal hover:underline font-bold font-display uppercase tracking-wider"
+                  className="flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold font-display uppercase tracking-wider cursor-pointer"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-3.5 w-3.5" />
                   <span>View Gig</span>
                 </button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

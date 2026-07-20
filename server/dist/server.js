@@ -20,6 +20,7 @@ const proposalRoutes_1 = __importDefault(require("./routes/proposalRoutes"));
 const paymentRoutes_1 = __importDefault(require("./routes/paymentRoutes"));
 const disputeRoutes_1 = __importDefault(require("./routes/disputeRoutes"));
 const aiRoutes_1 = __importDefault(require("./routes/aiRoutes"));
+const bookingRoutes_1 = __importDefault(require("./routes/bookingRoutes"));
 const socket_1 = require("./socket");
 // Load environment variables
 dotenv_1.default.config();
@@ -52,6 +53,7 @@ app.use('/api/proposals', proposalRoutes_1.default);
 app.use('/api/payments', paymentRoutes_1.default);
 app.use('/api/disputes', disputeRoutes_1.default);
 app.use('/api/ai', aiRoutes_1.default);
+app.use('/api/bookings', bookingRoutes_1.default);
 // Root route for server verification
 app.get('/', (_req, res) => {
     res.status(200).json({

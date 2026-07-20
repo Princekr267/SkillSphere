@@ -126,6 +126,17 @@ const UserSchema = new mongoose_1.Schema({
         type: Number,
         default: 0,
     },
+    availability: [
+        {
+            dayOfWeek: { type: Number, required: true },
+            startTime: { type: String, required: true },
+            endTime: { type: String, required: true },
+        },
+    ],
+    profileViews: {
+        type: Number,
+        default: 0,
+    },
     // Client fields
     companyName: {
         type: String,
@@ -135,6 +146,20 @@ const UserSchema = new mongoose_1.Schema({
         type: String,
         maxlength: 500,
     },
+    // Verification & Security
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    verificationToken: String,
+    verificationTokenExpires: Date,
+    resetPasswordToken: String,
+    resetPasswordTokenExpires: Date,
+    twoFactorEnabled: {
+        type: Boolean,
+        default: false,
+    },
+    twoFactorSecret: String,
 }, {
     timestamps: true,
 });

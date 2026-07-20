@@ -4,6 +4,12 @@ export interface IMessage extends Document {
   gigId: Types.ObjectId;
   senderId: Types.ObjectId;
   body: string;
+  read: boolean;
+  isFlagged: boolean;
+  flagReason?: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
   sentAt: Date;
 }
 
@@ -12,6 +18,12 @@ const MessageSchema = new Schema<IMessage>(
     gigId:    { type: Schema.Types.ObjectId, ref: 'Gig',  required: true, index: true },
     senderId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     body:     { type: String, required: true, trim: true, maxlength: 4000 },
+    read:     { type: Boolean, default: false },
+    isFlagged: { type: Boolean, default: false },
+    flagReason: { type: String },
+    fileUrl:  { type: String },
+    fileName: { type: String },
+    fileSize: { type: Number },
     sentAt:   { type: Date, default: Date.now },
   },
   { timestamps: false }

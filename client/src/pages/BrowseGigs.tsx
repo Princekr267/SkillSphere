@@ -6,6 +6,10 @@ import { useAuth } from '../context/AuthContext';
 import { GigCard, type GigCardData } from '../components/GigCard';
 import api from '../utils/api';
 import { Search, SlidersHorizontal, MapPin, Loader2, X } from 'lucide-react';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Badge } from '../components/ui/Badge';
 
 // Fix Leaflet default icon path issue with Vite bundler
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -18,14 +22,14 @@ L.Icon.Default.mergeOptions({
 // Custom teal marker for gig pins
 const gigIcon = L.divIcon({
   className: '',
-  html: `<div style="width:14px;height:14px;background:#0A7A75;border:2.5px solid #22252A;border-radius:60% 40% 50% 50% / 40% 50% 60% 50%;"></div>`,
+  html: `<div style="width:14px;height:14px;background:#0D9488;border:2.5px solid #22252A;border-radius:60% 40% 50% 50% / 40% 50% 60% 50%;"></div>`,
   iconSize: [14, 14],
   iconAnchor: [7, 7],
 });
 
 const userIcon = L.divIcon({
   className: '',
-  html: `<div style="width:16px;height:16px;background:#D94B36;border:3px solid #22252A;border-radius:40% 60% 50% 55% / 55% 45% 65% 45%;"></div>`,
+  html: `<div style="width:16px;height:16px;background:#F43F5E;border:3px solid #22252A;border-radius:40% 60% 50% 55% / 55% 45% 65% 45%;"></div>`,
   iconSize: [16, 16],
   iconAnchor: [8, 8],
 });
@@ -83,7 +87,6 @@ export const BrowseGigs: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-
   const fetchGigs = useCallback(async (searchVal: string, cat: string, rad: number, skills: string, minP: string, maxP: string, minR: string) => {
     setLoading(true);
     setError('');
@@ -130,106 +133,107 @@ export const BrowseGigs: React.FC = () => {
   };
 
   return (
-    <div className="flex-grow bg-paper flex flex-col animate-fade-in font-sans" style={{ minHeight: 0 }}>
+    <div className="flex-grow bg-cream flex flex-col animate-fade-in font-sans transition-colors duration-200" style={{ minHeight: 0 }}>
       
       {/* Top toolbar */}
-      <div className="border-b-2 border-ink bg-paper px-4 py-3 flex items-center space-x-3">
-        <div className="flex items-center space-x-2 flex-grow max-w-md">
-          <Search className="h-4 w-4 text-slate flex-shrink-0" />
-          <input
+      <div className="border-b-2 border-ink bg-cream px-4 py-3 flex items-center space-x-3 text-left">
+        <div className="flex items-center space-x-2 flex-grow max-w-md relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
+          <Input
             type="text"
             value={search}
             onChange={e => handleSearchChange(e.target.value)}
-            placeholder="Search gigs by title or keyword..."
-            className="flex-grow text-sm text-ink bg-transparent border-b-2 border-ink focus:outline-none focus:border-route-teal pb-0.5 font-sans placeholder:text-slate/50"
+            placeholder="Search gigs by title..."
+            className="pl-10 pr-10"
           />
           {search && (
-            <button onClick={() => { setSearch(''); fetchGigs('', category, radius, skillFilter, minPrice, maxPrice, minRating); }}>
-              <X className="h-3.5 w-3.5 text-slate hover:text-signal-coral" />
+            <button onClick={() => { setSearch(''); fetchGigs('', category, radius, skillFilter, minPrice, maxPrice, minRating); }} className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer">
+              <X className="h-4 w-4 text-ink hover:text-accent-coral" />
             </button>
           )}
         </div>
 
-        <button
+        <Button
           onClick={() => setShowFilters(f => !f)}
-          className="flex items-center space-x-1.5 px-3 py-1.5 border-2 border-ink text-xs font-bold font-display uppercase tracking-wider bg-paper sketch-button"
+          variant="outline"
+          size="md"
         >
-          <SlidersHorizontal className="h-3.5 w-3.5" />
+          <SlidersHorizontal className="h-4 w-4 mr-1" />
           <span>Filters</span>
-        </button>
+        </Button>
 
-        <span className="text-[10px] font-mono text-slate ml-auto">
+        <span className="text-[10px] font-mono text-ink/60 ml-auto font-bold uppercase">
           {loading ? '...' : `${gigs.length} GIGS FOUND`}
         </span>
       </div>
 
       {/* Filter panel (collapsible) */}
       {showFilters && (
-        <div className="bg-paper border-b-2 border-ink px-6 py-6 flex flex-wrap items-end gap-4 relative z-10">
-          <div className="space-y-1">
+        <div className="bg-cream border-b-2 border-ink px-6 py-6 flex flex-wrap items-end gap-4 relative z-10 text-left animate-fade-in">
+          <div className="space-y-1 text-left">
             <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Category</label>
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-sans"
+              className="px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
             >
               <option value="">All Categories</option>
               {GIG_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
 
-          <div className="space-y-1 min-w-[150px]">
+          <div className="space-y-1 min-w-[150px] text-left">
             <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">
-              Radius: <span className="font-mono text-route-teal font-bold">{radius}km</span>
+              Radius: <span className="font-mono text-accent-teal font-bold">{radius}km</span>
             </label>
             <input
               type="range"
               min="5" max="200" step="5"
               value={radius}
               onChange={e => setRadius(Number(e.target.value))}
-              className="w-full accent-route-teal"
+              className="w-full accent-accent-teal cursor-pointer"
             />
           </div>
 
-          <div className="space-y-1 flex-grow min-w-[150px]">
+          <div className="space-y-1 flex-grow min-w-[150px] text-left">
             <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Skills (comma-separated)</label>
-            <input
+            <Input
               type="text"
               value={skillFilter}
               onChange={e => setSkillFilter(e.target.value)}
               placeholder="e.g. React, Plumber, Figma"
-              className="w-full px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-sans"
+              className="py-1.5"
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 text-left">
             <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Min Price (₹)</label>
-            <input
+            <Input
               type="number"
               value={minPrice}
               onChange={e => setMinPrice(e.target.value)}
               placeholder="Min budget"
-              className="w-24 px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-mono"
+              className="w-24 py-1.5 font-mono"
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 text-left">
             <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Max Price (₹)</label>
-            <input
+            <Input
               type="number"
               value={maxPrice}
               onChange={e => setMaxPrice(e.target.value)}
               placeholder="Max budget"
-              className="w-24 px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-mono"
+              className="w-24 py-1.5 font-mono"
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 text-left">
             <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Min Rating</label>
             <select
               value={minRating}
               onChange={e => setMinRating(e.target.value)}
-              className="px-3 py-2 text-xs bg-paper border-2 border-ink sketch-input text-ink focus:outline-none focus:border-route-teal font-sans"
+              className="px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
             >
               <option value="">Any Rating</option>
               <option value="3">3.0+ ★</option>
@@ -238,12 +242,13 @@ export const BrowseGigs: React.FC = () => {
             </select>
           </div>
 
-          <button
+          <Button
             onClick={handleFilterApply}
-            className="px-4 py-2 bg-route-teal border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-widest sketch-button"
+            variant="coral"
+            className="py-2"
           >
             Apply Filters
-          </button>
+          </Button>
         </div>
       )}
 
@@ -283,11 +288,11 @@ export const BrowseGigs: React.FC = () => {
                   eventHandlers={{ click: () => setHighlightedId(gig._id) }}
                 >
                   <Popup>
-                    <div className="text-xs">
+                    <div className="text-xs text-left">
                       <strong className="block font-display uppercase">{gig.title}</strong>
                       <span className="font-mono text-[11px] font-bold">₹{gig.budget.toLocaleString()}</span>
                       <br />
-                      <span className="text-slate font-bold">{gig.location.city}</span>
+                      <span className="text-ink/60 font-bold">{gig.location.city}</span>
                     </div>
                   </Popup>
                 </Marker>
@@ -296,32 +301,32 @@ export const BrowseGigs: React.FC = () => {
           </MapContainer>
 
           {/* Map legend */}
-          <div className="absolute bottom-3 left-3 bg-paper border-2 border-ink sketch-card px-3 py-2 z-[1000] text-[9px] font-mono text-ink space-y-1 rotate-[0.5deg]">
+          <div className="absolute bottom-3 left-3 bg-cream border-2 border-ink rounded-lg px-3.5 py-2 z-[1000] text-[9px] font-mono text-ink space-y-1.5 shadow-retro">
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 bg-signal-coral border border-ink inline-block flex-shrink-0 sketch-border"></span>
+              <span className="w-2.5 h-2.5 bg-accent-coral border border-ink inline-block flex-shrink-0 rounded-full"></span>
               <span className="font-bold">YOUR LOCATION</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 bg-route-teal border border-ink inline-block flex-shrink-0 sketch-border"></span>
+              <span className="w-2.5 h-2.5 bg-accent-teal border border-ink inline-block flex-shrink-0 rounded-full"></span>
               <span className="font-bold">OPEN GIG</span>
             </div>
           </div>
         </div>
 
         {/* List Panel */}
-        <div className="flex-grow overflow-y-auto p-4 lg:p-6">
+        <div className="flex-grow overflow-y-auto p-4 lg:p-6 bg-cream">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-48 space-y-3">
-              <Loader2 className="h-7 w-7 text-route-teal animate-spin" />
-              <p className="text-xs font-mono text-slate uppercase tracking-wider">Scanning nearby nodes…</p>
+              <Loader2 className="h-7 w-7 text-accent-teal animate-spin" />
+              <p className="text-xs font-mono text-ink/60 uppercase tracking-wider">Scanning nearby nodes…</p>
             </div>
           ) : error ? (
-            <div className="text-center py-12 text-signal-coral text-sm font-sans">{error}</div>
+            <div className="text-center py-12 text-accent-coral text-sm font-sans font-bold">{error}</div>
           ) : gigs.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-ink bg-paper/50 sketch-border">
-              <MapPin className="h-8 w-8 mx-auto text-slate mb-3" />
+            <div className="text-center py-12 border-2 border-dashed border-ink rounded-xl bg-cream/50 shadow-retro-sm">
+              <MapPin className="h-8 w-8 mx-auto text-ink/40 mb-3" />
               <h3 className="font-bold font-display text-ink uppercase tracking-tight mb-1">No Gigs Found</h3>
-              <p className="text-xs text-slate font-sans max-w-xs mx-auto leading-relaxed">
+              <p className="text-xs text-ink/60 font-sans max-w-xs mx-auto leading-relaxed">
                 No open gigs within {radius}km of {user?.location.city}. Try expanding the radius or removing filters.
               </p>
             </div>

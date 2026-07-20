@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Briefcase, 
@@ -15,15 +16,23 @@ import {
   DollarSign, 
   Award,
   Link as LinkIcon,
-  Loader2
+  Loader2,
+  Calendar,
+  Clock,
+  Building,
+  Mail
 } from 'lucide-react';
 import axios from 'axios';
 import api from '../../utils/api';
 import { FreelancerApplications } from './FreelancerApplications';
 import { AvatarUpload } from '../../components/AvatarUpload';
+import { TwoFactorSetup } from '../../components/TwoFactorSetup';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Badge } from '../../components/ui/Badge';
 
-
-type Tab = 'profile' | 'applications';
+type Tab = 'profile' | 'applications' | 'analytics' | 'bookings';
 
 interface CitySuggestion {
   display_name: string;
@@ -31,6 +40,7 @@ interface CitySuggestion {
   lon: string;
 }
 
+// Freelancer dashboard screen styled in Retro-pop bold designs
 export const FreelancerDashboard: React.FC = () => {
   const { user, updateProfile, uploadResumeFile, updateUser } = useAuth();
   
@@ -39,7 +49,6 @@ export const FreelancerDashboard: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('profile');
 
-  
   // Core details states
   const [name, setName] = useState(user?.name || '');
   const [city, setCity] = useState(user?.location.city || '');
@@ -74,24 +83,51 @@ export const FreelancerDashboard: React.FC = () => {
   const [removingResume, setRemovingResume] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (!user) return null;
+  // Calendar bookings states
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
 
-  const handleRemoveResume = async () => {
-    if (!window.confirm('Remove your resume document?')) return;
-    setRemovingResume(true);
+  // Analytics states
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  const loadBookings = async () => {
+    setBookingsLoading(true);
     try {
-      const res = await api.delete('/users/resume');
+      const res = await api.get('/bookings');
       if (res.data.success) {
-        updateUser(res.data.user);
-        setMessage({ type: 'success', text: 'Resume removed successfully.' });
-        setTimeout(() => setMessage(null), 3000);
+        setBookings(res.data.bookings);
       }
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to remove resume.' });
+    } catch (err) {
+      console.error(err);
     } finally {
-      setRemovingResume(false);
+      setBookingsLoading(false);
     }
   };
+
+  const loadAnalytics = async () => {
+    setAnalyticsLoading(true);
+    try {
+      const res = await api.get('/users/profile/analytics');
+      if (res.data.success) {
+        setAnalytics(res.data.analytics);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'bookings') {
+      loadBookings();
+    } else if (activeTab === 'analytics') {
+      loadAnalytics();
+    }
+  }, [activeTab]);
+
+  if (!user) return null;
 
   // Search cities using OSM
   const handleCitySearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,18 +197,35 @@ export const FreelancerDashboard: React.FC = () => {
     );
   };
 
-  // Manage lists updates in DB
-  const saveLists = async (newSkills = skills, newPortfolio = portfolio, newCerts = certifications, newRate = hourlyRate) => {
+  const handleBookingResponse = async (bookingId: string, status: 'confirmed' | 'cancelled') => {
     try {
-      await updateProfile({
-        skills: newSkills,
-        portfolio: newPortfolio,
-        certifications: newCerts,
-        hourlyRate: newRate
-      });
-      setMessage({ type: 'success', text: 'Profile changes saved!' });
+      const res = await api.put(`/bookings/${bookingId}/status`, { status });
+      if (res.data.success) {
+        setMessage({ type: 'success', text: `Appointment ${status} successfully.` });
+        loadBookings();
+      }
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Failed to save changes.' });
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Action failed.' });
+    }
+  };
+
+  // Helper to save lists to backend
+  const saveLists = async (
+    updatedSkills = skills,
+    updatedPortfolio = portfolio,
+    updatedCerts = certifications
+  ) => {
+    try {
+      const res = await api.put('/users/profile/skills-details', {
+        skills: updatedSkills,
+        portfolio: updatedPortfolio,
+        certifications: updatedCerts,
+      });
+      if (res.data.success) {
+        updateUser(res.data.user);
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update credentials details.' });
     }
   };
 
@@ -180,9 +233,10 @@ export const FreelancerDashboard: React.FC = () => {
   const handleAddSkill = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSkillName.trim()) return;
-    
-    if (skills.some(s => s.name.toLowerCase() === newSkillName.trim().toLowerCase())) {
-      setMessage({ type: 'error', text: 'Skill already exists in your profile.' });
+
+    const exists = skills.some((s) => s.name.toLowerCase() === newSkillName.trim().toLowerCase());
+    if (exists) {
+      setMessage({ type: 'error', text: 'Skill already registered.' });
       return;
     }
 
@@ -255,6 +309,23 @@ export const FreelancerDashboard: React.FC = () => {
     }
   };
 
+  const handleRemoveResume = async () => {
+    if (!window.confirm('Are you sure you want to remove your resume document?')) return;
+    setMessage(null);
+    setRemovingResume(true);
+    try {
+      const res = await api.delete('/users/profile/resume');
+      if (res.data.success) {
+        updateUser(res.data.user);
+        setMessage({ type: 'success', text: 'Resume file removed successfully.' });
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to remove resume.' });
+    } finally {
+      setRemovingResume(false);
+    }
+  };
+
   // Save General profile settings
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,48 +349,296 @@ export const FreelancerDashboard: React.FC = () => {
     }
   };
 
+  const [resendingEmail, setResendingEmail] = useState(false);
+
+  const handleResendVerification = async () => {
+    setResendingEmail(true);
+    setMessage(null);
+    try {
+      const res = await api.post('/auth/resend-verification');
+      setMessage({ type: 'success', text: res.data.message || 'Fresh verification link generated!' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to resend verification email.' });
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-paper font-sans">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
       
+      {/* Unverified Email Alert Banner */}
+      {user && !user.isVerified && (
+        <div className="mb-6 p-4 bg-cream border-2 border-ink border-l-4 border-l-accent-amber rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left">
+          <div className="flex items-start space-x-3 text-xs text-ink font-sans">
+            <AlertCircle className="h-5 w-5 text-accent-amber flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold font-display uppercase tracking-wider text-ink">Account Email Unverified</p>
+              <p className="text-ink/70 text-[11px] mt-0.5">Please verify your email address to unlock submitting proposals for client gigs.</p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            onClick={handleResendVerification}
+            disabled={resendingEmail}
+            variant="primary"
+            size="sm"
+            className="flex-shrink-0"
+          >
+            {resendingEmail ? 'Sending Link...' : 'Resend Verification Email'}
+          </Button>
+        </div>
+      )}
+
       {/* Dashboard Title + Tab Switcher */}
       <div className="mb-8 border-b-2 border-ink pb-0 flex items-end justify-between">
-        <div className="pb-6">
-          <span className="text-[10px] font-mono text-slate uppercase tracking-widest block mb-1">Provider Node Workspace</span>
-          <h1 className="text-2xl font-black font-display text-ink uppercase tracking-tight">Freelancer Dashboard</h1>
+        <div className="pb-6 text-left">
+          <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Provider Node Workspace</span>
+          <h1 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Freelancer Dashboard</h1>
         </div>
         <div className="flex items-end space-x-2">
-          {(['profile', 'applications'] as Tab[]).map(tab => (
+          {(['profile', 'applications', 'bookings', 'analytics'] as Tab[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-xs font-bold font-display uppercase tracking-widest border-2 border-b-0 border-ink transition-all ${
+              className={`px-4 py-2.5 text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all cursor-pointer ${
                 activeTab === tab
-                  ? 'bg-route-teal text-white translate-y-0.5'
-                  : 'bg-paper text-ink hover:bg-line-gray/20'
-              } sketch-border`}
-              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
+                  ? 'bg-accent-teal text-ink shadow-none translate-y-[2px]'
+                  : 'bg-cream text-ink hover:bg-accent-teal/10'
+              }`}
+              style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}
             >
-              {tab === 'profile' ? 'My Profile' : 'My Applications'}
+              {tab === 'profile' ? 'My Profile' : tab === 'applications' ? 'Applications' : tab === 'bookings' ? 'Calendar' : 'Analytics'}
             </button>
           ))}
         </div>
       </div>
 
       {/* Tab content */}
-      {activeTab === 'applications' ? (
+      {activeTab === 'bookings' ? (
+        <Card>
+          <h2 className="text-sm font-bold font-display text-ink uppercase tracking-wider mb-6 flex items-center space-x-2">
+            <Calendar className="h-5 w-5 text-accent-teal" />
+            <span>Calendar Appointments & Bookings</span>
+          </h2>
+
+          {message && (
+            <div className={`mb-6 p-4 border-2 border-ink flex items-center space-x-3 text-xs rounded-lg ${
+              message.type === 'success' 
+                ? 'bg-cream border-l-4 border-l-accent-teal text-ink' 
+                : 'bg-cream border-l-4 border-l-accent-coral text-ink'
+            }`}>
+              {message.type === 'success' ? <Check className="h-4.5 w-4.5 text-accent-teal flex-shrink-0" /> : <AlertCircle className="h-4.5 w-4.5 text-accent-coral flex-shrink-0" />}
+              <span className="text-left">{message.text}</span>
+            </div>
+          )}
+
+          {bookingsLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-6 w-6 text-accent-teal animate-spin" />
+            </div>
+          ) : bookings.length === 0 ? (
+            <p className="text-xs text-ink/60 font-sans italic text-left">No scheduled appointments logged in your calendar node.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {bookings.map(b => (
+                <Card key={b._id} className="p-5 shadow-retro-sm text-left">
+                  <div className="space-y-4">
+                    {/* Header: Gig Title & Status */}
+                    <div className="flex items-start justify-between border-b-2 border-ink/10 pb-3 gap-2">
+                      <div>
+                        <span className="text-[9px] font-mono text-ink/60 uppercase tracking-widest block font-bold">Appointment for Gig</span>
+                        <Link to={`/gigs/${b.gigId?._id}`} className="font-black text-ink text-sm font-display uppercase tracking-tight hover:text-accent-teal transition-colors line-clamp-1">
+                          {b.gigId?.title || 'Active Gig Project'}
+                        </Link>
+                        {b.gigId?.budget && (
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="amber" className="text-[8px] shadow-none">
+                              ₹{b.gigId.budget}
+                            </Badge>
+                            {b.gigId.category && (
+                              <span className="text-[9px] font-mono text-ink/60 uppercase font-bold">
+                                {b.gigId.category}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <Badge variant={b.status === 'confirmed' ? 'teal' : b.status === 'cancelled' ? 'coral' : 'amber'} className="shadow-none flex-shrink-0">
+                        {b.status === 'confirmed' ? 'CONFIRMED' : b.status === 'cancelled' ? 'REJECTED' : 'PENDING'}
+                      </Badge>
+                    </div>
+
+                    {/* Client & Company Information */}
+                    <div className="bg-cream/60 border-2 border-ink p-3 rounded-lg space-y-2 font-sans text-xs">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-9 w-9 bg-cream border-2 border-ink rounded-full overflow-hidden flex items-center justify-center font-bold text-ink font-display flex-shrink-0">
+                          {b.clientId?.avatar ? (
+                            <img src={b.clientId.avatar} alt={b.clientId.name} className="h-full w-full object-cover" />
+                          ) : (
+                            b.clientId?.name?.charAt(0) || 'C'
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-ink font-display uppercase text-xs">
+                            {b.clientId?.name || 'Client Node'}
+                          </p>
+                          {b.clientId?.companyName && (
+                            <p className="text-[10px] text-ink/75 font-mono flex items-center space-x-1 font-bold">
+                              <Building className="h-3 w-3 text-accent-teal" />
+                              <span>{b.clientId.companyName}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-ink/10 text-[10px] font-mono text-ink/70">
+                        {b.clientId?.location?.city && (
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="h-3 w-3 text-accent-teal flex-shrink-0" />
+                            <span className="font-bold">{b.clientId.location.city}</span>
+                          </div>
+                        )}
+                        {b.clientId?.email && (
+                          <div className="flex items-center space-x-1 truncate">
+                            <Mail className="h-3 w-3 text-accent-teal flex-shrink-0" />
+                            <span className="font-bold truncate">{b.clientId.email}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Slot Date & Time */}
+                    <div className="flex items-center justify-between bg-cream border border-ink/20 p-2.5 rounded-lg text-xs font-mono">
+                      <div className="flex items-center space-x-1.5 text-ink">
+                        <Calendar className="h-3.5 w-3.5 text-accent-teal" />
+                        <span className="font-bold">{new Date(b.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      </div>
+                      <div className="flex items-center space-x-1.5 text-ink">
+                        <Clock className="h-3.5 w-3.5 text-accent-teal" />
+                        <span className="font-bold">{b.startTime || b.slot} - {b.endTime || 'End'}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons for Pending Requests */}
+                    {b.status === 'pending' && (
+                      <div className="flex space-x-2 pt-1">
+                        <Button
+                          onClick={() => handleBookingResponse(b._id, 'confirmed')}
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1 py-1.5 text-[10px]"
+                        >
+                          Accept Appointment
+                        </Button>
+                        <Button
+                          onClick={() => handleBookingResponse(b._id, 'cancelled')}
+                          variant="coral"
+                          size="sm"
+                          className="flex-1 py-1.5 text-[10px]"
+                        >
+                          Decline Request
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </Card>
+      ) : activeTab === 'applications' ? (
         <FreelancerApplications />
+      ) : activeTab === 'analytics' ? (
+        <Card>
+          <h2 className="text-sm font-bold font-display text-ink uppercase tracking-wider mb-6 flex items-center space-x-2">
+            <Award className="h-5 w-5 text-accent-teal" />
+            <span>Earnings & Profile Performance Analytics</span>
+          </h2>
+
+          {analyticsLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-6 w-6 text-accent-teal animate-spin" />
+            </div>
+          ) : !analytics ? (
+            <p className="text-xs text-ink/60 italic text-left">Could not load analytics summary dashboard details.</p>
+          ) : (
+            <div className="space-y-8">
+              
+              {/* Stat Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                
+                <Card className="p-4 shadow-retro-sm">
+                  <span className="text-[9px] font-mono font-bold text-ink/60 uppercase tracking-wider block mb-1">Total Earnings</span>
+                  <span className="text-lg font-black text-ink font-display uppercase tracking-tight">₹{analytics.totalEarnings.toLocaleString()}</span>
+                </Card>
+
+                <Card className="p-4 shadow-retro-sm">
+                  <span className="text-[9px] font-mono font-bold text-ink/60 uppercase tracking-wider block mb-1">Profile views</span>
+                  <span className="text-lg font-black text-ink font-display uppercase tracking-tight">{analytics.profileViews}</span>
+                </Card>
+
+                <Card className="p-4 shadow-retro-sm">
+                  <span className="text-[9px] font-mono font-bold text-ink/60 uppercase tracking-wider block mb-1">Submissions</span>
+                  <span className="text-lg font-black text-ink font-display uppercase tracking-tight">{analytics.applicationCount}</span>
+                </Card>
+
+                <Card className="p-4 shadow-retro-sm">
+                  <span className="text-[9px] font-mono font-bold text-ink/60 uppercase tracking-wider block mb-1">Feedback Score</span>
+                  <span className="text-lg font-black text-ink font-display uppercase tracking-tight">{analytics.rating.toFixed(1)} ★</span>
+                  <span className="text-[9px] font-mono text-ink/60 block">({analytics.reviewCount} reviews)</span>
+                </Card>
+
+              </div>
+
+              {/* HTML/CSS Bar Chart */}
+              <Card className="p-6">
+                <span className="text-[10px] font-mono font-bold text-ink/60 uppercase tracking-widest block mb-4 text-left">Earnings History By Month</span>
+                
+                <div className="h-48 flex items-end justify-between gap-2 pt-6 border-b-2 border-ink">
+                  {analytics.monthlyEarnings.map((val: number, idx: number) => {
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const maxVal = Math.max(...analytics.monthlyEarnings, 1000);
+                    const percentage = (val / maxVal) * 100;
+                    const accentColors = ['bg-accent-amber', 'bg-accent-teal', 'bg-accent-coral', 'bg-accent-pink'];
+                    const barColor = accentColors[idx % accentColors.length];
+                    
+                    return (
+                      <div key={idx} className="flex-grow flex flex-col items-center group relative">
+                        {/* Tooltip value */}
+                        <div className="absolute bottom-full mb-2 bg-cream border-2 border-ink px-1.5 py-0.5 rounded-lg text-[8px] font-mono font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-retro-sm">
+                          ₹{val.toLocaleString()}
+                        </div>
+                        {/* Bar */}
+                        <div
+                          className={`w-full ${barColor} hover:opacity-90 border-2 border-ink border-b-0 transition-all duration-500 rounded-t-md`}
+                          style={{ height: `${Math.max(4, percentage)}%` }}
+                        />
+                        {/* Label */}
+                        <span className="text-[8px] font-mono font-bold text-ink mt-2 uppercase tracking-tighter">
+                          {months[idx]}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+
+            </div>
+          )}
+        </Card>
       ) : (
         <>
 
       {/* Alert Banner */}
       {message && (
-        <div className={`mb-6 p-4 border-2 border-ink sketch-border flex items-center space-x-3 text-xs ${
+        <div className={`mb-6 p-4 border-2 border-ink flex items-center space-x-3 text-xs rounded-lg ${
           message.type === 'success' 
-            ? 'bg-paper border-l-4 border-l-route-teal text-ink' 
-            : 'bg-paper border-l-4 border-l-signal-coral text-ink'
+            ? 'bg-cream border-l-4 border-l-accent-teal text-ink' 
+            : 'bg-cream border-l-4 border-l-accent-coral text-ink'
         }`}>
-          {message.type === 'success' ? <Check className="h-4.5 w-4.5 text-route-teal flex-shrink-0" /> : <AlertCircle className="h-4.5 w-4.5 text-signal-coral flex-shrink-0" />}
-          <span>{message.text}</span>
+          {message.type === 'success' ? <Check className="h-4.5 w-4.5 text-accent-teal flex-shrink-0" /> : <AlertCircle className="h-4.5 w-4.5 text-accent-coral flex-shrink-0" />}
+          <span className="text-left">{message.text}</span>
         </div>
       )}
 
@@ -330,8 +649,8 @@ export const FreelancerDashboard: React.FC = () => {
         <div className="space-y-8 lg:col-span-1">
           
           {/* Card 1: Avatar and main stats */}
-          <div className="bg-paper border-2 border-ink sketch-card p-6 flex flex-col items-start text-left rotate-[-0.5deg]">
-            <div className="h-16 w-16 bg-paper border-2 border-ink flex items-center justify-center text-ink text-2xl font-black font-display uppercase mb-4 rounded-sm overflow-hidden flex-shrink-0 sketch-border">
+          <Card className="flex flex-col items-start text-left">
+            <div className="h-16 w-16 bg-cream border-2 border-ink flex items-center justify-center text-ink text-2xl font-black font-display uppercase mb-4 rounded-lg overflow-hidden flex-shrink-0 shadow-retro-sm">
               {user.avatar ? (
                 <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
               ) : (
@@ -339,28 +658,28 @@ export const FreelancerDashboard: React.FC = () => {
               )}
             </div>
             <h2 className="text-lg font-bold text-ink uppercase font-display tracking-tight">{user.name}</h2>
-            <span className="text-[10px] font-mono text-ink bg-paper border border-ink px-2 py-0.5 sketch-badge uppercase tracking-wider mt-1">
+            <Badge variant="outline" className="mt-1 shadow-none">
               Freelancer Account
-            </span>
+            </Badge>
             
-            <div className="w-full border-t-2 border-ink my-6 pt-6 space-y-4 font-mono text-xs text-slate">
+            <div className="w-full border-t-2 border-ink my-6 pt-6 space-y-4 font-mono text-xs text-ink/70">
               <div className="flex items-center justify-between">
                 <span className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4 text-route-teal" />
+                  <DollarSign className="h-4 w-4 text-accent-teal" />
                   <span>RATE:</span>
                 </span>
                 <span className="font-bold text-ink text-sm">₹{user.hourlyRate || 0}/HR</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-route-teal" />
+                  <MapPin className="h-4 w-4 text-accent-teal" />
                   <span>CITY:</span>
                 </span>
                 <span className="text-ink font-bold uppercase">{user.location.city}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center space-x-2">
-                  <Award className="h-4 w-4 text-transit-gold" />
+                  <Award className="h-4 w-4 text-accent-amber" />
                   <span>RATING:</span>
                 </span>
                 <span className="font-bold text-ink">{user.rating.toFixed(1)} ★</span>
@@ -369,87 +688,87 @@ export const FreelancerDashboard: React.FC = () => {
 
             {!isEditing && (
               <>
-                <button
+                <Button
                   onClick={() => setIsEditing(true)}
-                  className="w-full mt-4 py-2.5 border-2 border-ink text-xs font-bold font-display uppercase tracking-widest text-ink bg-paper sketch-button flex items-center justify-center space-x-2"
+                  variant="outline"
+                  className="w-full mt-4"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-4 w-4 mr-1" />
                   <span>Modify Settings</span>
-                </button>
+                </Button>
                 
                 <div className="w-full mt-4 border-t-2 border-ink pt-4">
                   <AvatarUpload />
                 </div>
               </>
             )}
-          </div>
+          </Card>
 
 
           {/* Card 2: Resume Uploader */}
-          <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[0.5deg]">
+          <Card className="text-left">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 flex items-center space-x-2 pl-1">
-              <FileText className="h-4 w-4 text-route-teal" />
+              <FileText className="h-4 w-4 text-accent-teal" />
               <span>Resume Document</span>
             </h3>
 
             {user.resumeUrl ? (
               <div className="space-y-4">
-                <div className="p-3 bg-paper border-2 border-ink sketch-border text-xs flex items-center justify-between font-mono">
-                  <span className="text-slate truncate max-w-[120px]">resume-node.pdf</span>
+                <div className="p-3 bg-cream border-2 border-ink text-xs flex items-center justify-between font-mono rounded-lg">
+                  <span className="text-ink/60 truncate max-w-[120px]">resume-node.pdf</span>
                   <a
                     href={user.resumeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-route-teal hover:underline font-bold"
+                    className="text-accent-teal hover:underline font-bold"
                   >
                     View File
                   </a>
                 </div>
                 <div className="border-t-2 border-ink pt-3 flex gap-2">
-                  <button
+                  <Button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading || removingResume}
-                    className="flex-1 py-2 text-xs font-bold font-display uppercase tracking-widest bg-paper border-2 border-ink sketch-button flex items-center justify-center space-x-2 transition-all disabled:opacity-50"
+                    variant="outline"
+                    className="flex-grow shadow-none py-2"
                   >
-                    <Upload className="h-3.5 w-3.5" />
-                    <span>{uploading ? 'Uploading...' : 'Replace'}</span>
-                  </button>
-                  <button
+                    {uploading ? 'Uploading...' : 'Replace'}
+                  </Button>
+                  <Button
                     onClick={handleRemoveResume}
                     disabled={uploading || removingResume}
-                    className="flex-1 py-2 text-xs font-bold font-display uppercase tracking-widest bg-paper border-2 border-ink text-signal-coral hover:bg-signal-coral/10 sketch-button flex items-center justify-center space-x-2 transition-all disabled:opacity-50"
+                    variant="coral"
+                    className="flex-grow shadow-none py-2"
                   >
-                    {removingResume ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-3.5 w-3.5" />
-                    )}
-                    <span>{removingResume ? 'Removing...' : 'Remove'}</span>
-                  </button>
+                    {removingResume ? 'Removing...' : 'Remove'}
+                  </Button>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-6 border-2 border-dashed border-ink sketch-border bg-paper/50">
-                <Upload className="h-6 w-6 mx-auto text-slate mb-2" />
-                <p className="text-[10px] text-slate font-mono uppercase tracking-wider">PDF, JPG, PNG (Max 10MB)</p>
-                <button
+              <div className="text-center py-6 border-2 border-dashed border-ink rounded-lg bg-cream/50">
+                <Upload className="h-6 w-6 mx-auto text-ink/40 mb-2" />
+                <p className="text-[10px] text-ink/60 font-mono uppercase tracking-wider">PDF, JPG, PNG (Max 10MB)</p>
+                <Button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="mt-3 px-4 py-2 bg-route-teal border-2 border-ink text-white text-xs font-bold font-display uppercase tracking-wider sketch-button"
+                  variant="secondary"
+                  className="mt-3 py-2 text-[10px]"
                 >
                   {uploading ? 'Uploading...' : 'Upload Resume'}
-                </button>
+                </Button>
               </div>
             )}
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
-              className="hidden"
               accept=".pdf,.jpg,.jpeg,.png"
+              className="hidden"
             />
-          </div>
+          </Card>
+
+          <TwoFactorSetup />
 
         </div>
 
@@ -458,29 +777,28 @@ export const FreelancerDashboard: React.FC = () => {
           
           {/* Dashboard Settings Editor */}
           {isEditing ? (
-            <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[-0.3deg]">
-              <h3 className="text-sm font-bold font-display text-ink uppercase tracking-widest mb-6 pl-1">Modify Settings</h3>
+            <Card>
+              <h3 className="text-sm font-bold font-display text-ink uppercase tracking-wider mb-6 pl-1">Modify Settings</h3>
               <form onSubmit={handleSaveProfile} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Full Name</label>
-                    <input
+                    <Input
                       type="text"
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Hourly Rate (₹)</label>
-                    <input
+                    <Input
                       type="number"
                       required
                       min={0}
                       value={hourlyRate}
                       onChange={(e) => setHourlyRate(Number(e.target.value))}
-                      className="w-full px-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal font-mono"
+                      className="font-mono"
                     />
                   </div>
                 </div>
@@ -493,7 +811,7 @@ export const FreelancerDashboard: React.FC = () => {
                       type="button"
                       onClick={handleDetectLocation}
                       disabled={fetchingGeo}
-                      className="text-xs text-route-teal hover:underline flex items-center space-x-1 font-bold"
+                      className="text-xs text-accent-teal hover:underline flex items-center space-x-1 font-bold cursor-pointer"
                     >
                       <Compass className="h-3.5 w-3.5" />
                       <span>{fetchingGeo ? 'GPS Locating...' : 'Use GPS Location'}</span>
@@ -501,28 +819,28 @@ export const FreelancerDashboard: React.FC = () => {
                   </div>
 
                   <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate z-10" />
-                    <input
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
+                    <Input
                       type="text"
                       value={citySearch}
                       onChange={handleCitySearchChange}
                       placeholder="Search city..."
-                      className="w-full pl-10 pr-4 py-2.5 bg-paper border-2 border-ink sketch-input text-ink text-sm focus:outline-none focus:border-route-teal"
+                      className="pl-10"
                     />
                     {searchingCity && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-route-teal/30 border-t-route-teal rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
                       </div>
                     )}
 
                     {suggestions.length > 0 && (
-                      <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-paper border-2 border-ink sketch-card max-h-40 overflow-y-auto">
+                      <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-cream border-2 border-ink rounded-lg shadow-retro max-h-40 overflow-y-auto">
                         {suggestions.map((sug, i) => (
                           <button
                             key={i}
                             type="button"
                             onClick={() => handleSelectCity(sug)}
-                            className="w-full text-left px-4 py-2 text-xs text-ink hover:bg-line-gray/20 border-b border-ink last:border-b-0"
+                            className="w-full text-left px-4 py-2 text-xs text-ink hover:bg-accent-amber/10 border-b border-ink/10 last:border-b-0 cursor-pointer"
                           >
                             {sug.display_name}
                           </button>
@@ -532,59 +850,53 @@ export const FreelancerDashboard: React.FC = () => {
                   </div>
 
                   {latitude !== null && longitude !== null && (
-                    <div className="text-xs font-mono text-slate bg-paper border-2 border-ink sketch-border p-2">
+                    <div className="text-xs font-mono text-ink/70 bg-cream border-2 border-ink rounded-lg p-2.5">
                       Location Lock: {latitude.toFixed(4)}, {longitude.toFixed(4)} ({city})
                     </div>
                   )}
                 </div>
 
                 <div className="flex space-x-3 pt-4 border-t-2 border-ink">
-                  <button
+                  <Button
                     type="submit"
                     disabled={saving || !city || latitude === null}
-                    className="px-5 py-2.5 text-white bg-signal-coral sketch-button"
+                    variant="coral"
                   >
                     {saving ? 'Saving...' : 'Save Settings'}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => {
                       setIsEditing(false);
                       setMessage(null);
                     }}
-                    className="px-5 py-2.5 text-ink bg-paper border-2 border-ink sketch-button"
+                    variant="outline"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </form>
-            </div>
+            </Card>
           ) : null}
 
           {/* Card 3: Skills Manager */}
-          <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[0.3deg]">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Skills Management</h3>
+          <Card>
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-wider mb-4 pl-1">Skills Management</h3>
             
             {skills.length > 0 ? (
               <div className="flex flex-wrap gap-2 mb-6">
                 {skills.map((s, i) => (
                   <span 
                     key={i} 
-                    className="inline-flex items-center space-x-2 px-3 py-1.5 border border-ink bg-paper text-xs text-ink sketch-badge"
+                    className="inline-flex items-center space-x-2 px-3 py-1.5 border-2 border-ink bg-cream text-xs text-ink rounded-lg shadow-retro-sm"
                   >
                     <span>{s.name}</span>
-                    <span className={`px-1.5 py-0.5 border border-ink text-[9px] font-mono uppercase font-bold sketch-badge ${
-                      s.level === 'Expert' 
-                        ? 'bg-route-teal text-white' 
-                        : s.level === 'Intermediate' 
-                        ? 'bg-line-gray text-ink' 
-                        : 'bg-paper text-slate'
-                    }`}>
+                    <Badge variant={s.level === 'Expert' ? 'teal' : s.level === 'Intermediate' ? 'amber' : 'outline'} className="shadow-none">
                       {s.level}
-                    </span>
+                    </Badge>
                     <button
                       onClick={() => handleDeleteSkill(i)}
-                      className="text-slate hover:text-signal-coral transition-colors pl-1"
+                      className="text-ink/50 hover:text-accent-coral transition-colors pl-1 cursor-pointer"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -592,96 +904,94 @@ export const FreelancerDashboard: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate mb-6 italic font-sans pl-1">No skills listed inside your node profiles. Add skills to matching algorithms.</p>
+              <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No skills listed inside your node profiles. Add skills to matching algorithms.</p>
             )}
 
             <form onSubmit={handleAddSkill} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-1.5">
-                <input
+                <Input
                   type="text"
                   required
                   value={newSkillName}
                   onChange={(e) => setNewSkillName(e.target.value)}
                   placeholder="Skill name (e.g. React.js)"
-                  className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
                 />
               </div>
               <div className="sm:col-span-1">
                 <select
                   value={newSkillLevel}
                   onChange={(e) => setNewSkillLevel(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
+                  className="w-full px-3 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
                 >
                   <option value="Beginner">Beginner</option>
                   <option value="Intermediate">Intermediate</option>
                   <option value="Expert">Expert</option>
                 </select>
               </div>
-              <button
+              <Button
                 type="submit"
-                className="py-2 px-4 bg-route-teal border-2 border-ink text-white font-bold font-display uppercase tracking-widest text-xs sketch-button flex items-center justify-center space-x-1.5"
+                variant="secondary"
+                className="py-2 px-4 flex items-center justify-center space-x-1.5"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add Skill</span>
-              </button>
+              </Button>
             </form>
-          </div>
+          </Card>
 
           {/* Card 4: Portfolio */}
-          <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[-0.5deg]">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Portfolio Registry</h3>
+          <Card>
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-wider mb-4 pl-1">Portfolio Registry</h3>
 
             {portfolio.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {portfolio.map((item, i) => (
-                  <div key={i} className="p-4 bg-paper border-2 border-ink sketch-card flex flex-col justify-between">
+                  <Card key={i} className="p-4 shadow-retro-sm">
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <h4 className="font-bold text-ink text-xs uppercase tracking-tight truncate">{item.title}</h4>
                         <button
                           onClick={() => handleDeletePortfolio(i)}
-                          className="text-slate hover:text-signal-coral transition-colors"
+                          className="text-ink/60 hover:text-accent-coral transition-colors cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      <p className="text-xs text-slate line-clamp-3 mb-3 leading-relaxed font-sans">{item.description}</p>
+                      <p className="text-xs text-ink/60 line-clamp-3 mb-3 leading-relaxed font-sans">{item.description}</p>
                     </div>
                     {item.link && (
                       <a
                         href={item.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-1 text-xs text-route-teal hover:underline font-bold"
+                        className="inline-flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold"
                       >
                         <LinkIcon className="h-3 w-3" />
                         <span>Visit Project</span>
                       </a>
                     )}
-                  </div>
+                  </Card>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate mb-6 italic font-sans pl-1">No portfolio items logged.</p>
+              <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No portfolio items logged.</p>
             )}
 
-            <form onSubmit={handleAddPortfolio} className="space-y-3.5 border-t-2 border-ink pt-4 font-sans">
+            <form onSubmit={handleAddPortfolio} className="space-y-3.5 border-t-2 border-ink pt-4 font-sans text-left">
               <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Add Portfolio Project</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
+                <Input
                   type="text"
                   required
                   value={portTitle}
                   onChange={(e) => setPortTitle(e.target.value)}
                   placeholder="Project Title"
-                  className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
                 />
-                <input
+                <Input
                   type="url"
                   value={portLink}
                   onChange={(e) => setPortLink(e.target.value)}
                   placeholder="Project Link (Optional)"
-                  className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
                 />
               </div>
               <textarea
@@ -690,34 +1000,35 @@ export const FreelancerDashboard: React.FC = () => {
                 value={portDesc}
                 onChange={(e) => setPortDesc(e.target.value)}
                 placeholder="Brief description of work parameters..."
-                className="w-full px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs resize-none focus:outline-none focus:border-route-teal font-sans"
+                className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm resize-none focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
               />
-              <button
+              <Button
                 type="submit"
-                className="w-full py-2.5 bg-route-teal border-2 border-ink text-white font-bold font-display uppercase tracking-widest text-xs sketch-button flex items-center justify-center space-x-1.5"
+                variant="secondary"
+                className="w-full py-2.5 flex items-center justify-center space-x-1.5"
               >
                 <Plus className="h-4 w-4" />
                 <span>Save Project</span>
-              </button>
+              </Button>
             </form>
-          </div>
+          </Card>
 
           {/* Card 5: Certifications */}
-          <div className="bg-paper border-2 border-ink sketch-card p-6 text-left rotate-[0.5deg]">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Certifications & Credentials</h3>
+          <Card>
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-wider mb-4 pl-1">Certifications & Credentials</h3>
 
             {certifications.length > 0 ? (
               <div className="space-y-2 mb-6 font-sans">
                 {certifications.map((cert, i) => (
-                  <div key={i} className="p-3 bg-paper border-2 border-ink sketch-border text-xs flex items-center justify-between text-ink font-mono">
+                  <div key={i} className="p-3 bg-cream border-2 border-ink text-xs flex items-center justify-between text-ink font-mono rounded-lg">
                     <span className="flex items-center space-x-2">
-                      <Award className="h-4 w-4 text-transit-gold flex-shrink-0" />
+                      <Award className="h-4 w-4 text-accent-amber flex-shrink-0" />
                       <span>{cert}</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => handleDeleteCert(i)}
-                      className="text-slate hover:text-signal-coral transition-colors"
+                      className="text-ink/60 hover:text-accent-coral transition-colors cursor-pointer"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -725,27 +1036,27 @@ export const FreelancerDashboard: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate mb-6 italic font-sans pl-1">No certifications listed.</p>
+              <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No certifications listed.</p>
             )}
 
             <form onSubmit={handleAddCert} className="flex gap-2">
-              <input
+              <Input
                 type="text"
                 required
                 value={newCertName}
                 onChange={(e) => setNewCertName(e.target.value)}
                 placeholder="AWS Developer, Electrician Level II"
-                className="flex-grow px-3 py-2 bg-paper border-2 border-ink sketch-input text-ink text-xs focus:outline-none focus:border-route-teal"
               />
-              <button
+              <Button
                 type="submit"
-                className="py-2 px-4 bg-route-teal border-2 border-ink text-white font-bold font-display uppercase tracking-widest text-xs sketch-button flex items-center justify-center space-x-1.5"
+                variant="secondary"
+                className="flex-shrink-0"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 mr-1" />
                 <span>Add</span>
-              </button>
+              </Button>
             </form>
-          </div>
+          </Card>
 
         </div>
 
