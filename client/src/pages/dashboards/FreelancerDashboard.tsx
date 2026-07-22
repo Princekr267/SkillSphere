@@ -449,17 +449,17 @@ export const FreelancerDashboard: React.FC = () => {
       )}
 
       {/* Dashboard Title + Tab Switcher */}
-      <div className="mb-8 border-b-2 border-ink pb-0 flex items-end justify-between">
-        <div className="pb-6 text-left">
+      <div className="mb-8 border-b-2 border-ink pb-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="pb-2 sm:pb-6 text-left">
           <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Provider Node Workspace</span>
           <h1 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Freelancer Dashboard</h1>
         </div>
-        <div className="flex items-end space-x-2">
+        <div className="flex items-end space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto -mb-[2px] scrollbar-none flex-nowrap">
           {(['profile', 'applications', 'bookings', 'analytics'] as Tab[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-2.5 text-[10px] sm:text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all cursor-pointer flex-shrink-0 ${
                 activeTab === tab
                   ? 'bg-accent-teal text-ink shadow-none translate-y-[2px]'
                   : 'bg-cream text-ink hover:bg-accent-teal/10'

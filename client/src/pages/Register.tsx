@@ -65,9 +65,10 @@ export const Register: React.FC = () => {
           });
           const btnContainer = document.getElementById('google-register-btn');
           if (btnContainer) {
+            const width = window.innerWidth < 450 ? Math.min(window.innerWidth - 64, 320) : 380;
             (window as any).google.accounts.id.renderButton(
               btnContainer,
-              { theme: 'outline', size: 'large', type: 'standard', width: 380 }
+              { theme: 'outline', size: 'large', type: 'standard', width }
             );
           }
         }
@@ -291,53 +292,59 @@ export const Register: React.FC = () => {
               <p className="text-xs font-sans text-ink/60 mt-1">Specify your node role inside the SkillSphere system.</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
+            <div className="flex flex-col gap-4 font-sans">
               <button
                 type="button"
                 onClick={() => setRole('client')}
-                className={`p-6 border-2 text-left rounded-xl transition-all shadow-retro cursor-pointer ${
+                className={`p-4 border-2 text-left rounded-xl transition-all shadow-retro cursor-pointer flex items-center space-x-4 ${
                   role === 'client'
                     ? 'bg-accent-teal text-ink border-ink'
                     : 'bg-cream border-ink hover:bg-accent-teal/10'
                 }`}
               >
-                <div className="h-9 w-9 bg-cream text-ink flex items-center justify-center border-2 border-ink rounded-lg mb-4 shadow-retro-sm">
-                  <UserIcon className="h-5 w-5" />
+                <div className="h-10 w-10 bg-cream text-ink flex items-center justify-center border-2 border-ink rounded-lg shadow-retro-sm flex-shrink-0">
+                  <UserIcon className="h-5.5 w-5.5" />
                 </div>
-                <h4 className="font-bold text-ink text-sm">Hiring Node</h4>
-                <p className="text-xs text-ink/60 mt-1 leading-relaxed text-left">Configure gigs, review proximity metrics, and contract local experts.</p>
+                <div className="flex-grow text-left">
+                  <h4 className="font-bold text-ink text-sm">Hiring Node (Client)</h4>
+                  <p className="text-xs text-ink/65 mt-0.5 leading-relaxed text-left">Configure gigs, review proximity metrics, and contract local experts.</p>
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setRole('freelancer')}
-                className={`p-6 border-2 text-left rounded-xl transition-all shadow-retro cursor-pointer ${
+                className={`p-4 border-2 text-left rounded-xl transition-all shadow-retro cursor-pointer flex items-center space-x-4 ${
                   role === 'freelancer'
                     ? 'bg-accent-teal text-ink border-ink'
                     : 'bg-cream border-ink hover:bg-accent-teal/10'
                 }`}
               >
-                <div className="h-9 w-9 bg-cream text-ink flex items-center justify-center border-2 border-ink rounded-lg mb-4 shadow-retro-sm">
-                  <Briefcase className="h-5 w-5" />
+                <div className="h-10 w-10 bg-cream text-ink flex items-center justify-center border-2 border-ink rounded-lg shadow-retro-sm flex-shrink-0">
+                  <Briefcase className="h-5.5 w-5.5" />
                 </div>
-                <h4 className="font-bold text-ink text-sm">Provider Node</h4>
-                <p className="text-xs text-ink/60 mt-1 leading-relaxed text-left">List professional service skills and accept hyperlocal jobs.</p>
+                <div className="flex-grow text-left">
+                  <h4 className="font-bold text-ink text-sm">Provider Node (Freelancer)</h4>
+                  <p className="text-xs text-ink/65 mt-0.5 leading-relaxed text-left">List professional service skills and accept hyperlocal jobs.</p>
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setRole('admin')}
-                className={`p-6 border-2 text-left rounded-xl transition-all shadow-retro cursor-pointer ${
+                className={`p-4 border-2 text-left rounded-xl transition-all shadow-retro cursor-pointer flex items-center space-x-4 ${
                   role === 'admin'
                     ? 'bg-accent-teal text-ink border-ink'
                     : 'bg-cream border-ink hover:bg-accent-teal/10'
                 }`}
               >
-                <div className="h-9 w-9 bg-cream text-ink flex items-center justify-center border-2 border-ink rounded-lg mb-4 shadow-retro-sm">
-                  <ShieldCheck className="h-5 w-5" />
+                <div className="h-10 w-10 bg-cream text-ink flex items-center justify-center border-2 border-ink rounded-lg shadow-retro-sm flex-shrink-0">
+                  <ShieldCheck className="h-5.5 w-5.5" />
                 </div>
-                <h4 className="font-bold text-ink text-sm">Admin Node</h4>
-                <p className="text-xs text-ink/60 mt-1 leading-relaxed text-left">System oversight, user management, warnings review & platform metrics.</p>
+                <div className="flex-grow text-left">
+                  <h4 className="font-bold text-ink text-sm">Admin Node (System Supervisor)</h4>
+                  <p className="text-xs text-ink/65 mt-0.5 leading-relaxed text-left">System oversight, user management, warnings review & platform metrics.</p>
+                </div>
               </button>
             </div>
 

@@ -109,7 +109,7 @@ export const Navbar: React.FC = () => {
               </span>
             </Link>
             
-            <Badge variant="teal" className="text-[8px] font-mono shadow-none uppercase font-black px-1.5 py-0.5 tracking-wider hidden sm:inline-flex items-center border-2 border-ink bg-accent-teal text-ink">
+            <Badge variant="teal" className="text-[8px] font-mono shadow-none uppercase font-black px-1.5 py-0.5 tracking-wider hidden lg:inline-flex items-center border-2 border-ink bg-accent-teal text-ink">
               <span className="w-1.5 h-1.5 rounded-full bg-cream inline-block animate-pulse mr-1"></span>
               <span>Live Node</span>
             </Badge>
@@ -251,14 +251,6 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile: right side controls */}
           <div className="flex md:hidden items-center space-x-2">
-            {/* Dark Mode toggle button mobile */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 border-2 border-ink bg-cream text-ink rounded-lg shadow-retro-sm cursor-pointer"
-            >
-              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-
             {user && (
               <>
                 <Link
@@ -295,19 +287,29 @@ export const Navbar: React.FC = () => {
           <div className="px-4 py-4 space-y-2">
             {user ? (
               <>
-                {/* User info strip */}
-                <div className="flex items-center space-x-3 pb-4 mb-2 border-b-2 border-ink">
-                  <div className="h-10 w-10 bg-cream border-2 border-ink flex items-center justify-center text-ink font-bold font-display uppercase text-sm overflow-hidden flex-shrink-0 rounded-lg">
-                    {user.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
-                    ) : (
-                      user.name.charAt(0)
-                    )}
+                {/* User info strip with dark mode toggle inside */}
+                <div className="flex items-center justify-between pb-4 mb-2 border-b-2 border-ink">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-10 w-10 bg-cream border-2 border-ink flex items-center justify-center text-ink font-bold font-display uppercase text-sm overflow-hidden flex-shrink-0 rounded-lg">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                      ) : (
+                        user.name.charAt(0)
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-ink">{user.name}</p>
+                      <p className="text-[10px] font-mono text-ink/60 uppercase tracking-wider">{user.role} · {user.location.city}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-ink">{user.name}</p>
-                    <p className="text-[10px] font-mono text-ink/60 uppercase tracking-wider">{user.role} · {user.location.city}</p>
-                  </div>
+                  
+                  <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="p-2 border-2 border-ink bg-cream text-ink rounded-lg shadow-retro-sm cursor-pointer active:translate-y-[1px]"
+                    title="Toggle Theme"
+                  >
+                    {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  </button>
                 </div>
 
                 {/* Nav links */}
@@ -320,18 +322,16 @@ export const Navbar: React.FC = () => {
                   <span>Dashboard</span>
                 </Link>
 
-                {user.role === 'freelancer' && (
-                  <Link
-                    to="/gigs"
-                    onClick={() => setMobileOpen(false)}
-                    className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-sans font-bold transition-all border-2 ${
-                      isActive('/gigs') ? 'bg-accent-teal/20 border-ink' : 'border-transparent hover:border-ink hover:bg-accent-teal/15'
-                    }`}
-                  >
-                    <span className="w-2.5 h-2.5 rounded-full bg-accent-teal border border-ink flex-shrink-0" />
-                    <span>Browse Gigs</span>
-                  </Link>
-                )}
+                <Link
+                  to="/gigs"
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-sans font-bold transition-all border-2 ${
+                    isActive('/gigs') ? 'bg-accent-teal/20 border-ink' : 'border-transparent hover:border-ink hover:bg-accent-teal/15'
+                  }`}
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent-teal border border-ink flex-shrink-0" />
+                  <span>Marketplace</span>
+                </Link>
 
                 <button
                   onClick={handleLogout}
@@ -343,6 +343,16 @@ export const Navbar: React.FC = () => {
               </>
             ) : (
               <>
+                <div className="flex items-center justify-between pb-4 mb-4 border-b-2 border-ink">
+                  <span className="text-xs font-mono font-bold text-ink/60 uppercase tracking-widest pl-1">Theme Toggle</span>
+                  <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="p-2 border-2 border-ink bg-cream text-ink rounded-lg shadow-retro-sm cursor-pointer"
+                  >
+                    {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  </button>
+                </div>
+
                 <Link
                   to="/login"
                   onClick={() => setMobileOpen(false)}

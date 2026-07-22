@@ -192,9 +192,10 @@ export const Login: React.FC = () => {
         });
         const btnContainer = document.getElementById('google-signin-btn');
         if (btnContainer) {
+          const width = window.innerWidth < 450 ? Math.min(window.innerWidth - 64, 320) : 380;
           (window as any).google.accounts.id.renderButton(
             btnContainer,
-            { theme: 'outline', size: 'large', type: 'standard', width: 380 }
+            { theme: 'outline', size: 'large', type: 'standard', width }
           );
         }
       }
