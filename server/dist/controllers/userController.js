@@ -19,13 +19,15 @@ const isCloudinaryConfigured = () => {
         key !== 'placeholder_api_key' &&
         secret !== 'placeholder_api_secret');
 };
-if (isCloudinaryConfigured()) {
-    cloudinary_1.v2.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-    });
-}
+const configureCloudinary = () => {
+    if (isCloudinaryConfigured()) {
+        cloudinary_1.v2.config({
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET,
+        });
+    }
+};
 /**
  * @desc    Update user profile details
  * @route   PUT /api/users/profile
@@ -41,7 +43,7 @@ const updateUserProfile = async (req, res) => {
         // Client specific
         companyName, bio, 
         // Freelancer specific
-        skills, hourlyRate, portfolio, certifications, } = req.body;
+        skills, hourlyRate, portfolio, certifications, experience, } = req.body;
         // 1. General Profile Updates
         if (name)
             user.name = name;
@@ -69,6 +71,8 @@ const updateUserProfile = async (req, res) => {
                 user.portfolio = portfolio;
             if (certifications !== undefined)
                 user.certifications = certifications;
+            if (experience !== undefined)
+                user.experience = experience;
         }
         const updatedUser = await user.save();
         res.status(200).json({
@@ -87,6 +91,7 @@ const updateUserProfile = async (req, res) => {
                 hourlyRate: updatedUser.hourlyRate,
                 resumeUrl: updatedUser.resumeUrl,
                 certifications: updatedUser.certifications,
+                experience: updatedUser.experience,
                 rating: updatedUser.rating,
                 reviewCount: updatedUser.reviewCount,
             },
@@ -116,8 +121,9 @@ const uploadResume = async (req, res) => {
         if (isCloudinaryConfigured()) {
             // Upload to Cloudinary
             try {
+                configureCloudinary();
                 const result = await cloudinary_1.v2.uploader.upload(req.file.path, {
-                    resource_type: 'raw', // For non-image files like PDFs
+                    resource_type: 'auto',
                     folder: 'skillsphere_resumes',
                 });
                 fileUrl = result.secure_url;
@@ -189,6 +195,7 @@ const uploadAvatar = async (req, res) => {
         let fileUrl = '';
         if (isCloudinaryConfigured()) {
             try {
+                configureCloudinary();
                 const result = await cloudinary_1.v2.uploader.upload(req.file.path, {
                     folder: 'skillsphere_avatars',
                     transformation: [{ width: 400, height: 400, crop: 'limit' }],
@@ -380,6 +387,7 @@ const deleteAvatar = async (req, res) => {
             // Try to delete from Cloudinary if configured
             if (isCloudinaryConfigured() && user.avatar.includes('cloudinary')) {
                 try {
+                    configureCloudinary();
                     // Extract public_id from url
                     const parts = user.avatar.split('/');
                     const fileWithExt = parts[parts.length - 1];
@@ -426,10 +434,16 @@ const deleteResume = async (req, res) => {
         if (user.resumeUrl) {
             if (isCloudinaryConfigured() && user.resumeUrl.includes('cloudinary')) {
                 try {
+                    configureCloudinary();
                     const parts = user.resumeUrl.split('/');
                     const fileWithExt = parts[parts.length - 1];
                     const publicId = `skillsphere_resumes/${fileWithExt.split('.')[0]}`;
-                    await cloudinary_1.v2.uploader.destroy(publicId, { resource_type: 'raw' });
+                    try {
+                        await cloudinary_1.v2.uploader.destroy(publicId);
+                    }
+                    catch (destroyErr) {
+                        await cloudinary_1.v2.uploader.destroy(publicId, { resource_type: 'raw' });
+                    }
                 }
                 catch (e) {
                     console.warn('Cloudinary resume delete failed:', e);

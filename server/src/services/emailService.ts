@@ -1,27 +1,33 @@
 import nodemailer from 'nodemailer';
 
 export const getTransporter = () => {
-  const token = process.env.MAILTRAP_API_TOKEN;
-  const user = process.env.MAILTRAP_USER;
-  const pass = process.env.MAILTRAP_PASS;
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT) || 587;
+  const secure = process.env.SMTP_SECURE === 'true'; // true for port 465, false for other ports
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
 
-  if (user && pass) {
+  // If a host is explicitly defined
+  if (host && user && pass) {
     return nodemailer.createTransport({
-      host: 'sandbox.smtp.mailtrap.io',
-      port: 2525,
-      auth: { user, pass }
+      host,
+      port,
+      secure,
+      auth: {
+        user,
+        pass,
+      },
     });
   }
 
-  if (token) {
-    // Standard Mailtrap sandbox fallback or API auth
+  // Fallback: If Gmail user/pass are provided without custom SMTP host, use direct Gmail service
+  if (user && pass) {
     return nodemailer.createTransport({
-      host: 'sandbox.smtp.mailtrap.io',
-      port: 2525,
+      service: 'gmail',
       auth: {
-        user: 'api',
-        pass: token
-      }
+        user,
+        pass,
+      },
     });
   }
 
@@ -63,7 +69,8 @@ export const sendVerificationEmail = async (to: string, token: string) => {
 
     return await transporter.sendMail(mailOptions);
   } catch (err: any) {
-    console.warn('⚠️ Mailtrap SMTP dispatch error (falling back to terminal URL above):', err.message);
+    console.error('❌ Nodemailer SMTP dispatch error:', err.message);
+    throw err;
   }
 };
 
@@ -103,6 +110,46 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
 
     return await transporter.sendMail(mailOptions);
   } catch (err: any) {
-    console.warn('⚠️ Mailtrap SMTP dispatch error (falling back to terminal URL above):', err.message);
+    console.error('❌ Nodemailer SMTP dispatch error:', err.message);
+    throw err;
+  }
+};
+
+export const sendOTPEmail = async (to: string, otp: string) => {
+  // Always log OTP to terminal console for instant local development access
+  console.log('\n==================================================');
+  console.log('🔒 TWO-FACTOR AUTHENTICATION OTP CODE');
+  console.log(`To: ${to}`);
+  console.log(`OTP Code: ${otp}`);
+  console.log('==================================================\n');
+
+  try {
+    const transporter = getTransporter();
+    if (!transporter) return;
+
+    const mailOptions = {
+      from: '"SkillSphere Security" <security@skillsphere.in>',
+      to,
+      subject: 'Your SkillSphere OTP Code',
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; background-color: #EFF2ED; color: #1B2621; border: 2px solid #1B2621; border-radius: 4px;">
+          <h2 style="font-family: cursive; text-transform: uppercase;">Two-Factor Authentication 🔒</h2>
+          <p>Please enter the following 6-digit One-Time Password (OTP) code to log in to your account:</p>
+          <div style="margin: 20px 0; text-align: center;">
+            <span style="font-family: monospace; font-size: 32px; font-weight: bold; background-color: #F0F4E8; border: 2px dashed #1B2621; padding: 10px 25px; letter-spacing: 5px; display: inline-block;">
+              ${otp}
+            </span>
+          </div>
+          <p>This code will expire in 5 minutes.</p>
+          <p style="font-size: 11px; color: #46607A;">If you did not request this code, please secure your account credentials immediately.</p>
+        </div>
+      `,
+      text: `Your SkillSphere OTP code is: ${otp}`
+    };
+
+    return await transporter.sendMail(mailOptions);
+  } catch (err: any) {
+    console.error('❌ Nodemailer SMTP dispatch error:', err.message);
+    throw err;
   }
 };

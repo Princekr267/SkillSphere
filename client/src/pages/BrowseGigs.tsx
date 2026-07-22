@@ -175,10 +175,10 @@ export const BrowseGigs: React.FC = () => {
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
+              className="px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans dark:bg-[#1A1A1A] dark:text-[#F5F0E6]"
             >
-              <option value="">All Categories</option>
-              {GIG_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="" className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">All Categories</option>
+              {GIG_CATEGORIES.map(c => <option key={c} value={c} className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">{c}</option>)}
             </select>
           </div>
 
@@ -233,12 +233,12 @@ export const BrowseGigs: React.FC = () => {
             <select
               value={minRating}
               onChange={e => setMinRating(e.target.value)}
-              className="px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
+              className="px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans dark:bg-[#1A1A1A] dark:text-[#F5F0E6]"
             >
-              <option value="">Any Rating</option>
-              <option value="3">3.0+ ★</option>
-              <option value="4">4.0+ ★</option>
-              <option value="4.5">4.5+ ★</option>
+              <option value="" className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">Any Rating</option>
+              <option value="3" className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">3.0+ ★</option>
+              <option value="4" className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">4.0+ ★</option>
+              <option value="4.5" className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">4.5+ ★</option>
             </select>
           </div>
 

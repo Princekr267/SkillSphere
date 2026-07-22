@@ -7,7 +7,7 @@ import qrcode from 'qrcode';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
+import { sendVerificationEmail, sendPasswordResetEmail, sendOTPEmail } from '../services/emailService';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -176,6 +176,15 @@ export const loginUser = async (req: Request, res: Response) => {
 
     // 4. Check 2FA
     if (user.twoFactorEnabled) {
+      // Generate OTP Code
+      const otpCode = speakeasy.totp({
+        secret: user.twoFactorSecret || 'default_secret',
+        encoding: 'base32',
+      });
+
+      // Send Code to Email
+      await sendOTPEmail(user.email, otpCode);
+
       const tempToken = jwt.sign(
         { tempUserId: user._id.toString() },
         process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026',

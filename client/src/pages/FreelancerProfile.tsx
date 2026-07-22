@@ -10,7 +10,7 @@ import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import {
   ArrowLeft, MapPin, DollarSign, Award,
-  Briefcase, Calendar, Loader2, AlertCircle, Clock, Trash2, Plus
+  Briefcase, Calendar, Loader2, AlertCircle, Clock, Trash2, Plus, FileText
 } from 'lucide-react';
 
 interface PublicUser {
@@ -22,7 +22,15 @@ interface PublicUser {
   skills: Array<{ name: string; level: 'Beginner' | 'Intermediate' | 'Expert' }>;
   hourlyRate?: number;
   portfolio: Array<{ title: string; description: string; link?: string }>;
+  resumeUrl?: string;
   certifications: string[];
+  experience?: Array<{
+    title: string;
+    company: string;
+    startDate: string;
+    endDate?: string;
+    description?: string;
+  }>;
   rating: number;
   reviewCount: number;
   createdAt: string;
@@ -234,6 +242,23 @@ export const FreelancerProfile: React.FC = () => {
                   <span className="text-xs font-bold text-ink font-mono">({freelancer.reviewCount})</span>
                 </div>
               </div>
+
+              {/* Resume download */}
+              {freelancer.resumeUrl && (
+                <div className="border-t-2 border-ink pt-4 w-full">
+                  <a
+                    href={freelancer.resumeUrl.startsWith('http') ? freelancer.resumeUrl : `http://localhost:3000${freelancer.resumeUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full"
+                  >
+                    <Button variant="coral" className="w-full py-2 text-xs flex items-center justify-center space-x-1">
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>View Freelancer Resume</span>
+                    </Button>
+                  </a>
+                </div>
+              )}
             </div>
           </Card>
 
@@ -254,10 +279,10 @@ export const FreelancerProfile: React.FC = () => {
                         <select
                           value={slot.dayOfWeek}
                           onChange={e => handleUpdateTempSlot(idx, 'dayOfWeek', Number(e.target.value))}
-                          className="bg-cream border border-ink text-[10px] font-mono p-1 focus:outline-none rounded"
+                          className="bg-cream border border-ink text-[10px] font-mono p-1 focus:outline-none rounded dark:bg-[#1A1A1A] dark:text-[#F5F0E6]"
                         >
                           {DAYS_OF_WEEK.map((d, i) => (
-                            <option key={i} value={i}>{d}</option>
+                            <option key={i} value={i} className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">{d}</option>
                           ))}
                         </select>
                         <Input
@@ -380,11 +405,11 @@ export const FreelancerProfile: React.FC = () => {
                         required
                         value={bookingGigId}
                         onChange={e => setBookingGigId(e.target.value)}
-                        className="w-full px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
+                        className="w-full px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans dark:bg-[#1A1A1A] dark:text-[#F5F0E6]"
                       >
-                        <option value="">-- Choose Gig --</option>
+                        <option value="" className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">-- Choose Gig --</option>
                         {myGigs.map(g => (
-                          <option key={g._id} value={g._id}>{g.title}</option>
+                          <option key={g._id} value={g._id} className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">{g.title}</option>
                         ))}
                       </select>
                     </div>
@@ -496,6 +521,39 @@ export const FreelancerProfile: React.FC = () => {
                       </a>
                     )}
                   </Card>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* Work Experience Timeline */}
+          <Card className="text-left">
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Work Experience Timeline</h3>
+            {(!freelancer.experience || freelancer.experience.length === 0) ? (
+              <p className="text-xs text-ink/60 font-sans pl-1 italic">No work experience timeline listed.</p>
+            ) : (
+              <div className="relative border-l-2 border-ink ml-3 pl-6 space-y-6 my-2">
+                {freelancer.experience.map((exp, i) => (
+                  <div key={i} className="relative">
+                    {/* Bullet marker */}
+                    <div className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 bg-accent-teal border-2 border-ink rounded-full" />
+                    <div>
+                      <h4 className="font-bold text-ink text-sm font-display uppercase tracking-tight">
+                        {exp.title}
+                      </h4>
+                      <p className="text-xs text-ink font-sans font-bold mt-0.5">
+                        {exp.company}
+                      </p>
+                      <p className="text-[10px] font-mono text-ink/60 mt-0.5">
+                        {exp.startDate} — {exp.endDate || 'Present'}
+                      </p>
+                      {exp.description && (
+                        <p className="text-xs text-ink/75 mt-1.5 leading-relaxed font-sans font-bold">
+                          {exp.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}

@@ -11,4 +11,5 @@ router.use(auth_1.protect);
 router.post('/', bookingController_1.createBooking);
 router.get('/', bookingController_1.getBookings);
 router.put('/:id/status', bookingController_1.updateBookingStatus);
+router.put('/:id/respond', bookingController_1.updateBookingStatus);
 exports.default = router;

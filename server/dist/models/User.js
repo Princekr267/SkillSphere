@@ -112,6 +112,15 @@ const UserSchema = new mongoose_1.Schema({
             type: String,
         },
     ],
+    experience: [
+        {
+            title: { type: String, required: true },
+            company: { type: String, required: true },
+            startDate: { type: String, required: true },
+            endDate: String,
+            description: String,
+        },
+    ],
     rating: {
         type: Number,
         default: 5.0,

@@ -91,7 +91,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/gigs"
             element={
-              <ProtectedRoute allowedRoles={['freelancer']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
                 <BrowseGigs />
               </ProtectedRoute>
             }
@@ -99,7 +99,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/gigs/:id"
             element={
-              <ProtectedRoute allowedRoles={['freelancer', 'client']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
                 <GigDetail />
               </ProtectedRoute>
             }
@@ -109,7 +109,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/gigs/:id/chat"
             element={
-              <ProtectedRoute allowedRoles={['freelancer', 'client']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
                 <GigChat />
               </ProtectedRoute>
             }
@@ -119,7 +119,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/review/:gigId/:revieweeId"
             element={
-              <ProtectedRoute allowedRoles={['freelancer', 'client']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
                 <LeaveReview />
               </ProtectedRoute>
             }
@@ -129,7 +129,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/profile/:id"
             element={
-              <ProtectedRoute allowedRoles={['freelancer', 'client']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
                 <FreelancerProfile />
               </ProtectedRoute>
             }

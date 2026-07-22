@@ -35,12 +35,13 @@ const createBooking = async (req, res) => {
             endTime,
             status: 'pending',
         });
+        const clientCompany = req.user?.companyName ? ` (${req.user.companyName})` : '';
         // Notify freelancer
         const notif = await Notification_1.default.create({
             userId: freelancerId,
             type: 'new_application', // Using existing valid enum type
-            title: 'New Calendar Booking Request',
-            body: `${req.user?.name} requested a booking slot on ${new Date(date).toLocaleDateString()}`,
+            title: `Booking Request: ${gig.title}`,
+            body: `${req.user?.name}${clientCompany} requested a booking slot for "${gig.title}" on ${new Date(date).toLocaleDateString()}`,
             link: `/freelancer-dashboard`,
         });
         (0, socket_1.sendNotification)(freelancerId.toString(), notif);
@@ -61,9 +62,9 @@ const getBookings = async (req, res) => {
             ? { freelancerId: userId }
             : { clientId: userId };
         const bookings = await Booking_1.default.find(query)
-            .populate('clientId', 'name email location')
-            .populate('freelancerId', 'name email location')
-            .populate('gigId', 'title status budget')
+            .populate('clientId', 'name email location companyName avatar bio')
+            .populate('freelancerId', 'name email location avatar rating reviewCount hourlyRate skills bio certifications')
+            .populate('gigId', 'title status budget budgetType category')
             .sort({ date: 1, startTime: 1 });
         return res.json({ success: true, bookings });
     }
@@ -93,15 +94,18 @@ const updateBookingStatus = async (req, res) => {
         }
         booking.status = status;
         await booking.save();
+        // Fetch gig details for notification title & body
+        const gig = await Gig_1.default.findById(booking.gigId);
+        const gigTitle = gig ? gig.title : 'Gig';
         // Notify other participant
         const otherUserId = booking.freelancerId.toString() === userIdStr
             ? booking.clientId
             : booking.freelancerId;
         const notif = await Notification_1.default.create({
             userId: otherUserId,
-            type: status === 'confirmed' ? 'application_accepted' : 'application_rejected', // Using existing valid enum types
-            title: `Booking Request ${status.toUpperCase()}`,
-            body: `${req.user?.name} has ${status} the booking request for ${new Date(booking.date).toLocaleDateString()}`,
+            type: status === 'confirmed' ? 'application_accepted' : 'application_rejected',
+            title: `Appointment ${status.toUpperCase()} for "${gigTitle}"`,
+            body: `${req.user?.name} has ${status} the booking request for "${gigTitle}" on ${new Date(booking.date).toLocaleDateString()}`,
             link: req.user?.role === 'freelancer' ? '/client-dashboard' : '/freelancer-dashboard',
         });
         (0, socket_1.sendNotification)(otherUserId.toString(), notif);

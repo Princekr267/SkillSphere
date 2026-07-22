@@ -22,13 +22,15 @@ const isCloudinaryConfigured = (): boolean => {
   );
 };
 
-if (isCloudinaryConfigured()) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-}
+const configureCloudinary = () => {
+  if (isCloudinaryConfigured()) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+  }
+};
 
 
 // ─── GIG CATEGORIES ──────────────────────────────────────────────────────────
@@ -679,6 +681,7 @@ export const updateMilestone = async (req: AuthRequest, res: Response): Promise<
     if (req.file) {
       if (isCloudinaryConfigured()) {
         try {
+          configureCloudinary();
           const result = await cloudinary.uploader.upload(req.file.path, {
             folder: 'skillsphere_deliverables',
           });

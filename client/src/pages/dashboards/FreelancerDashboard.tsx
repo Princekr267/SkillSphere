@@ -60,11 +60,19 @@ export const FreelancerDashboard: React.FC = () => {
   const [skills, setSkills] = useState(user?.skills || []);
   const [portfolio, setPortfolio] = useState(user?.portfolio || []);
   const [certifications, setCertifications] = useState(user?.certifications || []);
+  const [experience, setExperience] = useState<any[]>(user?.experience || []);
 
   // Temporary inputs states
   const [newSkillName, setNewSkillName] = useState('');
   const [newSkillLevel, setNewSkillLevel] = useState<'Beginner' | 'Intermediate' | 'Expert'>('Intermediate');
   const [newCertName, setNewCertName] = useState('');
+  
+  // Temporary experience states
+  const [expTitle, setExpTitle] = useState('');
+  const [expCompany, setExpCompany] = useState('');
+  const [expStart, setExpStart] = useState('');
+  const [expEnd, setExpEnd] = useState('');
+  const [expDesc, setExpDesc] = useState('');
 
   // Portfolio dialog inputs
   const [portTitle, setPortTitle] = useState('');
@@ -105,6 +113,23 @@ export const FreelancerDashboard: React.FC = () => {
     }
   };
 
+  const [trendingSkills, setTrendingSkills] = useState<any[]>([]);
+  const [trendingLoading, setTrendingLoading] = useState(false);
+
+  const loadTrendingSkills = async () => {
+    setTrendingLoading(true);
+    try {
+      const res = await api.get('/ai/trending-skills');
+      if (res.data.success) {
+        setTrendingSkills(res.data.trending);
+      }
+    } catch (err) {
+      console.error('Error fetching trending skills:', err);
+    } finally {
+      setTrendingLoading(false);
+    }
+  };
+
   const loadAnalytics = async () => {
     setAnalyticsLoading(true);
     try {
@@ -124,6 +149,7 @@ export const FreelancerDashboard: React.FC = () => {
       loadBookings();
     } else if (activeTab === 'analytics') {
       loadAnalytics();
+      loadTrendingSkills();
     }
   }, [activeTab]);
 
@@ -213,13 +239,15 @@ export const FreelancerDashboard: React.FC = () => {
   const saveLists = async (
     updatedSkills = skills,
     updatedPortfolio = portfolio,
-    updatedCerts = certifications
+    updatedCerts = certifications,
+    updatedExp = experience
   ) => {
     try {
-      const res = await api.put('/users/profile/skills-details', {
+      const res = await api.put('/users/profile', {
         skills: updatedSkills,
         portfolio: updatedPortfolio,
         certifications: updatedCerts,
+        experience: updatedExp,
       });
       if (res.data.success) {
         updateUser(res.data.user);
@@ -271,6 +299,36 @@ export const FreelancerDashboard: React.FC = () => {
     saveLists(skills, portfolio, updated);
   };
 
+  // Add Experience
+  const handleAddExperience = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expTitle.trim() || !expCompany.trim() || !expStart.trim()) return;
+
+    const newExp = {
+      title: expTitle.trim(),
+      company: expCompany.trim(),
+      startDate: expStart.trim(),
+      endDate: expEnd.trim() || 'Present',
+      description: expDesc.trim(),
+    };
+
+    const updated = [...experience, newExp];
+    setExperience(updated);
+    setExpTitle('');
+    setExpCompany('');
+    setExpStart('');
+    setExpEnd('');
+    setExpDesc('');
+    saveLists(skills, portfolio, certifications, updated);
+  };
+
+  // Delete Experience
+  const handleDeleteExperience = (index: number) => {
+    const updated = experience.filter((_, idx) => idx !== index);
+    setExperience(updated);
+    saveLists(skills, portfolio, certifications, updated);
+  };
+
   // Add Portfolio Item
   const handleAddPortfolio = (e: React.FormEvent) => {
     e.preventDefault();
@@ -314,7 +372,7 @@ export const FreelancerDashboard: React.FC = () => {
     setMessage(null);
     setRemovingResume(true);
     try {
-      const res = await api.delete('/users/profile/resume');
+      const res = await api.delete('/users/resume');
       if (res.data.success) {
         updateUser(res.data.user);
         setMessage({ type: 'success', text: 'Resume file removed successfully.' });
@@ -624,6 +682,35 @@ export const FreelancerDashboard: React.FC = () => {
                 </div>
               </Card>
 
+              {/* Trending Skills Matrix */}
+              <Card className="p-6 text-left">
+                <span className="text-[10px] font-mono font-bold text-ink/60 uppercase tracking-widest block mb-4">
+                  Marketplace Trending Skills (AI Aggregated)
+                </span>
+
+                {trendingLoading ? (
+                  <div className="flex justify-center py-6">
+                    <Loader2 className="h-5 w-5 text-accent-teal animate-spin" />
+                  </div>
+                ) : trendingSkills.length === 0 ? (
+                  <p className="text-xs text-ink/60 font-sans italic">No trending skills detected in recent gigs yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2.5">
+                    {trendingSkills.map((ts, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center space-x-2.5 px-3 py-2 border-2 border-ink bg-cream rounded-lg shadow-retro-sm"
+                      >
+                        <span className="text-xs font-bold text-ink font-sans">{ts.name}</span>
+                        <Badge variant="teal" className="shadow-none text-[8px] font-mono">
+                          {ts.count} Gigs
+                        </Badge>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
             </div>
           )}
         </Card>
@@ -669,6 +756,13 @@ export const FreelancerDashboard: React.FC = () => {
                   <span>RATE:</span>
                 </span>
                 <span className="font-bold text-ink text-sm">₹{user.hourlyRate || 0}/HR</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center space-x-2">
+                  <Mail className="h-4 w-4 text-accent-teal" />
+                  <span>EMAIL:</span>
+                </span>
+                <span className="font-bold text-ink truncate max-w-[170px]" title={user.email}>{user.email}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center space-x-2">
@@ -921,11 +1015,11 @@ export const FreelancerDashboard: React.FC = () => {
                 <select
                   value={newSkillLevel}
                   onChange={(e) => setNewSkillLevel(e.target.value as any)}
-                  className="w-full px-3 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
+                  className="w-full px-3 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans dark:bg-cream dark:text-ink"
                 >
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Expert">Expert</option>
+                  <option value="Beginner" className="bg-cream text-ink">Beginner</option>
+                  <option value="Intermediate" className="bg-cream text-ink">Intermediate</option>
+                  <option value="Expert" className="bg-cream text-ink">Expert</option>
                 </select>
               </div>
               <Button
@@ -1054,6 +1148,97 @@ export const FreelancerDashboard: React.FC = () => {
               >
                 <Plus className="h-4 w-4 mr-1" />
                 <span>Add</span>
+              </Button>
+            </form>
+          </Card>
+
+          {/* Card 6: Work Experience Timeline */}
+          <Card>
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-wider mb-4 pl-1">Work Experience Timeline</h3>
+
+            {experience.length > 0 ? (
+              <div className="space-y-4 mb-6 font-sans">
+                {experience.map((exp, i) => (
+                  <div key={i} className="p-3 bg-cream border-2 border-ink text-xs text-ink rounded-lg relative text-left">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteExperience(i)}
+                      className="absolute right-3 top-3 text-ink/60 hover:text-accent-coral transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                    <p className="font-bold font-display uppercase tracking-tight text-xs pr-6">
+                      {exp.title}
+                    </p>
+                    <p className="font-bold text-[10px] text-ink/80 mt-0.5">
+                      {exp.company}
+                    </p>
+                    <p className="text-[9px] font-mono text-ink/60 mt-0.5">
+                      {exp.startDate} — {exp.endDate || 'Present'}
+                    </p>
+                    {exp.description && (
+                      <p className="text-[10px] text-ink/75 mt-1.5 leading-relaxed font-sans font-bold">
+                        {exp.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No work experience timeline listed.</p>
+            )}
+
+            <form onSubmit={handleAddExperience} className="space-y-3.5 border-t-2 border-ink pt-4 font-sans text-left">
+              <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Add Job Entry</span>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  type="text"
+                  required
+                  value={expTitle}
+                  onChange={(e) => setExpTitle(e.target.value)}
+                  placeholder="Job Title (e.g. Lead Designer)"
+                />
+                <Input
+                  type="text"
+                  required
+                  value={expCompany}
+                  onChange={(e) => setExpCompany(e.target.value)}
+                  placeholder="Company Name (e.g. Google)"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  type="text"
+                  required
+                  value={expStart}
+                  onChange={(e) => setExpStart(e.target.value)}
+                  placeholder="Start Date (e.g. Jan 2024)"
+                />
+                <Input
+                  type="text"
+                  value={expEnd}
+                  onChange={(e) => setExpEnd(e.target.value)}
+                  placeholder="End Date (e.g. Dec 2024 or leave empty for Present)"
+                />
+              </div>
+
+              <textarea
+                rows={2}
+                value={expDesc}
+                onChange={(e) => setExpDesc(e.target.value)}
+                placeholder="Brief summary of duties, projects, achievements..."
+                className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm resize-none focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
+              />
+
+              <Button
+                type="submit"
+                variant="secondary"
+                className="w-full py-2.5 flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Save Experience Entry</span>
               </Button>
             </form>
           </Card>

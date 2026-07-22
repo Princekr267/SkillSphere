@@ -17,6 +17,12 @@ const createProposal = async (req, res) => {
         if (!user || user.role !== 'freelancer') {
             return res.status(403).json({ success: false, message: 'Only freelancers can submit proposals' });
         }
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                message: 'Email verification required. Please verify your email address to submit proposals.',
+            });
+        }
         const { coverLetter, bidAmount, completionTime } = req.body;
         const gigId = req.params.id;
         if (!coverLetter || !bidAmount || !completionTime) {

@@ -19,13 +19,15 @@ const isCloudinaryConfigured = (): boolean => {
   );
 };
 
-if (isCloudinaryConfigured()) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-}
+const configureCloudinary = () => {
+  if (isCloudinaryConfigured()) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+  }
+};
 
 /**
  * @desc    Update user profile details
@@ -52,6 +54,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
       hourlyRate,
       portfolio,
       certifications,
+      experience,
     } = req.body;
 
     // 1. General Profile Updates
@@ -75,6 +78,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
       if (hourlyRate !== undefined) user.hourlyRate = Number(hourlyRate);
       if (portfolio !== undefined) user.portfolio = portfolio;
       if (certifications !== undefined) user.certifications = certifications;
+      if (experience !== undefined) user.experience = experience;
     }
 
     const updatedUser = await user.save();
@@ -95,6 +99,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
         hourlyRate: updatedUser.hourlyRate,
         resumeUrl: updatedUser.resumeUrl,
         certifications: updatedUser.certifications,
+        experience: updatedUser.experience,
         rating: updatedUser.rating,
         reviewCount: updatedUser.reviewCount,
       },
@@ -125,8 +130,9 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
     if (isCloudinaryConfigured()) {
       // Upload to Cloudinary
       try {
+        configureCloudinary();
         const result = await cloudinary.uploader.upload(req.file.path, {
-          resource_type: 'raw', // For non-image files like PDFs
+          resource_type: 'auto',
           folder: 'skillsphere_resumes',
         });
         fileUrl = result.secure_url;
@@ -201,6 +207,7 @@ export const uploadAvatar = async (req: AuthRequest, res: Response) => {
 
     if (isCloudinaryConfigured()) {
       try {
+        configureCloudinary();
         const result = await cloudinary.uploader.upload(req.file.path, {
           folder: 'skillsphere_avatars',
           transformation: [{ width: 400, height: 400, crop: 'limit' }],
@@ -400,6 +407,7 @@ export const deleteAvatar = async (req: AuthRequest, res: Response) => {
       // Try to delete from Cloudinary if configured
       if (isCloudinaryConfigured() && user.avatar.includes('cloudinary')) {
         try {
+          configureCloudinary();
           // Extract public_id from url
           const parts = user.avatar.split('/');
           const fileWithExt = parts[parts.length - 1];
@@ -447,10 +455,15 @@ export const deleteResume = async (req: AuthRequest, res: Response) => {
     if (user.resumeUrl) {
       if (isCloudinaryConfigured() && user.resumeUrl.includes('cloudinary')) {
         try {
+          configureCloudinary();
           const parts = user.resumeUrl.split('/');
           const fileWithExt = parts[parts.length - 1];
           const publicId = `skillsphere_resumes/${fileWithExt.split('.')[0]}`;
-          await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+          try {
+            await cloudinary.uploader.destroy(publicId);
+          } catch (destroyErr) {
+            await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+          }
         } catch (e) {
           console.warn('Cloudinary resume delete failed:', e);
         }

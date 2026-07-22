@@ -356,9 +356,9 @@ export const ClientGigManager: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Category *</label>
                 <select required value={category} onChange={e => setCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
+                  className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans dark:bg-[#1A1A1A] dark:text-[#F5F0E6]"
                 >
-                  {GIG_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  {GIG_CATEGORIES.map(c => <option key={c} value={c} className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">{c}</option>)}
                 </select>
               </div>
               <div className="space-y-1.5">

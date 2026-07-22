@@ -34,6 +34,13 @@ export interface IUser extends Document {
   portfolio: IPortfolioItem[];
   resumeUrl?: string;
   certifications: string[];
+  experience?: Array<{
+    title: string;
+    company: string;
+    startDate: string;
+    endDate?: string;
+    description?: string;
+  }>;
   rating: number;
   reviewCount: number;
   completedGigsCount?: number;
@@ -129,6 +136,15 @@ const UserSchema: Schema = new Schema(
     certifications: [
       {
         type: String,
+      },
+    ],
+    experience: [
+      {
+        title: { type: String, required: true },
+        company: { type: String, required: true },
+        startDate: { type: String, required: true },
+        endDate: String,
+        description: String,
       },
     ],
     rating: {

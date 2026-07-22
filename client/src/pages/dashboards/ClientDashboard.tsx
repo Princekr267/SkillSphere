@@ -391,6 +391,10 @@ export const ClientDashboard: React.FC = () => {
                     <MapPin className="h-4 w-4 text-accent-teal flex-shrink-0" />
                     <span className="font-bold text-ink">{user.location.city}</span>
                   </div>
+                  <div className="flex items-center space-x-2 text-ink/70">
+                    <Mail className="h-4 w-4 text-accent-teal flex-shrink-0" />
+                    <span className="font-bold text-ink truncate max-w-[190px]" title={user.email}>{user.email}</span>
+                  </div>
                 </div>
               </Card>
 

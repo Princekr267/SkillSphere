@@ -21,13 +21,15 @@ const isCloudinaryConfigured = () => {
         !key.includes('placeholder') &&
         !secret.includes('placeholder'));
 };
-if (isCloudinaryConfigured()) {
-    cloudinary_1.v2.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-    });
-}
+const configureCloudinary = () => {
+    if (isCloudinaryConfigured()) {
+        cloudinary_1.v2.config({
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET,
+        });
+    }
+};
 // @desc    Raise a dispute on a gig
 // @route   POST /api/disputes
 // @access  Private
@@ -65,6 +67,7 @@ const raiseDispute = async (req, res) => {
         if (req.file) {
             if (isCloudinaryConfigured()) {
                 try {
+                    configureCloudinary();
                     const result = await cloudinary_1.v2.uploader.upload(req.file.path, {
                         folder: 'skillsphere_disputes',
                         resource_type: 'auto',

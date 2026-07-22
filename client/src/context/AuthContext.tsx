@@ -20,6 +20,13 @@ export interface IUser {
   portfolio: Array<{ title: string; description: string; link?: string }>;
   resumeUrl?: string;
   certifications: string[];
+  experience?: Array<{
+    title: string;
+    company: string;
+    startDate: string;
+    endDate?: string;
+    description?: string;
+  }>;
   rating: number;
   reviewCount: number;
   isVerified?: boolean;

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.googleLogin = exports.verify2FACode = exports.disable2FA = exports.enable2FA = exports.generate2FA = exports.resetPassword = exports.forgotPassword = exports.verifyEmail = exports.getMe = exports.loginUser = exports.registerUser = void 0;
+exports.googleLogin = exports.verify2FACode = exports.disable2FA = exports.enable2FA = exports.generate2FA = exports.resetPassword = exports.forgotPassword = exports.resendVerificationEmail = exports.verifyEmail = exports.getMe = exports.loginUser = exports.registerUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
@@ -150,6 +150,13 @@ const loginUser = async (req, res) => {
         }
         // 4. Check 2FA
         if (user.twoFactorEnabled) {
+            // Generate OTP Code
+            const otpCode = speakeasy_1.default.totp({
+                secret: user.twoFactorSecret || 'default_secret',
+                encoding: 'base32',
+            });
+            // Send Code to Email
+            await (0, emailService_1.sendOTPEmail)(user.email, otpCode);
             const tempToken = jsonwebtoken_1.default.sign({ tempUserId: user._id.toString() }, process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026', { expiresIn: '5m' });
             return res.status(200).json({
                 success: true,
@@ -221,15 +228,31 @@ exports.getMe = getMe;
  */
 const verifyEmail = async (req, res) => {
     try {
-        const { token } = req.params;
-        const user = await User_1.default.findOne({
-            verificationToken: token,
-            verificationTokenExpires: { $gt: new Date() },
-        });
+        const token = req.body.token || req.params.token;
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                message: 'Verification token is required.',
+            });
+        }
+        // Find user by token
+        const user = await User_1.default.findOne({ verificationToken: token });
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: 'Verification token is invalid or has expired.',
+                message: 'Verification token is invalid or has already been used.',
+            });
+        }
+        if (user.isVerified) {
+            return res.status(200).json({
+                success: true,
+                message: 'Your email address is already verified! You can proceed to sign in.',
+            });
+        }
+        if (user.verificationTokenExpires && user.verificationTokenExpires < new Date()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Verification token has expired. Please request a new verification link.',
             });
         }
         user.isVerified = true;
@@ -238,7 +261,7 @@ const verifyEmail = async (req, res) => {
         await user.save();
         res.status(200).json({
             success: true,
-            message: 'Email verified successfully! You can close this window.',
+            message: 'Email verified successfully! You now have full access to post & apply for gigs.',
         });
     }
     catch (error) {
@@ -250,6 +273,40 @@ const verifyEmail = async (req, res) => {
     }
 };
 exports.verifyEmail = verifyEmail;
+/**
+ * @desc    Resend email verification link
+ * @route   POST /api/auth/resend-verification
+ * @access  Private
+ */
+const resendVerificationEmail = async (req, res) => {
+    try {
+        const user = await User_1.default.findById(req.user?._id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        if (user.isVerified) {
+            return res.status(400).json({ success: false, message: 'Your email address is already verified.' });
+        }
+        const verificationToken = crypto_1.default.randomBytes(16).toString('hex');
+        const verificationTokenExpires = new Date(Date.now() + 24 * 3600 * 1000); // 24 hours
+        user.verificationToken = verificationToken;
+        user.verificationTokenExpires = verificationTokenExpires;
+        await user.save();
+        await (0, emailService_1.sendVerificationEmail)(user.email, verificationToken);
+        res.status(200).json({
+            success: true,
+            message: 'Fresh verification link generated! Check your terminal logs or Mailtrap inbox.',
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Could not resend verification email.',
+            error: error.message,
+        });
+    }
+};
+exports.resendVerificationEmail = resendVerificationEmail;
 /**
  * @desc    Request password reset link
  * @route   POST /api/auth/forgot-password
@@ -511,6 +568,7 @@ const googleLogin = async (req, res) => {
             const userData = {
                 name,
                 email,
+                password: crypto_1.default.randomBytes(16).toString('hex'),
                 role,
                 location,
                 avatar: picture,

@@ -95,7 +95,7 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-20">
           
           {/* Logo & Brand */}
-          <div className="flex items-center">
+          <div className="flex items-center space-x-3">
             <Link 
               to={dashboardPath} 
               className="flex items-center space-x-2 group"
@@ -108,6 +108,11 @@ export const Navbar: React.FC = () => {
                 SkillSphere
               </span>
             </Link>
+            
+            <Badge variant="teal" className="text-[8px] font-mono shadow-none uppercase font-black px-1.5 py-0.5 tracking-wider hidden sm:inline-flex items-center border-2 border-ink bg-accent-teal text-ink">
+              <span className="w-1.5 h-1.5 rounded-full bg-cream inline-block animate-pulse mr-1"></span>
+              <span>Live Node</span>
+            </Badge>
           </div>
 
           {/* Navigation Route Line (desktop only) */}
@@ -119,63 +124,48 @@ export const Navbar: React.FC = () => {
               <div className="flex flex-col items-center">
                 <Link to={dashboardPath} className="flex flex-col items-center group">
                   <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
-                    user ? 'text-ink' : 'text-ink/60'
+                    isActive(dashboardPath) ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
                   }`}>
                     Dashboard
                   </span>
                   <div className={`w-4.5 h-4.5 border-2 border-ink transition-all rounded-md ${
-                    user ? 'bg-accent-amber scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-amber/20'
+                    isActive(dashboardPath) ? 'bg-accent-amber scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-amber/20'
                   }`}></div>
                 </Link>
               </div>
 
-              {/* Station 2: Local Node */}
+              {/* Station 2: Marketplace / Gigs */}
               <div className="flex flex-col items-center">
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 text-ink/60">
-                    Local Node
+                <Link to="/gigs" className="flex flex-col items-center group">
+                  <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
+                    isActive('/gigs') ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
+                  }`}>
+                    Marketplace
                   </span>
-                  <div className="flex items-center space-x-1.5">
-                    <div className="w-4 h-4 border-2 border-ink bg-cream rounded-md"></div>
-                    {user && (
-                      <Badge variant="teal" className="text-[8px] font-mono shadow-none px-1.5">
-                        {user.location.city}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+                  <div className={`w-4.5 h-4.5 border-2 border-ink transition-all rounded-md ${
+                    isActive('/gigs') ? 'bg-accent-teal scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-teal/20'
+                  }`}></div>
+                </Link>
               </div>
 
-              {/* Station 3 (Freelancer only): Browse Gigs */}
-              {user?.role === 'freelancer' && (
+              {/* Station 3: Node Profile */}
+              {user && (
                 <div className="flex flex-col items-center">
-                  <Link to="/gigs" className="flex flex-col items-center group">
+                  <Link 
+                    to={user.role === 'freelancer' ? `/profile/${user._id}` : dashboardPath} 
+                    className="flex flex-col items-center group"
+                  >
                     <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
-                      isActive('/gigs') ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
+                      (user.role === 'freelancer' && isActive(`/profile/${user._id}`)) ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
                     }`}>
-                      Browse Gigs
+                      Node Profile
                     </span>
                     <div className={`w-4.5 h-4.5 border-2 border-ink transition-all rounded-md ${
-                      isActive('/gigs') ? 'bg-accent-teal scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-teal/20'
+                      (user.role === 'freelancer' && isActive(`/profile/${user._id}`)) ? 'bg-accent-pink scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-pink/20'
                     }`}></div>
                   </Link>
                 </div>
               )}
-
-              {/* Station 4: Platform Status */}
-              <div className="flex flex-col items-center">
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 text-ink/60">
-                    Platform Status
-                  </span>
-                  <div className="flex items-center space-x-1.5">
-                    <div className="w-4 h-4 bg-accent-teal border-2 border-ink rounded-md animate-pulse"></div>
-                    <span className="text-[9px] font-mono text-accent-teal uppercase tracking-wider font-extrabold">
-                      Live
-                    </span>
-                  </div>
-                </div>
-              </div>
 
             </div>
           </div>
@@ -193,6 +183,12 @@ export const Navbar: React.FC = () => {
 
             {user ? (
               <>
+                {/* Location Info Badge */}
+                <div className="hidden lg:flex items-center space-x-1.5 px-3 py-1.5 border-2 border-ink bg-cream text-ink rounded-lg text-xs font-mono font-bold">
+                  <span className="w-2 h-2 rounded-full bg-accent-teal inline-block"></span>
+                  <span>{user.location.city}</span>
+                </div>
+
                 {/* User Info & Badge */}
                 <div className="flex items-center space-x-3 pr-4 border-r-2 border-ink">
                   <div className="flex flex-col text-right">

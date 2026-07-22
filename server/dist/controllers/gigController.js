@@ -21,13 +21,15 @@ const isCloudinaryConfigured = () => {
         key !== 'placeholder_api_key' &&
         secret !== 'placeholder_api_secret');
 };
-if (isCloudinaryConfigured()) {
-    cloudinary_1.v2.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-    });
-}
+const configureCloudinary = () => {
+    if (isCloudinaryConfigured()) {
+        cloudinary_1.v2.config({
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET,
+        });
+    }
+};
 // ─── GIG CATEGORIES ──────────────────────────────────────────────────────────
 exports.GIG_CATEGORIES = [
     'Technology & Development',
@@ -49,6 +51,12 @@ const createGig = async (req, res) => {
         const user = req.user;
         if (!user || user.role !== 'client') {
             return res.status(403).json({ success: false, message: 'Only clients can post gigs' });
+        }
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                message: 'Email verification required. Please verify your email address to post new gigs.',
+            });
         }
         const { title, description, category, budget, budgetType, skillsRequired, radiusKm } = req.body;
         if (!title || !description || !category || budget === undefined) {
@@ -617,6 +625,7 @@ const updateMilestone = async (req, res) => {
         if (req.file) {
             if (isCloudinaryConfigured()) {
                 try {
+                    configureCloudinary();
                     const result = await cloudinary_1.v2.uploader.upload(req.file.path, {
                         folder: 'skillsphere_deliverables',
                     });
