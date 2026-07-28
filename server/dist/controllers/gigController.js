@@ -118,8 +118,16 @@ exports.createGig = createGig;
  */
 const getGigs = async (req, res) => {
     try {
-        const { category, skills, status, search, minPrice, maxPrice, minRating, page = '1', limit = '20' } = req.query;
-        const filter = { status: status || 'open' };
+        const { category, skills, status, search, minPrice, maxPrice, minRating, clientId, page = '1', limit = '20' } = req.query;
+        const filter = {};
+        if (status === 'all') {
+            // Bypasses status filter to show all gigs
+        }
+        else {
+            filter.status = status || 'open';
+        }
+        if (clientId)
+            filter.clientId = clientId;
         if (category)
             filter.category = category;
         if (skills) {
@@ -233,10 +241,22 @@ exports.getNearbyGigs = getNearbyGigs;
  */
 const getGigById = async (req, res) => {
     try {
-        const gig = await Gig_1.default.findById(req.params.id)
+        let gig = await Gig_1.default.findById(req.params.id)
             .populate('clientId', 'name companyName location rating reviewCount avatar')
             .populate('applicants.freelancerId', 'name skills hourlyRate rating location avatar');
         if (!gig) {
+            const Proposal = require('../models/Proposal').default;
+            const proposal = await Proposal.findById(req.params.id).populate('freelancerId', 'name skills hourlyRate rating location avatar');
+            if (proposal) {
+                const baseGig = await Gig_1.default.findById(proposal.gigId)
+                    .populate('clientId', 'name companyName location rating reviewCount avatar')
+                    .populate('applicants.freelancerId', 'name skills hourlyRate rating location avatar');
+                if (baseGig) {
+                    const gigObj = baseGig.toObject();
+                    gigObj.acceptedFreelancerId = proposal.freelancerId;
+                    return res.status(200).json({ success: true, gig: gigObj });
+                }
+            }
             return res.status(404).json({ success: false, message: 'Gig not found' });
         }
         // Automated 24-hour deadline reminder checks
@@ -315,9 +335,11 @@ const getMyApplications = async (req, res) => {
         })
             .populate('clientId', 'name companyName location rating avatar')
             .sort({ updatedAt: -1 });
+        const Proposal = require('../models/Proposal').default;
+        const proposals = await Proposal.find({ freelancerId: user._id });
         // Enrich each gig response with the freelancer's own application status
         const result = gigs.map(gig => {
-            const myApp = gig.applicants.find(a => a.freelancerId.toString() === user._id.toString());
+            const prop = proposals.find((p) => p.gigId.toString() === gig._id.toString());
             return {
                 _id: gig._id,
                 title: gig.title,
@@ -328,7 +350,12 @@ const getMyApplications = async (req, res) => {
                 status: gig.status,
                 escrowStatus: gig.escrowStatus,
                 clientId: gig.clientId,
-                myApplication: myApp,
+                myApplication: prop ? {
+                    _id: prop._id,
+                    message: prop.coverLetter,
+                    status: prop.status,
+                    appliedAt: prop.createdAt,
+                } : null,
             };
         });
         res.status(200).json({ success: true, applications: result });

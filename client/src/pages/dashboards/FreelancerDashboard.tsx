@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Briefcase, 
@@ -43,11 +43,19 @@ interface CitySuggestion {
 // Freelancer dashboard screen styled in Retro-pop bold designs
 export const FreelancerDashboard: React.FC = () => {
   const { user, updateProfile, uploadResumeFile, updateUser } = useAuth();
+  const [searchParams] = useSearchParams();
   
   // View states
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('profile');
+
+  useEffect(() => {
+    const tab = searchParams.get('tab') as Tab;
+    if (tab && ['profile', 'applications', 'bookings', 'analytics'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   // Core details states
   const [name, setName] = useState(user?.name || '');

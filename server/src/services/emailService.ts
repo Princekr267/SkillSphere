@@ -1,5 +1,8 @@
 import nodemailer from 'nodemailer';
 
+/**
+ * Establishes a nodemailer SMTP transporter using Gmail or defined SMTP variables.
+ */
 export const getTransporter = () => {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT) || 587;
@@ -20,7 +23,7 @@ export const getTransporter = () => {
     });
   }
 
-  // Fallback: If Gmail user/pass are provided without custom SMTP host, use direct Gmail service
+  // Fallback: If Gmail credentials are provided, use Gmail service directly
   if (user && pass) {
     return nodemailer.createTransport({
       service: 'gmail',
@@ -34,8 +37,12 @@ export const getTransporter = () => {
   return null;
 };
 
+/**
+ * Send account verification email
+ */
 export const sendVerificationEmail = async (to: string, token: string) => {
-  const verifyUrl = `http://localhost:5173/verify-email?token=${token}`;
+  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+  const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
 
   // Always log link to terminal console for instant local development access
   console.log('\n==================================================');
@@ -46,10 +53,18 @@ export const sendVerificationEmail = async (to: string, token: string) => {
 
   try {
     const transporter = getTransporter();
-    if (!transporter) return;
+    if (!transporter) {
+      console.warn('⚠️ SMTP Transporter is not configured. Email cannot be sent.');
+      return;
+    }
+
+    // Gmail SMTP service requires 'from' to match the authenticated user email to prevent dispatch failures
+    const fromAddress = process.env.EMAIL_USER 
+      ? `"SkillSphere Security" <${process.env.EMAIL_USER}>` 
+      : '"SkillSphere Security" <noreply@skillsphere.in>';
 
     const mailOptions = {
-      from: '"SkillSphere Security" <noreply@skillsphere.in>',
+      from: fromAddress,
       to,
       subject: 'Verify your SkillSphere Account',
       html: `
@@ -67,15 +82,21 @@ export const sendVerificationEmail = async (to: string, token: string) => {
       text: `Welcome to SkillSphere! Verify your email address by visiting this link: ${verifyUrl}`
     };
 
-    return await transporter.sendMail(mailOptions);
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Verification email sent successfully via Nodemailer SMTP.');
+    return result;
   } catch (err: any) {
     console.error('❌ Nodemailer SMTP dispatch error:', err.message);
     throw err;
   }
 };
 
+/**
+ * Send password reset email
+ */
 export const sendPasswordResetEmail = async (to: string, token: string) => {
-  const resetUrl = `http://localhost:5173/reset-password?token=${token}`;
+  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+  const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
   // Always log reset link to terminal console for instant local development access
   console.log('\n==================================================');
@@ -86,10 +107,17 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
 
   try {
     const transporter = getTransporter();
-    if (!transporter) return;
+    if (!transporter) {
+      console.warn('⚠️ SMTP Transporter is not configured. Email cannot be sent.');
+      return;
+    }
+
+    const fromAddress = process.env.EMAIL_USER 
+      ? `"SkillSphere Security" <${process.env.EMAIL_USER}>` 
+      : '"SkillSphere Security" <security@skillsphere.in>';
 
     const mailOptions = {
-      from: '"SkillSphere Security" <security@skillsphere.in>',
+      from: fromAddress,
       to,
       subject: 'Reset your SkillSphere Password',
       html: `
@@ -108,13 +136,18 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
       text: `Reset your SkillSphere password by visiting this link: ${resetUrl}`
     };
 
-    return await transporter.sendMail(mailOptions);
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Password reset email sent successfully via Nodemailer SMTP.');
+    return result;
   } catch (err: any) {
     console.error('❌ Nodemailer SMTP dispatch error:', err.message);
     throw err;
   }
 };
 
+/**
+ * Send 2FA One-Time Password (OTP) email
+ */
 export const sendOTPEmail = async (to: string, otp: string) => {
   // Always log OTP to terminal console for instant local development access
   console.log('\n==================================================');
@@ -125,10 +158,17 @@ export const sendOTPEmail = async (to: string, otp: string) => {
 
   try {
     const transporter = getTransporter();
-    if (!transporter) return;
+    if (!transporter) {
+      console.warn('⚠️ SMTP Transporter is not configured. Email cannot be sent.');
+      return;
+    }
+
+    const fromAddress = process.env.EMAIL_USER 
+      ? `"SkillSphere Security" <${process.env.EMAIL_USER}>` 
+      : '"SkillSphere Security" <security@skillsphere.in>';
 
     const mailOptions = {
-      from: '"SkillSphere Security" <security@skillsphere.in>',
+      from: fromAddress,
       to,
       subject: 'Your SkillSphere OTP Code',
       html: `
@@ -147,7 +187,9 @@ export const sendOTPEmail = async (to: string, otp: string) => {
       text: `Your SkillSphere OTP code is: ${otp}`
     };
 
-    return await transporter.sendMail(mailOptions);
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ OTP email sent successfully via Nodemailer SMTP.');
+    return result;
   } catch (err: any) {
     console.error('❌ Nodemailer SMTP dispatch error:', err.message);
     throw err;

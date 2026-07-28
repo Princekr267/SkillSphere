@@ -14,11 +14,50 @@ const moderationService_1 = require("./services/moderationService");
 const Warning_1 = __importDefault(require("./models/Warning"));
 const JWT_SECRET = process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026';
 const activeUsers = new Set();
+async function resolveRoomParticipants(roomId) {
+    try {
+        let gig = null;
+        let proposal = null;
+        gig = await Gig_1.default.findById(roomId).select('clientId acceptedFreelancerId title');
+        if (!gig) {
+            const ProposalClass = require('./models/Proposal').default;
+            proposal = await ProposalClass.findById(roomId);
+            if (proposal) {
+                gig = await Gig_1.default.findById(proposal.gigId).select('clientId acceptedFreelancerId title');
+            }
+        }
+        if (!gig)
+            return null;
+        return {
+            clientId: gig.clientId.toString(),
+            acceptedFreelancerId: proposal ? proposal.freelancerId.toString() : (gig.acceptedFreelancerId?.toString() || null),
+            title: gig.title,
+        };
+    }
+    catch (err) {
+        return null;
+    }
+}
 let ioInstance = null;
 function initSocket(httpServer) {
+    const allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+    if (process.env.FRONTEND_URL) {
+        allowedOrigins.push(process.env.FRONTEND_URL.trim());
+    }
+    if (process.env.ALLOWED_ORIGINS) {
+        const extraOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+        allowedOrigins.push(...extraOrigins);
+    }
     const io = new socket_io_1.Server(httpServer, {
         cors: {
-            origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+            origin: (origin, callback) => {
+                if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+                    callback(null, true);
+                }
+                else {
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
             methods: ['GET', 'POST'],
             credentials: true,
         },
@@ -56,12 +95,12 @@ function initSocket(httpServer) {
         // ── join_room (gigs/chat) ──────────────────────────────────────────────────
         socket.on('join_room', async (gigId) => {
             try {
-                const gig = await Gig_1.default.findById(gigId).select('clientId acceptedFreelancerId');
-                if (!gig)
-                    return socket.emit('error', 'Gig not found');
+                const roomInfo = await resolveRoomParticipants(gigId);
+                if (!roomInfo)
+                    return socket.emit('error', 'Chat room not found');
                 const uid = socketUser._id.toString();
-                const isParticipant = gig.clientId.toString() === uid ||
-                    gig.acceptedFreelancerId?.toString() === uid;
+                const isParticipant = roomInfo.clientId === uid ||
+                    roomInfo.acceptedFreelancerId === uid;
                 if (!isParticipant)
                     return socket.emit('error', 'Not a participant of this gig');
                 socket.join(`gig-${gigId}`);
@@ -76,12 +115,12 @@ function initSocket(httpServer) {
             if (!body?.trim() && !fileUrl)
                 return;
             try {
-                const gig = await Gig_1.default.findById(gigId).select('clientId acceptedFreelancerId title');
-                if (!gig)
-                    return socket.emit('error', 'Gig not found');
+                const roomInfo = await resolveRoomParticipants(gigId);
+                if (!roomInfo)
+                    return socket.emit('error', 'Chat room not found');
                 const uid = socketUser._id.toString();
-                const isParticipant = gig.clientId.toString() === uid ||
-                    gig.acceptedFreelancerId?.toString() === uid;
+                const isParticipant = roomInfo.clientId === uid ||
+                    roomInfo.acceptedFreelancerId === uid;
                 if (!isParticipant)
                     return socket.emit('error', 'Not authorised');
                 // Moderate text if there is body content
@@ -123,23 +162,23 @@ function initSocket(httpServer) {
                         type: 'message_flagged',
                         title: 'Message Flagged for Moderation',
                         body: `Your message was flagged by platform safety: ${flagReason}`,
-                        link: `/gigs/${gig._id}/chat`,
+                        link: `/gigs/${gigId}/chat`,
                     });
                     sendNotification(socketUser._id.toString(), warnNotif);
                 }
                 else {
                     // Also trigger an in-app notification to the other participant (only if not flagged)
-                    const otherUserId = gig.clientId.toString() === uid
-                        ? gig.acceptedFreelancerId?.toString()
-                        : gig.clientId.toString();
+                    const otherUserId = roomInfo.clientId === uid
+                        ? roomInfo.acceptedFreelancerId
+                        : roomInfo.clientId;
                     if (otherUserId) {
                         const NotificationClass = require('./models/Notification').default;
                         const notif = await NotificationClass.create({
                             userId: otherUserId,
                             type: 'new_message',
-                            title: `New message on ${gig.title}`,
+                            title: `New message on ${roomInfo.title}`,
                             body: `${socketUser.name}: ${body.substring(0, 60)}${body.length > 60 ? '...' : ''}`,
-                            link: `/gigs/${gig._id}/chat`,
+                            link: `/gigs/${gigId}/chat`,
                         });
                         sendNotification(otherUserId, notif);
                     }

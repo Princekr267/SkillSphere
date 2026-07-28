@@ -4,11 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { Globe, LogOut, Menu, X, MessageSquare, Sun, Moon } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import { io } from 'socket.io-client';
-import api from '../utils/api';
+import api, { BACKEND_URL } from '../utils/api';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 
-const SOCKET_URL = 'http://localhost:3000';
+const SOCKET_URL = BACKEND_URL;
 
 // Navigation header styled in Retro-pop visual style with dark mode switch
 export const Navbar: React.FC = () => {
@@ -90,7 +90,7 @@ export const Navbar: React.FC = () => {
     : '/';
 
   return (
-    <nav className="bg-cream border-b-2 border-ink sticky top-0 z-50 transition-colors duration-200">
+    <nav className="bg-cream border-b-2 border-ink fixed top-0 left-0 right-0 z-50 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -104,7 +104,7 @@ export const Navbar: React.FC = () => {
               <div className="h-9 w-9 bg-accent-amber flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg shadow-retro-sm">
                 <Globe className="h-4.5 w-4.5" />
               </div>
-              <span className="text-xl font-display font-black tracking-tight text-ink uppercase">
+              <span className="text-base sm:text-xl font-display font-black tracking-tight text-ink uppercase">
                 SkillSphere
               </span>
             </Link>
@@ -152,16 +152,16 @@ export const Navbar: React.FC = () => {
               {user && (
                 <div className="flex flex-col items-center">
                   <Link 
-                    to={user.role === 'freelancer' ? `/profile/${user._id}` : dashboardPath} 
+                    to={user.role === 'admin' ? dashboardPath : `/profile/${user._id}`} 
                     className="flex flex-col items-center group"
                   >
                     <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
-                      (user.role === 'freelancer' && isActive(`/profile/${user._id}`)) ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
+                      isActive(`/profile/${user._id}`) ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
                     }`}>
                       Node Profile
                     </span>
                     <div className={`w-4.5 h-4.5 border-2 border-ink transition-all rounded-md ${
-                      (user.role === 'freelancer' && isActive(`/profile/${user._id}`)) ? 'bg-accent-pink scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-pink/20'
+                      isActive(`/profile/${user._id}`) ? 'bg-accent-pink scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-pink/20'
                     }`}></div>
                   </Link>
                 </div>
@@ -191,7 +191,7 @@ export const Navbar: React.FC = () => {
 
                 {/* User Info & Badge */}
                 <div className="flex items-center space-x-3 pr-4 border-r-2 border-ink">
-                  <div className="flex flex-col text-right">
+                  <div className="hidden lg:flex flex-col text-right">
                     <span className="text-sm font-bold text-ink">{user.name}</span>
                     <span className="text-[10px] font-mono text-ink/60 uppercase tracking-wider">
                       {user.role}
@@ -208,7 +208,7 @@ export const Navbar: React.FC = () => {
 
                 {/* Unread Messages Mail Badge */}
                 <Link
-                  to={dashboardPath}
+                  to={user?.role === 'client' ? '/client-dashboard?tab=gigs' : '/freelancer-dashboard?tab=applications'}
                   className="relative p-2 text-ink hover:bg-accent-amber/15 rounded-lg border-2 border-transparent transition-all"
                   title="Unread Messages"
                 >
@@ -254,7 +254,7 @@ export const Navbar: React.FC = () => {
             {user && (
               <>
                 <Link
-                  to={dashboardPath}
+                  to={user?.role === 'client' ? '/client-dashboard?tab=gigs' : '/freelancer-dashboard?tab=applications'}
                   className="relative p-2 text-ink"
                   title="Unread Messages"
                   onClick={() => setMobileOpen(false)}
@@ -311,12 +311,15 @@ export const Navbar: React.FC = () => {
                     {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                   </button>
                 </div>
-
                 {/* Nav links */}
                 <Link
                   to={dashboardPath}
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-sans font-bold text-ink border-2 border-transparent hover:border-ink hover:bg-accent-amber/25 transition-all"
+                  className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-sans font-bold transition-all border-2 ${
+                    isActive(dashboardPath)
+                      ? 'bg-accent-amber/10 border-ink shadow-retro-sm scale-[1.02]'
+                      : 'border-transparent hover:border-ink hover:bg-accent-amber/15'
+                  }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-accent-amber border border-ink flex-shrink-0" />
                   <span>Dashboard</span>
@@ -326,18 +329,35 @@ export const Navbar: React.FC = () => {
                   to="/gigs"
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-sans font-bold transition-all border-2 ${
-                    isActive('/gigs') ? 'bg-accent-teal/20 border-ink' : 'border-transparent hover:border-ink hover:bg-accent-teal/15'
+                    isActive('/gigs')
+                      ? 'bg-accent-teal/10 border-ink shadow-retro-sm scale-[1.02]'
+                      : 'border-transparent hover:border-ink hover:bg-accent-teal/15'
                   }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-accent-teal border border-ink flex-shrink-0" />
                   <span>Marketplace</span>
                 </Link>
 
+                {user.role !== 'admin' && (
+                  <Link
+                    to={`/profile/${user._id}`}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-sans font-bold transition-all border-2 ${
+                      isActive(`/profile/${user._id}`)
+                        ? 'bg-accent-pink/10 border-ink shadow-retro-sm scale-[1.02]'
+                        : 'border-transparent hover:border-ink hover:bg-accent-pink/15'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-accent-pink border border-ink flex-shrink-0" />
+                    <span>Node Profile</span>
+                  </Link>
+                )}
+
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-sans font-bold text-accent-coral hover:bg-accent-coral/10 border-2 border-transparent hover:border-ink transition-all cursor-pointer"
                 >
-                  <LogOut className="h-4 w-4 flex-shrink-0 text-ink" />
+                  <LogOut className="h-4.5 w-4.5 flex-shrink-0 text-ink" />
                   <span>Logout</span>
                 </button>
               </>

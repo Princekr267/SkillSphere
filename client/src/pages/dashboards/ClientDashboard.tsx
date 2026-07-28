@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Building, MapPin, Edit, FileText, Check, AlertCircle, Compass, Search, Calendar, Clock, User as UserIcon, Star, ExternalLink, Loader2, Mail } from 'lucide-react';
 import axios from 'axios';
@@ -23,7 +23,15 @@ type Tab = 'profile' | 'gigs' | 'calendar';
 
 export const ClientDashboard: React.FC = () => {
   const { user, updateProfile } = useAuth();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
+
+  useEffect(() => {
+    const tab = searchParams.get('tab') as Tab;
+    if (tab && ['profile', 'gigs', 'calendar'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
   
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || '');

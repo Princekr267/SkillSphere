@@ -45,6 +45,11 @@
 }
 
 @layer base {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   body {
     @apply text-ink font-sans antialiased min-h-screen flex flex-col selection:bg-accent-amber/20 selection:text-ink transition-colors duration-200;
     background-color: var(--color-cream);

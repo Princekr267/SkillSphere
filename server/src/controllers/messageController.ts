@@ -6,15 +6,45 @@ import { moderateText } from '../services/moderationService';
 import { AuthRequest } from '../middleware/auth';
 
 // Helper: check if user is a gig participant
-async function assertParticipant(gigId: string, userId: string, res: Response): Promise<any | null> {
-  const gig = await Gig.findById(gigId).select('clientId acceptedFreelancerId');
-  if (!gig) { res.status(404).json({ success: false, message: 'Gig not found' }); return null; }
+async function assertParticipant(roomId: string, userId: string, res: Response): Promise<any | null> {
+  const Proposal = require('../models/Proposal').default;
+  let gig: any = null;
+  let proposal: any = null;
+  
+  gig = await Gig.findById(roomId).select('clientId acceptedFreelancerId');
 
-  const isParticipant =
-    gig.clientId.toString() === userId ||
-    gig.acceptedFreelancerId?.toString() === userId;
+  if (!gig) {
+    proposal = await Proposal.findById(roomId);
+    if (proposal) {
+      gig = await Gig.findById(proposal.gigId).select('clientId acceptedFreelancerId');
+    }
+  }
 
-  if (!isParticipant) { res.status(403).json({ success: false, message: 'Not a participant of this gig' }); return null; }
+  if (!gig) {
+    res.status(404).json({ success: false, message: 'Gig or Chat Thread not found' });
+    return null;
+  }
+
+  const isClient = gig.clientId.toString() === userId;
+  const isAcceptedFreelancer = gig.acceptedFreelancerId?.toString() === userId;
+  const isProposalFreelancer = proposal && proposal.freelancerId.toString() === userId;
+
+  if (proposal) {
+    if (!isClient && !isProposalFreelancer) {
+      res.status(403).json({ success: false, message: 'Not a participant of this private chat' });
+      return null;
+    }
+    return {
+      _id: roomId,
+      clientId: gig.clientId,
+      acceptedFreelancerId: proposal.freelancerId
+    };
+  }
+
+  if (!isClient && !isAcceptedFreelancer) {
+    res.status(403).json({ success: false, message: 'Not a participant of this gig' });
+    return null;
+  }
   return gig;
 }
 

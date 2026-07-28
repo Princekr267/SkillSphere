@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { Globe, Check, AlertTriangle, ShieldCheck, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { Globe, Check, AlertTriangle, ShieldCheck, ArrowRight, LayoutDashboard } from 'lucide-react';
 import api from '../utils/api';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { useAuth } from '../context/AuthContext';
 
 export const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
 
   const [submitting, setSubmitting] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -28,15 +31,32 @@ export const VerifyEmail: React.FC = () => {
       if (res.data.success) {
         setVerified(true);
         setMessage(res.data.message || 'Email verified successfully! You now have full access.');
+        if (user) {
+          updateUser({ ...user, isVerified: true });
+        }
       } else {
         setError(res.data.message || 'Verification failed.');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Server error verifying email.');
+      // If user is already verified or backend responds with message
+      const msg = err.response?.data?.message || 'Server error verifying email.';
+      if (user?.isVerified || msg.toLowerCase().includes('already verified')) {
+        setVerified(true);
+        setMessage('Your email address is already verified!');
+        if (user) updateUser({ ...user, isVerified: true });
+      } else {
+        setError(msg);
+      }
     } finally {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (token) {
+      handleVerify();
+    }
+  }, [token]);
 
   return (
     <div className="flex-grow flex items-center justify-center p-8 bg-cream relative transition-colors duration-200">
@@ -73,9 +93,10 @@ export const VerifyEmail: React.FC = () => {
               <span>{message}</span>
             </div>
 
-            <Link to="/login" className="block w-full">
-              <Button variant="primary" className="w-full py-3">
-                <span>Sign Into Account</span>
+            <Link to={user ? (user.role === 'client' ? '/client-dashboard' : user.role === 'freelancer' ? '/freelancer-dashboard' : '/admin') : '/login'} className="block w-full">
+              <Button variant="primary" className="w-full py-3 flex items-center justify-center space-x-2">
+                <LayoutDashboard className="h-4 w-4" />
+                <span>{user ? 'Go to Dashboard' : 'Sign Into Account'}</span>
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>

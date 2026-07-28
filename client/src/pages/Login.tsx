@@ -7,6 +7,8 @@ import api from '../utils/api';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { EmailInput } from '../components/ui/EmailInput';
+import { PasswordInput } from '../components/ui/PasswordInput';
 
 interface CitySuggestion {
   place_id: number;
@@ -187,7 +189,7 @@ export const Login: React.FC = () => {
     const initGoogle = () => {
       if ((window as any).google) {
         (window as any).google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '35391508282-r6r69antfsgl9jen2e501242s5i4vqlk.apps.googleusercontent.com',
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '35391508282-83pfbal1rumlvjurfandhdq7al8fqm39.apps.googleusercontent.com',
           callback: handleGoogleLoginResponse,
         });
         const btnContainer = document.getElementById('google-signin-btn');
@@ -208,6 +210,13 @@ export const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address with a proper domain.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -244,6 +253,13 @@ export const Login: React.FC = () => {
     e.preventDefault();
     setError(null);
     setForgotSuccess(null);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(forgotEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -263,7 +279,7 @@ export const Login: React.FC = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 py-12 flex-grow bg-cream font-sans transition-colors duration-200">
+    <div className="max-w-lg mx-auto px-4 py-12 flex-grow bg-cream font-sans transition-colors duration-200">
       
       <Card className="p-8 text-left">
         
@@ -293,14 +309,12 @@ export const Login: React.FC = () => {
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40 z-10" />
-                  <Input
-                    type="email"
+                  <Mail className="absolute left-3.5 top-[22px] -translate-y-1/2 h-4 w-4 text-ink/40 z-30" />
+                  <EmailInput
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@domain.com"
-                    className="pl-10"
+                    onChange={setEmail}
+                    inputClassName="pl-10"
                   />
                 </div>
               </div>
@@ -319,9 +333,8 @@ export const Login: React.FC = () => {
                   </button>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40 z-10" />
-                  <Input
-                    type="password"
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40 z-30 pointer-events-none" />
+                  <PasswordInput
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -620,14 +633,12 @@ export const Login: React.FC = () => {
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40 z-10" />
-                  <Input
-                    type="email"
+                  <Mail className="absolute left-3.5 top-[22px] -translate-y-1/2 h-4 w-4 text-ink/40 z-30" />
+                  <EmailInput
                     required
                     value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="name@domain.com"
-                    className="pl-10"
+                    onChange={setForgotEmail}
+                    inputClassName="pl-10"
                   />
                 </div>
               </div>

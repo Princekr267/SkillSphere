@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, DollarSign, Tag, Loader2, ExternalLink } from 'lucide-react';
+import { MapPin, DollarSign, Tag, Loader2, ExternalLink, MessageSquare } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -20,6 +20,7 @@ interface MyApplication {
     companyName?: string;
   };
   myApplication: {
+    _id?: string;
     message: string;
     status: 'pending' | 'accepted' | 'rejected';
     appliedAt: string;
@@ -150,13 +151,24 @@ export const FreelancerApplications: React.FC = () => {
                 <span className="text-[10px] font-mono text-ink/60">
                   APPLIED: {new Date(app.myApplication?.appliedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </span>
-                <button
-                  onClick={() => navigate(`/gigs/${app._id}`)}
-                  className="flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold font-display uppercase tracking-wider cursor-pointer"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  <span>View Gig</span>
-                </button>
+                <div className="flex items-center space-x-3">
+                  {app.myApplication?._id && (
+                    <button
+                      onClick={() => navigate(`/gigs/${app.myApplication._id}/chat`)}
+                      className="flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold font-display uppercase tracking-wider cursor-pointer"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      <span>Chat</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => navigate(`/gigs/${app._id}`)}
+                    className="flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold font-display uppercase tracking-wider cursor-pointer"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>View Gig</span>
+                  </button>
+                </div>
               </div>
             </Card>
           ))}

@@ -10,7 +10,7 @@ import { Badge } from '../../components/ui/Badge';
 import {
   Plus, Tag, DollarSign, MapPin, Users, ChevronDown,
   ChevronRight, CheckCircle2, XCircle, Loader2, Trash2, X,
-  Banknote
+  Banknote, MessageSquare
 } from 'lucide-react';
 
 const GIG_CATEGORIES = [
@@ -361,13 +361,52 @@ export const ClientGigManager: React.FC = () => {
                   {GIG_CATEGORIES.map(c => <option key={c} value={c} className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">{c}</option>)}
                 </select>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Search Radius</label>
-                <div className="flex items-center space-x-3">
-                  <input type="range" min="5" max="200" step="5" value={radiusKm}
-                    onChange={e => setRadiusKm(Number(e.target.value))} className="flex-grow accent-accent-teal cursor-pointer" />
-                  <span className="text-xs font-mono text-accent-teal w-12 font-bold">{radiusKm}km</span>
+              <div className="space-y-2 sm:col-span-2">
+                <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Target Area / Scope *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { if (radiusKm >= 3000) setRadiusKm(25); }}
+                    className={`p-3 rounded-lg border-2 text-left flex items-center justify-between transition-all cursor-pointer ${
+                      radiusKm < 3000 ? 'border-accent-teal bg-accent-teal/10 text-ink font-bold shadow-retro-sm' : 'border-ink/20 bg-cream text-ink/70 hover:border-ink'
+                    }`}
+                  >
+                    <div>
+                      <p className="text-xs font-display font-black uppercase tracking-tight">Local Proximity Radius</p>
+                      <p className="text-[10px] font-sans opacity-80">Limit applications to nearby freelancers ({radiusKm >= 3000 ? '25' : radiusKm}km)</p>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-accent-teal">{radiusKm >= 3000 ? '25km' : `${radiusKm}km`}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setRadiusKm(4000)}
+                    className={`p-3 rounded-lg border-2 text-left flex items-center justify-between transition-all cursor-pointer ${
+                      radiusKm >= 3000 ? 'border-accent-teal bg-accent-teal/10 text-ink font-bold shadow-retro-sm' : 'border-ink/20 bg-cream text-ink/70 hover:border-ink'
+                    }`}
+                  >
+                    <div>
+                      <p className="text-xs font-display font-black uppercase tracking-tight">🇮🇳 Full Country India (Pan-India)</p>
+                      <p className="text-[10px] font-sans opacity-80">Open gig to freelancers across all of India</p>
+                    </div>
+                    <span className="text-[10px] font-mono font-extrabold bg-accent-amber text-ink px-2 py-0.5 rounded border border-ink">ALL INDIA</span>
+                  </button>
                 </div>
+
+                {radiusKm < 3000 && (
+                  <div className="pt-2 flex items-center space-x-3">
+                    <input
+                      type="range"
+                      min="5"
+                      max="200"
+                      step="5"
+                      value={radiusKm}
+                      onChange={e => setRadiusKm(Number(e.target.value))}
+                      className="flex-grow accent-accent-teal cursor-pointer"
+                    />
+                    <span className="text-xs font-mono text-accent-teal w-12 font-bold">{radiusKm}km</span>
+                  </div>
+                )}
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Budget (₹) *</label>
@@ -531,7 +570,9 @@ export const ClientGigManager: React.FC = () => {
                   {!gigProposals[gig._id] ? (
                     <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-accent-teal" /></div>
                   ) : gigProposals[gig._id].length === 0 ? (
-                    <p className="text-xs text-ink/60 font-sans italic text-left">No proposals yet. Your gig is visible to freelancers within {gig.radiusKm}km.</p>
+                    <p className="text-xs text-ink/60 font-sans italic text-left">
+                      No proposals yet. Your gig is visible to freelancers {gig.radiusKm >= 3000 ? 'across all of India (Full Country India)' : `within ${gig.radiusKm}km`}.
+                    </p>
                   ) : (
                     <div className="space-y-4">
                       {gigProposals[gig._id].map((prop) => (
@@ -569,6 +610,20 @@ export const ClientGigManager: React.FC = () => {
                           <p className="text-xs text-ink font-sans leading-relaxed bg-cream border-2 border-ink rounded-lg p-3 mb-3 text-left">
                             {prop.coverLetter}
                           </p>
+
+                          <div className="flex items-center justify-between mb-3 border-b border-ink/10 pb-3">
+                            <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider">Direct Candidate Node</span>
+                            <Link to={`/gigs/${prop._id}/chat`} onClick={e => e.stopPropagation()}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-accent-teal/10 hover:bg-accent-teal/25 py-1 px-3 border border-ink shadow-none h-auto font-display text-[10px] uppercase tracking-wider font-bold cursor-pointer flex items-center"
+                              >
+                                <MessageSquare className="h-3 w-3 mr-1 text-ink" />
+                                <span>Message Candidate</span>
+                              </Button>
+                            </Link>
+                          </div>
 
                           {/* Negotiation context */}
                           {prop.status === 'negotiating' && (

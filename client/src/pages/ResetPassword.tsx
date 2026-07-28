@@ -5,6 +5,7 @@ import api from '../utils/api';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { PasswordInput } from '../components/ui/PasswordInput';
 
 export const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -98,9 +99,8 @@ export const ResetPassword: React.FC = () => {
                 New Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
-                <Input
-                  type="password"
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-30 pointer-events-none" />
+                <PasswordInput
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -115,9 +115,8 @@ export const ResetPassword: React.FC = () => {
                 Confirm New Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
-                <Input
-                  type="password"
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-30 pointer-events-none" />
+                <PasswordInput
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

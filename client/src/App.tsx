@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navbar } from './components/Navbar';
@@ -50,10 +50,13 @@ const HomeRedirect: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
+  const location = useLocation();
+  const isChatPage = location.pathname.includes('/chat');
+
   return (
     <>
       <Navbar />
-      <main className="flex-grow flex flex-col">
+      <main className="flex-grow flex flex-col pt-20">
         <Routes>
           {/* Public Auth Routes */}
           <Route path="/login" element={<Login />} />
@@ -141,7 +144,7 @@ const AppContent: React.FC = () => {
         </Routes>
 
       </main>
-      <Footer />
+      {!isChatPage && <Footer />}
     </>
   );
 };

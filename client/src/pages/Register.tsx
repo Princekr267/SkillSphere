@@ -22,6 +22,8 @@ import axios from 'axios';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { EmailInput } from '../components/ui/EmailInput';
+import { PasswordInput } from '../components/ui/PasswordInput';
 import { Badge } from '../components/ui/Badge';
 
 interface CitySuggestion {
@@ -60,7 +62,7 @@ export const Register: React.FC = () => {
       const initGoogle = () => {
         if ((window as any).google) {
           (window as any).google.accounts.id.initialize({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '35391508282-r6r69antfsgl9jen2e501242s5i4vqlk.apps.googleusercontent.com',
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '35391508282-83pfbal1rumlvjurfandhdq7al8fqm39.apps.googleusercontent.com',
             callback: handleGoogleLoginResponse,
           });
           const btnContainer = document.getElementById('google-register-btn');
@@ -189,6 +191,13 @@ export const Register: React.FC = () => {
   // Submit complete form
   const handleSubmit = async () => {
     setError(null);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setLoading(true);
 
     if (!role) {
@@ -219,7 +228,8 @@ export const Register: React.FC = () => {
     }
   };
 
-  const canGoToStep3 = name && email && password.length >= 6;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const canGoToStep3 = name && email && emailRegex.test(email) && password.length >= 6;
   const canGoToStep4 = city && latitude !== null && longitude !== null;
 
   // If auth is still resolving, show a spinner
@@ -398,14 +408,12 @@ export const Register: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
-                  <Input
-                    type="email"
+                  <Mail className="absolute left-3.5 top-[22px] -translate-y-1/2 h-4 w-4 text-ink/50 z-30" />
+                  <EmailInput
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="john@example.com"
-                    className="pl-10"
+                    onChange={setEmail}
+                    inputClassName="pl-10"
                   />
                 </div>
               </div>
@@ -413,9 +421,8 @@ export const Register: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
-                  <Input
-                    type="password"
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-30 pointer-events-none" />
+                  <PasswordInput
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

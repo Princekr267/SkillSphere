@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, Check, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { io, Socket } from 'socket.io-client';
-import api from '../utils/api';
+import api, { BACKEND_URL } from '../utils/api';
 import { Badge } from './ui/Badge';
 
 interface Notification {
@@ -16,7 +16,7 @@ interface Notification {
   createdAt: string;
 }
 
-const SOCKET_URL = 'http://localhost:3000';
+const SOCKET_URL = BACKEND_URL;
 
 export const NotificationBell: React.FC = () => {
   const { user, token } = useAuth();

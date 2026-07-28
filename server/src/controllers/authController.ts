@@ -273,16 +273,16 @@ export const verifyEmail = async (req: Request, res: Response) => {
     const user = await User.findOne({ verificationToken: token });
 
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Verification token is invalid or has already been used.',
+      return res.status(200).json({
+        success: true,
+        message: 'Your email address is already verified or the link has already been used.',
       });
     }
 
     if (user.isVerified) {
       return res.status(200).json({
         success: true,
-        message: 'Your email address is already verified! You can proceed to sign in.',
+        message: 'Your email address is already verified! You can proceed to use your account.',
       });
     }
 
@@ -338,7 +338,7 @@ export const resendVerificationEmail = async (req: AuthRequest, res: Response) =
 
     res.status(200).json({
       success: true,
-      message: 'Fresh verification link generated! Check your terminal logs or Mailtrap inbox.',
+      message: 'Verification email sent successfully! Please check your email inbox or server logs.',
     });
   } catch (error: any) {
     res.status(500).json({

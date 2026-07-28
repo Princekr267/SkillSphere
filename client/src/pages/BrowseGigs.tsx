@@ -182,16 +182,28 @@ export const BrowseGigs: React.FC = () => {
             </select>
           </div>
 
-          <div className="space-y-1 min-w-[150px] text-left">
-            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">
-              Radius: <span className="font-mono text-accent-teal font-bold">{radius}km</span>
-            </label>
+          <div className="space-y-1 min-w-[170px] text-left">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">
+                Radius: <span className="font-mono text-accent-teal font-bold">{radius >= 3000 ? 'All India' : `${radius}km`}</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setRadius(r => r >= 3000 ? 50 : 4000)}
+                className={`px-1.5 py-0.5 text-[9px] font-mono font-bold border rounded transition-colors cursor-pointer ${
+                  radius >= 3000 ? 'bg-accent-amber text-ink border-ink' : 'bg-cream text-ink/70 border-ink/40 hover:border-ink'
+                }`}
+              >
+                {radius >= 3000 ? '🇮🇳 All India' : 'Pan-India'}
+              </button>
+            </div>
             <input
               type="range"
               min="5" max="200" step="5"
-              value={radius}
+              value={radius >= 3000 ? 200 : radius}
               onChange={e => setRadius(Number(e.target.value))}
-              className="w-full accent-accent-teal cursor-pointer"
+              disabled={radius >= 3000}
+              className="w-full accent-accent-teal cursor-pointer disabled:opacity-40"
             />
           </div>
 
@@ -327,7 +339,7 @@ export const BrowseGigs: React.FC = () => {
               <MapPin className="h-8 w-8 mx-auto text-ink/40 mb-3" />
               <h3 className="font-bold font-display text-ink uppercase tracking-tight mb-1">No Gigs Found</h3>
               <p className="text-xs text-ink/60 font-sans max-w-xs mx-auto leading-relaxed">
-                No open gigs within {radius}km of {user?.location.city}. Try expanding the radius or removing filters.
+                No open gigs {radius >= 3000 ? 'in India' : `within ${radius}km of ${user?.location.city}`}. Try expanding the radius or removing filters.
               </p>
             </div>
           ) : (

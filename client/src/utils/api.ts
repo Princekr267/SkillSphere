@@ -1,8 +1,12 @@
 import axios from 'axios';
 
+// Dynamically retrieve backend URL, fallback to localhost for local development
+export const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '');
+export const API_BASE_URL = `${BACKEND_URL}/api`;
+
 // Create a pre-configured axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: API_BASE_URL,
 
   headers: {
     'Content-Type': 'application/json',

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
+import api, { BACKEND_URL } from '../utils/api';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -21,7 +21,7 @@ interface Message {
   sentAt: string;
 }
 
-const SOCKET_URL = 'http://localhost:3000';
+const SOCKET_URL = BACKEND_URL;
 
 export const GigChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -272,13 +272,13 @@ export const GigChat: React.FC = () => {
                     <div className="mb-2">
                       {isImage(msg.fileName) ? (
                         <img 
-                          src={`http://localhost:3000${msg.fileUrl}`} 
+                          src={`${BACKEND_URL}${msg.fileUrl}`} 
                           alt={msg.fileName} 
                           className="max-w-full rounded-lg border-2 border-ink p-0.5 max-h-48 object-contain bg-white"
                         />
                       ) : (
                         <a 
-                          href={`http://localhost:3000${msg.fileUrl}`}
+                          href={`${BACKEND_URL}${msg.fileUrl}`}
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className={`p-2 border-2 border-ink rounded-lg flex items-center space-x-2 text-xs font-bold ${

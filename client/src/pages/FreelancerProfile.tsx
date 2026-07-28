@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ReviewList } from '../components/ReviewList';
 import { StarRating } from '../components/StarRating';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
+import api, { BACKEND_URL } from '../utils/api';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -47,6 +47,10 @@ export const FreelancerProfile: React.FC = () => {
   const [freelancer, setFreelancer] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Client Gigs states
+  const [clientGigs, setClientGigs] = useState<any[]>([]);
+  const [loadingGigs, setLoadingGigs] = useState(false);
 
   // Scheduler Booking States
   const [myGigs, setMyGigs] = useState<any[]>([]);
@@ -160,6 +164,26 @@ export const FreelancerProfile: React.FC = () => {
     if (id) fetchProfile();
   }, [id]);
 
+  useEffect(() => {
+    const fetchClientGigs = async () => {
+      setLoadingGigs(true);
+      try {
+        const res = await api.get(`/gigs?clientId=${id}&status=all`);
+        if (res.data.success) {
+          setClientGigs(res.data.gigs);
+        }
+      } catch (err) {
+        console.error('Error fetching client gigs:', err);
+      } finally {
+        setLoadingGigs(false);
+      }
+    };
+
+    if (freelancer && freelancer.role === 'client' && id) {
+      fetchClientGigs();
+    }
+  }, [freelancer, id]);
+
   if (loading) {
     return (
       <div className="flex-grow bg-cream flex flex-col items-center justify-center py-16 min-h-[50vh]">
@@ -177,6 +201,125 @@ export const FreelancerProfile: React.FC = () => {
         <button onClick={() => navigate(-1)} className="text-xs text-accent-teal font-bold hover:underline cursor-pointer">
           ← Go Back
         </button>
+      </div>
+    );
+  }
+
+  if (freelancer.role === 'client') {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
+        {/* Back button */}
+        <div className="text-left">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-8 font-bold font-display uppercase tracking-wider cursor-pointer"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Summary Info */}
+          <div className="space-y-6 lg:col-span-1">
+            <Card className="flex flex-col items-center text-center">
+              <div className="h-24 w-24 bg-cream border-2 border-ink overflow-hidden flex items-center justify-center font-display text-3xl font-black text-ink uppercase mb-4 rounded-lg shadow-retro animate-fade-in">
+                {freelancer.avatar ? (
+                  <img src={freelancer.avatar} alt={freelancer.name} className="h-full w-full object-cover" />
+                ) : (
+                  freelancer.name.charAt(0)
+                )}
+              </div>
+
+              <h1 className="text-xl font-black font-display text-ink uppercase tracking-tight">
+                {freelancer.name}
+              </h1>
+
+              {freelancer.companyName && (
+                <p className="text-xs font-mono text-ink/70 font-bold uppercase mt-1">
+                  {freelancer.companyName}
+                </p>
+              )}
+
+              <Badge variant="teal" className="mt-2.5 shadow-retro-sm border-2 border-ink text-ink font-bold font-sans">
+                Client node
+              </Badge>
+
+              <div className="w-full border-t-2 border-ink mt-6 pt-6 space-y-4 text-left font-mono text-xs">
+                <div className="flex items-center space-x-3 text-ink/60">
+                  <MapPin className="h-4 w-4 text-accent-teal flex-shrink-0" />
+                  <span className="font-bold text-ink uppercase">{freelancer.location.city}</span>
+                </div>
+
+                <div className="flex items-center space-x-3 text-ink/60">
+                  <Calendar className="h-4 w-4 text-accent-teal flex-shrink-0" />
+                  <span className="font-bold text-ink">Joined {new Date(freelancer.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</span>
+                </div>
+
+                {/* Overall score */}
+                <div className="border-t-2 border-ink pt-4 flex flex-col items-start space-y-1">
+                  <span className="text-[9px] font-mono text-ink/60 uppercase tracking-widest font-bold">Client Rep Score</span>
+                  <div className="flex items-center space-x-2">
+                    <StarRating value={freelancer.rating} size="sm" />
+                    <span className="text-xs font-bold text-ink font-mono">({freelancer.reviewCount})</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Column: Bio, Posted Gigs, Reviews */}
+          <div className="lg:col-span-2 space-y-8 text-left">
+            {/* Bio / Description */}
+            <Card className="text-left">
+              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-3 pl-1">About Client</h3>
+              <p className="text-sm text-ink leading-relaxed font-sans font-bold">
+                {freelancer.bio || 'No description configured on this client node.'}
+              </p>
+            </Card>
+
+            {/* Client's Gigs Listings */}
+            <Card className="text-left">
+              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Posted Gigs</h3>
+              {loadingGigs ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="h-5 w-5 text-accent-teal animate-spin" />
+                </div>
+              ) : clientGigs.length === 0 ? (
+                <p className="text-xs text-ink/60 font-sans pl-1 italic">No gigs posted by this client.</p>
+              ) : (
+                <div className="space-y-4">
+                  {clientGigs.map((gig) => (
+                    <div key={gig._id} className="p-4 border-2 border-ink bg-cream rounded-lg shadow-retro-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div className="space-y-1 flex-1 min-w-0">
+                        <h4 className="font-bold text-ink text-sm font-display uppercase tracking-tight truncate">{gig.title}</h4>
+                        <p className="text-[10px] text-ink/60 leading-relaxed font-sans line-clamp-2 max-w-xl mt-1">{gig.description}</p>
+                        <div className="flex flex-wrap gap-2 items-center mt-2">
+                          <Badge variant="outline" className="text-[8px] font-mono font-bold uppercase">{gig.category}</Badge>
+                          <span className="text-[10px] font-mono font-bold text-ink/60">₹{gig.budget} ({gig.budgetType})</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3 self-stretch md:self-auto justify-between md:justify-end">
+                        <Badge variant={gig.status === 'open' ? 'teal' : 'outline'} className="text-[9px] font-mono font-bold uppercase shadow-none">{gig.status}</Badge>
+                        <Link to={`/gigs/${gig._id}`}>
+                          <Button variant="coral" className="py-1 px-3 text-[10px] uppercase font-bold tracking-wider">
+                            View Details
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            {/* Reviews section */}
+            <Card className="text-left">
+              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Client Reviews</h3>
+              <ReviewList userId={freelancer._id} limit={20} />
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -247,7 +390,7 @@ export const FreelancerProfile: React.FC = () => {
               {freelancer.resumeUrl && (
                 <div className="border-t-2 border-ink pt-4 w-full">
                   <a
-                    href={freelancer.resumeUrl.startsWith('http') ? freelancer.resumeUrl : `http://localhost:3000${freelancer.resumeUrl}`}
+                    href={freelancer.resumeUrl.startsWith('http') ? freelancer.resumeUrl : `${BACKEND_URL}${freelancer.resumeUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full"

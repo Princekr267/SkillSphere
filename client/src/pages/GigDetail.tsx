@@ -351,7 +351,7 @@ export const GigDetail: React.FC = () => {
               </span>
               <span className="flex items-center space-x-1.5">
                 <MapPin className="h-3.5 w-3.5 text-accent-teal" />
-                <span className="font-bold text-ink">{gig.location.city} · {gig.radiusKm}KM RADIUS</span>
+                <span className="font-bold text-ink">{gig.location.city} · {gig.radiusKm >= 3000 ? 'FULL COUNTRY INDIA (PAN-INDIA)' : `${gig.radiusKm}KM RADIUS`}</span>
               </span>
               <span className="flex items-center space-x-1.5">
                 <Users className="h-3.5 w-3.5 text-accent-teal" />

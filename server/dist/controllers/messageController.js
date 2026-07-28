@@ -9,15 +9,36 @@ const Gig_1 = __importDefault(require("../models/Gig"));
 const Warning_1 = __importDefault(require("../models/Warning"));
 const moderationService_1 = require("../services/moderationService");
 // Helper: check if user is a gig participant
-async function assertParticipant(gigId, userId, res) {
-    const gig = await Gig_1.default.findById(gigId).select('clientId acceptedFreelancerId');
+async function assertParticipant(roomId, userId, res) {
+    const Proposal = require('../models/Proposal').default;
+    let gig = null;
+    let proposal = null;
+    gig = await Gig_1.default.findById(roomId).select('clientId acceptedFreelancerId');
     if (!gig) {
-        res.status(404).json({ success: false, message: 'Gig not found' });
+        proposal = await Proposal.findById(roomId);
+        if (proposal) {
+            gig = await Gig_1.default.findById(proposal.gigId).select('clientId acceptedFreelancerId');
+        }
+    }
+    if (!gig) {
+        res.status(404).json({ success: false, message: 'Gig or Chat Thread not found' });
         return null;
     }
-    const isParticipant = gig.clientId.toString() === userId ||
-        gig.acceptedFreelancerId?.toString() === userId;
-    if (!isParticipant) {
+    const isClient = gig.clientId.toString() === userId;
+    const isAcceptedFreelancer = gig.acceptedFreelancerId?.toString() === userId;
+    const isProposalFreelancer = proposal && proposal.freelancerId.toString() === userId;
+    if (proposal) {
+        if (!isClient && !isProposalFreelancer) {
+            res.status(403).json({ success: false, message: 'Not a participant of this private chat' });
+            return null;
+        }
+        return {
+            _id: roomId,
+            clientId: gig.clientId,
+            acceptedFreelancerId: proposal.freelancerId
+        };
+    }
+    if (!isClient && !isAcceptedFreelancer) {
         res.status(403).json({ success: false, message: 'Not a participant of this gig' });
         return null;
     }
