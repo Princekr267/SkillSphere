@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Check, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { io, Socket } from 'socket.io-client';
-import api, { BACKEND_URL } from '../utils/api';
+import { useSocket } from '../context/SocketContext';
+import api from '../utils/api';
 import { Badge } from './ui/Badge';
 
 interface Notification {
@@ -16,17 +16,16 @@ interface Notification {
   createdAt: string;
 }
 
-const SOCKET_URL = BACKEND_URL;
 
 export const NotificationBell: React.FC = () => {
   const { user, token } = useAuth();
+  const socket = useSocket();
   const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<Socket | null>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -46,29 +45,23 @@ export const NotificationBell: React.FC = () => {
 
   useEffect(() => {
     if (!token || !user) return;
-
     fetchNotifications();
+  }, [token, user]);
 
-    // Setup Socket connection
-    const socket = io(SOCKET_URL, {
-      auth: { token },
-      transports: ['websocket'],
-    });
+  // Subscribe to real-time notifications on the shared socket
+  useEffect(() => {
+    if (!socket) return;
 
-    socket.on('connect', () => {
-      // Automatic room joins handled on server side for 'user-<id>'
-    });
-
-    socket.on('new_notification', (notif: Notification) => {
+    const handleNewNotification = (notif: Notification) => {
       setNotifications(prev => [notif, ...prev]);
-    });
+    };
 
-    socketRef.current = socket;
+    socket.on('new_notification', handleNewNotification);
 
     return () => {
-      socket.disconnect();
+      socket.off('new_notification', handleNewNotification);
     };
-  }, [token, user]);
+  }, [socket]);
 
   // Click outside to close dropdown
   useEffect(() => {

@@ -612,7 +612,7 @@ export const ClientGigManager: React.FC = () => {
                           </p>
 
                           <div className="flex items-center justify-between mb-3 border-b border-ink/10 pb-3">
-                            <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider">Direct Candidate Node</span>
+                            <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider">Direct Candidate</span>
                             <Link to={`/gigs/${prop._id}/chat`} onClick={e => e.stopPropagation()}>
                               <Button
                                 variant="outline"

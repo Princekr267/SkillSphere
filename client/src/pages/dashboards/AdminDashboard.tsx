@@ -82,6 +82,8 @@ export const AdminDashboard: React.FC = () => {
   const [flaggedReviews, setFlaggedReviews] = useState<any[]>([]);
   const [warnings, setWarnings] = useState<AdminWarning[]>([]);
   const [resolutionNotes, setResolutionNotes] = useState<Record<string, string>>({});
+  const [resolutionActions, setResolutionActions] = useState<Record<string, 'release' | 'refund' | 'partial'>>({});
+  const [partialAmounts, setPartialAmounts] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
@@ -168,13 +170,27 @@ export const AdminDashboard: React.FC = () => {
 
   const handleResolveDispute = async (disputeId: string) => {
     const note = resolutionNotes[disputeId];
+    const action = resolutionActions[disputeId];
     if (!note || !note.trim()) {
       alert('Please enter a resolution note');
       return;
     }
+    if (!action) {
+      alert('Please select a resolution action (Release / Refund / Partial)');
+      return;
+    }
+    const body: Record<string, any> = { resolutionNote: note.trim(), resolutionAction: action };
+    if (action === 'partial') {
+      const amt = parseFloat(partialAmounts[disputeId] || '');
+      if (!amt || amt <= 0) {
+        alert('Please enter a valid partial amount for the freelancer');
+        return;
+      }
+      body.partialAmount = amt;
+    }
     setActionLoading(disputeId);
     try {
-      await api.put(`/disputes/${disputeId}/resolve`, { resolutionNote: note.trim() });
+      await api.put(`/disputes/${disputeId}/resolve`, body);
       setMsg('Dispute marked as resolved.');
       fetchDisputes();
     } catch (e: any) {
@@ -368,16 +384,23 @@ export const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-left text-[10px] font-mono text-ink/60">{g.location?.city || '—'}</td>
                       <td className="px-4 py-3 text-left">
-                        <Button
-                          onClick={() => handleDeleteGig(g._id)}
-                          disabled={actionLoading === g._id}
-                          variant="coral"
-                          size="sm"
-                          className="shadow-none py-1"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          <span>Delete</span>
-                        </Button>
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            onClick={() => handleDeleteGig(g._id)}
+                            disabled={actionLoading === g._id || g.escrowStatus === 'funds_deposited'}
+                            variant="coral"
+                            size="sm"
+                            className="shadow-none py-1"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            <span>Delete</span>
+                          </Button>
+                          {g.escrowStatus === 'funds_deposited' && (
+                            <span className="text-[8px] font-mono text-accent-coral leading-tight">
+                              Escrow funded — resolve via dispute first
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -442,6 +465,44 @@ export const AdminDashboard: React.FC = () => {
                       <td className="px-4 py-3 text-left">
                         {d.status === 'open' ? (
                           <div className="space-y-2">
+                            {/* Resolution action selector */}
+                            <div className="flex gap-1">
+                              {(['release', 'refund', 'partial'] as const).map(action => (
+                                <button
+                                  key={action}
+                                  type="button"
+                                  onClick={() => setResolutionActions(prev => ({ ...prev, [d._id]: action }))}
+                                  className={`flex-1 px-1.5 py-1 text-[9px] font-bold font-display uppercase tracking-wider border-2 border-ink rounded cursor-pointer transition-all ${
+                                    resolutionActions[d._id] === action
+                                      ? action === 'release'
+                                        ? 'bg-accent-teal text-ink shadow-retro-sm'
+                                        : action === 'refund'
+                                        ? 'bg-accent-coral text-ink shadow-retro-sm'
+                                        : 'bg-accent-amber text-ink shadow-retro-sm'
+                                      : 'bg-cream text-ink/60 hover:bg-ink/5'
+                                  }`}
+                                >
+                                  {action === 'release' ? '→ Freelancer' : action === 'refund' ? '← Client' : 'Split'}
+                                </button>
+                              ))}
+                            </div>
+                            {/* Partial amount input (shown only when 'partial' is selected) */}
+                            {resolutionActions[d._id] === 'partial' && (
+                              <div>
+                                <label className="block text-[9px] font-bold font-display uppercase tracking-wider text-ink/60 mb-1">
+                                  Amount to freelancer (₹) — remainder refunds to client
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  step="1"
+                                  placeholder="e.g. 500"
+                                  value={partialAmounts[d._id] || ''}
+                                  onChange={e => setPartialAmounts(prev => ({ ...prev, [d._id]: e.target.value }))}
+                                  className="w-full p-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-mono"
+                                />
+                              </div>
+                            )}
                             <textarea
                               placeholder="Resolution note..."
                               value={resolutionNotes[d._id] || ''}
@@ -451,7 +512,12 @@ export const AdminDashboard: React.FC = () => {
                             />
                             <Button
                               onClick={() => handleResolveDispute(d._id)}
-                              disabled={actionLoading === d._id}
+                              disabled={
+                                actionLoading === d._id ||
+                                !resolutionActions[d._id] ||
+                                !resolutionNotes[d._id]?.trim() ||
+                                (resolutionActions[d._id] === 'partial' && !partialAmounts[d._id])
+                              }
                               variant="secondary"
                               size="sm"
                               className="w-full py-1 shadow-none"

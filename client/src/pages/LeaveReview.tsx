@@ -64,7 +64,15 @@ export const LeaveReview: React.FC = () => {
               Your review has been submitted. Ratings help the community find reliable professionals.
             </p>
             <Button
-              onClick={() => navigate(-2)}
+              onClick={() => {
+                const dashboardPath =
+                  user.role === 'admin'
+                    ? '/admin'
+                    : user.role === 'client'
+                    ? '/client-dashboard'
+                    : '/freelancer-dashboard';
+                navigate(dashboardPath);
+              }}
               variant="secondary"
               className="px-5 py-2.5"
             >

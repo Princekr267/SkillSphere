@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { Globe, LogOut, Menu, X, MessageSquare, Sun, Moon } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
-import { io } from 'socket.io-client';
-import api, { BACKEND_URL } from '../utils/api';
+import api from '../utils/api';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 
-const SOCKET_URL = BACKEND_URL;
-
 // Navigation header styled in Retro-pop visual style with dark mode switch
 export const Navbar: React.FC = () => {
-  const { user, token, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const socket = useSocket();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -46,32 +45,29 @@ export const Navbar: React.FC = () => {
     }
   };
 
+  // Fetch unread count once on mount / when the user logs in
   useEffect(() => {
     if (user) {
       fetchUnreadCount();
     }
-  }, [location.pathname, user]);
+  }, [user]);
 
+  // Subscribe to new_message events on the shared socket
   useEffect(() => {
-    if (!token || !user) return;
+    if (!socket) return;
 
-    const socket = io(SOCKET_URL, {
-      auth: { token },
-      transports: ['websocket'],
-    });
-
-    socket.on('connect', () => {});
-
-    socket.on('new_notification', (notif: any) => {
+    const handleNewNotification = (notif: any) => {
       if (notif.type === 'new_message') {
         setUnreadMessages(prev => prev + 1);
       }
-    });
+    };
+
+    socket.on('new_notification', handleNewNotification);
 
     return () => {
-      socket.disconnect();
+      socket.off('new_notification', handleNewNotification);
     };
-  }, [token, user]);
+  }, [socket]);
 
   const handleLogout = () => {
     logout();
@@ -111,7 +107,7 @@ export const Navbar: React.FC = () => {
             
             <Badge variant="teal" className="text-[8px] font-mono shadow-none uppercase font-black px-1.5 py-0.5 tracking-wider hidden lg:inline-flex items-center border-2 border-ink bg-accent-teal text-ink">
               <span className="w-1.5 h-1.5 rounded-full bg-cream inline-block animate-pulse mr-1"></span>
-              <span>Live Node</span>
+              <span>Live</span>
             </Badge>
           </div>
 
@@ -158,7 +154,7 @@ export const Navbar: React.FC = () => {
                     <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
                       isActive(`/profile/${user._id}`) ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
                     }`}>
-                      Node Profile
+                      Profile
                     </span>
                     <div className={`w-4.5 h-4.5 border-2 border-ink transition-all rounded-md ${
                       isActive(`/profile/${user._id}`) ? 'bg-accent-pink scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-pink/20'
@@ -349,7 +345,7 @@ export const Navbar: React.FC = () => {
                     }`}
                   >
                     <span className="w-2.5 h-2.5 rounded-full bg-accent-pink border border-ink flex-shrink-0" />
-                    <span>Node Profile</span>
+                    <span>Profile</span>
                   </Link>
                 )}
 

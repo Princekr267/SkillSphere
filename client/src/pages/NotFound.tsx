@@ -28,7 +28,7 @@ export const NotFound: React.FC = () => {
       </h1>
       
       <p className="text-sm text-ink/65 font-sans max-w-sm leading-relaxed mb-8 font-bold">
-        The waypoint node you are trying to reach does not exist or has been shifted in the platform network.
+        The page you're looking for doesn't exist or may have moved.
       </p>
 
       <Button
@@ -38,7 +38,7 @@ export const NotFound: React.FC = () => {
         className="flex items-center space-x-2"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>Return to Dashboard</span>
+        <span>Return Home</span>
       </Button>
     </div>
   );

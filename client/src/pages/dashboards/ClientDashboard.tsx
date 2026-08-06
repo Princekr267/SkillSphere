@@ -209,7 +209,7 @@ export const ClientDashboard: React.FC = () => {
 
       <div className="mb-8 border-b-2 border-ink pb-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="pb-2 sm:pb-6 text-left">
-          <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Workspace Node</span>
+          <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Workspace</span>
           <h1 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Client Panel</h1>
         </div>
         <div className="flex items-end space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto -mb-[2px] scrollbar-none flex-nowrap">
@@ -246,7 +246,7 @@ export const ClientDashboard: React.FC = () => {
             </div>
           ) : bookings.length === 0 ? (
             <div className="text-center py-10 text-xs text-ink/60 font-sans italic">
-              No appointment slots booked. You can request interview & consultation slots from candidate node profile pages.
+              No appointment slots booked. You can request interview & consultation slots from candidate profile pages.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -292,7 +292,7 @@ export const ClientDashboard: React.FC = () => {
                           </div>
                           <div>
                             <p className="font-bold text-ink font-display uppercase text-xs">
-                              {b.freelancerId?.name || 'Candidate Node'}
+                              {b.freelancerId?.name || 'Candidate'}
                             </p>
                             <div className="flex items-center space-x-2 mt-0.5">
                               <StarRating value={b.freelancerId?.rating || 5} size="sm" />
@@ -386,7 +386,7 @@ export const ClientDashboard: React.FC = () => {
                 <div className="mt-4 border-t-2 border-ink w-full pt-4">
                   <h3 className="text-lg font-black font-display text-ink uppercase tracking-tight">{user.name}</h3>
                   <Badge variant="outline" className="mt-1 shadow-none">
-                    {user.role} node
+                    {user.role}
                   </Badge>
                 </div>
 
@@ -501,7 +501,7 @@ export const ClientDashboard: React.FC = () => {
                         <Badge variant="amber" className="shadow-none text-xs">{user.role}</Badge>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Primary Node Location</span>
+                        <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Primary Location</span>
                         <span className="font-bold text-ink text-xs">{user.location.city}</span>
                       </div>
                     </div>

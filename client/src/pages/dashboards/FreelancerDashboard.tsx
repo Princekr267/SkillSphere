@@ -241,13 +241,13 @@ export const FreelancerDashboard: React.FC = () => {
     }
   };
 
-  // Helper to save lists to backend
+  // Helper to save lists to backend — returns true on success, false on failure
   const saveLists = async (
     updatedSkills = skills,
     updatedPortfolio = portfolio,
     updatedCerts = certifications,
     updatedExp = experience
-  ) => {
+  ): Promise<boolean> => {
     try {
       const res = await api.put('/users/profile', {
         skills: updatedSkills,
@@ -258,13 +258,15 @@ export const FreelancerDashboard: React.FC = () => {
       if (res.data.success) {
         updateUser(res.data.user);
       }
+      return true;
     } catch (err: any) {
       setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update credentials details.' });
+      return false;
     }
   };
 
   // Add Skill
-  const handleAddSkill = (e: React.FormEvent) => {
+  const handleAddSkill = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSkillName.trim()) return;
 
@@ -274,39 +276,47 @@ export const FreelancerDashboard: React.FC = () => {
       return;
     }
 
+    const previousSkills = skills;
     const updated = [...skills, { name: newSkillName.trim(), level: newSkillLevel }];
     setSkills(updated);
     setNewSkillName('');
-    saveLists(updated);
+    const ok = await saveLists(updated);
+    if (!ok) setSkills(previousSkills);
   };
 
   // Delete Skill
-  const handleDeleteSkill = (index: number) => {
+  const handleDeleteSkill = async (index: number) => {
+    const previousSkills = skills;
     const updated = skills.filter((_, idx) => idx !== index);
     setSkills(updated);
-    saveLists(updated);
+    const ok = await saveLists(updated);
+    if (!ok) setSkills(previousSkills);
   };
 
   // Add Certification
-  const handleAddCert = (e: React.FormEvent) => {
+  const handleAddCert = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCertName.trim()) return;
 
+    const previousCerts = certifications;
     const updated = [...certifications, newCertName.trim()];
     setCertifications(updated);
     setNewCertName('');
-    saveLists(skills, portfolio, updated);
+    const ok = await saveLists(skills, portfolio, updated);
+    if (!ok) setCertifications(previousCerts);
   };
 
   // Delete Certification
-  const handleDeleteCert = (index: number) => {
+  const handleDeleteCert = async (index: number) => {
+    const previousCerts = certifications;
     const updated = certifications.filter((_, idx) => idx !== index);
     setCertifications(updated);
-    saveLists(skills, portfolio, updated);
+    const ok = await saveLists(skills, portfolio, updated);
+    if (!ok) setCertifications(previousCerts);
   };
 
   // Add Experience
-  const handleAddExperience = (e: React.FormEvent) => {
+  const handleAddExperience = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!expTitle.trim() || !expCompany.trim() || !expStart.trim()) return;
 
@@ -318,6 +328,7 @@ export const FreelancerDashboard: React.FC = () => {
       description: expDesc.trim(),
     };
 
+    const previousExperience = experience;
     const updated = [...experience, newExp];
     setExperience(updated);
     setExpTitle('');
@@ -325,34 +336,41 @@ export const FreelancerDashboard: React.FC = () => {
     setExpStart('');
     setExpEnd('');
     setExpDesc('');
-    saveLists(skills, portfolio, certifications, updated);
+    const ok = await saveLists(skills, portfolio, certifications, updated);
+    if (!ok) setExperience(previousExperience);
   };
 
   // Delete Experience
-  const handleDeleteExperience = (index: number) => {
+  const handleDeleteExperience = async (index: number) => {
+    const previousExperience = experience;
     const updated = experience.filter((_, idx) => idx !== index);
     setExperience(updated);
-    saveLists(skills, portfolio, certifications, updated);
+    const ok = await saveLists(skills, portfolio, certifications, updated);
+    if (!ok) setExperience(previousExperience);
   };
 
   // Add Portfolio Item
-  const handleAddPortfolio = (e: React.FormEvent) => {
+  const handleAddPortfolio = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!portTitle.trim() || !portDesc.trim()) return;
 
+    const previousPortfolio = portfolio;
     const updated = [...portfolio, { title: portTitle.trim(), description: portDesc.trim(), link: portLink.trim() }];
     setPortfolio(updated);
     setPortTitle('');
     setPortDesc('');
     setPortLink('');
-    saveLists(skills, updated);
+    const ok = await saveLists(skills, updated);
+    if (!ok) setPortfolio(previousPortfolio);
   };
 
   // Delete Portfolio Item
-  const handleDeletePortfolio = (index: number) => {
+  const handleDeletePortfolio = async (index: number) => {
+    const previousPortfolio = portfolio;
     const updated = portfolio.filter((_, idx) => idx !== index);
     setPortfolio(updated);
-    saveLists(skills, updated);
+    const ok = await saveLists(skills, updated);
+    if (!ok) setPortfolio(previousPortfolio);
   };
 
   // Save General profile settings
@@ -422,7 +440,7 @@ export const FreelancerDashboard: React.FC = () => {
       {/* Dashboard Title + Tab Switcher */}
       <div className="mb-8 border-b-2 border-ink pb-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="pb-2 sm:pb-6 text-left">
-          <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Provider Node Workspace</span>
+          <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Provider Workspace</span>
           <h1 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Freelancer Dashboard</h1>
         </div>
         <div className="flex items-end space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto -mb-[2px] scrollbar-none flex-nowrap">
@@ -467,7 +485,7 @@ export const FreelancerDashboard: React.FC = () => {
               <Loader2 className="h-6 w-6 text-accent-teal animate-spin" />
             </div>
           ) : bookings.length === 0 ? (
-            <p className="text-xs text-ink/60 font-sans italic text-left">No scheduled appointments logged in your calendar node.</p>
+            <p className="text-xs text-ink/60 font-sans italic text-left">No scheduled appointments logged in your calendar.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {bookings.map(b => (
@@ -510,7 +528,7 @@ export const FreelancerDashboard: React.FC = () => {
                         </div>
                         <div>
                           <p className="font-bold text-ink font-display uppercase text-xs">
-                            {b.clientId?.name || 'Client Node'}
+                            {b.clientId?.name || 'Client'}
                           </p>
                           {b.clientId?.companyName && (
                             <p className="text-[10px] text-ink/75 font-mono flex items-center space-x-1 font-bold">
@@ -909,7 +927,7 @@ export const FreelancerDashboard: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No skills listed inside your node profiles. Add skills to matching algorithms.</p>
+              <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No skills listed in your profile. Add skills to matching algorithms.</p>
             )}
 
             <form onSubmit={handleAddSkill} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
