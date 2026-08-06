@@ -1,6 +1,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import { getJwtSecret } from './utils/jwtSecret';
+// Eagerly validate JWT_SECRET on startup — throws in production if unset
+getJwtSecret();
+
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';

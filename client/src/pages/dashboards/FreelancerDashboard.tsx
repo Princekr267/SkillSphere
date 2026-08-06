@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -26,6 +26,7 @@ import axios from 'axios';
 import api from '../../utils/api';
 import { FreelancerApplications } from './FreelancerApplications';
 import { AvatarUpload } from '../../components/AvatarUpload';
+import { ResumeUpload } from '../../components/ResumeUpload';
 import { TwoFactorSetup } from '../../components/TwoFactorSetup';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -42,7 +43,7 @@ interface CitySuggestion {
 
 // Freelancer dashboard screen styled in Retro-pop bold designs
 export const FreelancerDashboard: React.FC = () => {
-  const { user, updateProfile, uploadResumeFile, updateUser } = useAuth();
+  const { user, updateProfile, updateUser } = useAuth();
   const [searchParams] = useSearchParams();
   
   // View states
@@ -95,9 +96,6 @@ export const FreelancerDashboard: React.FC = () => {
 
   // Action states
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [removingResume, setRemovingResume] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Calendar bookings states
   const [bookings, setBookings] = useState<any[]>([]);
@@ -355,41 +353,6 @@ export const FreelancerDashboard: React.FC = () => {
     const updated = portfolio.filter((_, idx) => idx !== index);
     setPortfolio(updated);
     saveLists(skills, updated);
-  };
-
-  // File Upload
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setMessage(null);
-    setUploading(true);
-
-    try {
-      await uploadResumeFile(file);
-      setMessage({ type: 'success', text: `Resume uploaded successfully!` });
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'File upload failed.' });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleRemoveResume = async () => {
-    if (!window.confirm('Are you sure you want to remove your resume document?')) return;
-    setMessage(null);
-    setRemovingResume(true);
-    try {
-      const res = await api.delete('/users/resume');
-      if (res.data.success) {
-        updateUser(res.data.user);
-        setMessage({ type: 'success', text: 'Resume file removed successfully.' });
-      }
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to remove resume.' });
-    } finally {
-      setRemovingResume(false);
-    }
   };
 
   // Save General profile settings
@@ -740,7 +703,7 @@ export const FreelancerDashboard: React.FC = () => {
       {/* Main Layout Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Left Column: Profile Card & Resume Uploader */}
+        {/* Left Column: Profile Card */}
         <div className="space-y-8 lg:col-span-1">
           
           {/* Card 1: Avatar and main stats */}
@@ -799,76 +762,16 @@ export const FreelancerDashboard: React.FC = () => {
                   <span>Modify Settings</span>
                 </Button>
                 
-                <div className="w-full mt-4 border-t-2 border-ink pt-4">
+                <div className="w-full mt-4 border-t-2 border-ink pt-4 space-y-4">
                   <AvatarUpload />
+                  <ResumeUpload />
                 </div>
               </>
             )}
           </Card>
 
 
-          {/* Card 2: Resume Uploader */}
-          <Card className="text-left">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 flex items-center space-x-2 pl-1">
-              <FileText className="h-4 w-4 text-accent-teal" />
-              <span>Resume Document</span>
-            </h3>
 
-            {user.resumeUrl ? (
-              <div className="space-y-4">
-                <div className="p-3 bg-cream border-2 border-ink text-xs flex items-center justify-between font-mono rounded-lg">
-                  <span className="text-ink/60 truncate max-w-[120px]">resume-node.pdf</span>
-                  <a
-                    href={user.resumeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-accent-teal hover:underline font-bold"
-                  >
-                    View File
-                  </a>
-                </div>
-                <div className="border-t-2 border-ink pt-3 flex gap-2">
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading || removingResume}
-                    variant="outline"
-                    className="flex-grow shadow-none py-2"
-                  >
-                    {uploading ? 'Uploading...' : 'Replace'}
-                  </Button>
-                  <Button
-                    onClick={handleRemoveResume}
-                    disabled={uploading || removingResume}
-                    variant="coral"
-                    className="flex-grow shadow-none py-2"
-                  >
-                    {removingResume ? 'Removing...' : 'Remove'}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-6 border-2 border-dashed border-ink rounded-lg bg-cream/50">
-                <Upload className="h-6 w-6 mx-auto text-ink/40 mb-2" />
-                <p className="text-[10px] text-ink/60 font-mono uppercase tracking-wider">PDF, JPG, PNG (Max 10MB)</p>
-                <Button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  variant="secondary"
-                  className="mt-3 py-2 text-[10px]"
-                >
-                  {uploading ? 'Uploading...' : 'Upload Resume'}
-                </Button>
-              </div>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".pdf,.jpg,.jpeg,.png"
-              className="hidden"
-            />
-          </Card>
 
           <TwoFactorSetup />
 

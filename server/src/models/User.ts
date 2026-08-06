@@ -32,7 +32,6 @@ export interface IUser extends Document {
   skills: ISkill[];
   hourlyRate?: number;
   portfolio: IPortfolioItem[];
-  resumeUrl?: string;
   certifications: string[];
   experience?: Array<{
     title: string;
@@ -46,6 +45,10 @@ export interface IUser extends Document {
   completedGigsCount?: number;
   availability?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
   profileViews?: number;
+  resume?: {
+    url: string;
+    originalName?: string;
+  };
   isVerified?: boolean;
   verificationToken?: string;
   verificationTokenExpires?: Date;
@@ -130,9 +133,6 @@ const UserSchema: Schema = new Schema(
         link: String,
       },
     ],
-    resumeUrl: {
-      type: String,
-    },
     certifications: [
       {
         type: String,
@@ -171,6 +171,10 @@ const UserSchema: Schema = new Schema(
     profileViews: {
       type: Number,
       default: 0,
+    },
+    resume: {
+      url: { type: String },
+      originalName: { type: String },
     },
     // Client fields
     companyName: {

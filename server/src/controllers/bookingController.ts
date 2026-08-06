@@ -26,6 +26,26 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<an
       return res.status(404).json({ success: false, message: 'Gig not found' });
     }
 
+    // Check for time-slot conflicts with existing non-cancelled bookings for this freelancer on the same date
+    const bookingDate = new Date(date);
+    const conflictingBookings = await Booking.find({
+      freelancerId,
+      date: bookingDate,
+      status: { $nin: ['cancelled'] },
+    });
+
+    const hasOverlap = conflictingBookings.some(existing => {
+      // Standard interval overlap: existingStart < newEnd && existingEnd > newStart
+      return existing.startTime < endTime && existing.endTime > startTime;
+    });
+
+    if (hasOverlap) {
+      return res.status(409).json({
+        success: false,
+        message: 'This freelancer already has a booking during the requested time slot',
+      });
+    }
+
     const booking = await Booking.create({
       freelancerId,
       clientId: req.user?._id,

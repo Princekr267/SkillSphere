@@ -128,7 +128,7 @@ export const AvatarUpload: React.FC = () => {
       {uploading && (
         <div className="flex items-center space-x-1.5 text-[10px] font-mono text-accent-teal font-bold">
           <Loader2 className="h-3 w-3 animate-spin" />
-          <span>Uploading node photo...</span>
+          <span>Uploading photo...</span>
         </div>
       )}
 

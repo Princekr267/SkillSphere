@@ -20,14 +20,20 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter to allow safe MIME types (image/jpeg, image/png, application/pdf)
+// File filter to allow safe MIME types (image/jpeg, image/png, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document)
 const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+  const allowedMimeTypes = [
+    'image/jpeg',
+    'image/png',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ];
   
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Unsupported file format. Please upload PDF, JPG, or PNG.'), false);
+    cb(new Error('Unsupported file format. Please upload PDF, DOC, DOCX, JPG, or PNG.'), false);
   }
 };
 

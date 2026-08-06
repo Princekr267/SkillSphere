@@ -8,6 +8,7 @@ import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { sendVerificationEmail, sendPasswordResetEmail, sendOTPEmail } from '../services/emailService';
+import { getJwtSecret } from '../utils/jwtSecret';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -17,7 +18,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const generateToken = (id: string): string => {
   return jwt.sign(
     { id },
-    process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026',
+    getJwtSecret(),
     { expiresIn: '30d' }
   );
 };
@@ -46,6 +47,18 @@ export const registerUser = async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         message: 'Please provide all required fields: name, email, password, role, city, latitude, longitude',
+      });
+    }
+
+    // Privilege-escalation prevention: only allow public-facing roles at registration.
+    // Accepting 'role' blindly from req.body would let any unauthenticated caller
+    // POST { role: 'admin' } and immediately gain elevated access.
+    // TODO: role changes must go through an admin-only endpoint
+    const ALLOWED_REGISTRATION_ROLES = ['client', 'freelancer'];
+    if (!ALLOWED_REGISTRATION_ROLES.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid role. Allowed values are: ${ALLOWED_REGISTRATION_ROLES.join(', ')}`,
       });
     }
 
@@ -116,7 +129,6 @@ export const registerUser = async (req: Request, res: Response) => {
       skills: user.skills,
       portfolio: user.portfolio,
       hourlyRate: user.hourlyRate,
-      resumeUrl: user.resumeUrl,
       certifications: user.certifications,
       rating: user.rating,
       reviewCount: user.reviewCount,
@@ -187,7 +199,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
       const tempToken = jwt.sign(
         { tempUserId: user._id.toString() },
-        process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026',
+        getJwtSecret(),
         { expiresIn: '5m' }
       );
       return res.status(200).json({
@@ -214,7 +226,6 @@ export const loginUser = async (req: Request, res: Response) => {
         skills: user.skills,
         portfolio: user.portfolio,
         hourlyRate: user.hourlyRate,
-        resumeUrl: user.resumeUrl,
         certifications: user.certifications,
         rating: user.rating,
         reviewCount: user.reviewCount,
@@ -531,7 +542,7 @@ export const verify2FACode = async (req: Request, res: Response) => {
 
     let decoded: any;
     try {
-      decoded = jwt.verify(tempToken, process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026');
+      decoded = jwt.verify(tempToken, getJwtSecret());
     } catch (jwtErr) {
       return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
     }
@@ -569,7 +580,6 @@ export const verify2FACode = async (req: Request, res: Response) => {
         skills: user.skills,
         portfolio: user.portfolio,
         hourlyRate: user.hourlyRate,
-        resumeUrl: user.resumeUrl,
         certifications: user.certifications,
         rating: user.rating,
         reviewCount: user.reviewCount,
@@ -618,6 +628,17 @@ export const googleLogin = async (req: Request, res: Response) => {
         });
       }
 
+      // Privilege-escalation prevention: apply the same role allowlist as /register.
+      // A caller could otherwise pass { role: 'admin' } via the Google OAuth flow.
+      // TODO: role changes must go through an admin-only endpoint
+      const ALLOWED_REGISTRATION_ROLES = ['client', 'freelancer'];
+      if (!ALLOWED_REGISTRATION_ROLES.includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid role. Allowed values are: ${ALLOWED_REGISTRATION_ROLES.join(', ')}`,
+        });
+      }
+
       const { city, latitude, longitude } = req.body;
       const defaultCity = city || 'Mumbai';
       const defaultLat = latitude !== undefined ? parseFloat(latitude) : 19.076;
@@ -654,7 +675,7 @@ export const googleLogin = async (req: Request, res: Response) => {
     if (user.twoFactorEnabled) {
       const tempToken = jwt.sign(
         { tempUserId: user._id.toString() },
-        process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026',
+        getJwtSecret(),
         { expiresIn: '5m' }
       );
       return res.status(200).json({
@@ -681,7 +702,6 @@ export const googleLogin = async (req: Request, res: Response) => {
         skills: user.skills,
         portfolio: user.portfolio,
         hourlyRate: user.hourlyRate,
-        resumeUrl: user.resumeUrl,
         certifications: user.certifications,
         rating: user.rating,
         reviewCount: user.reviewCount,

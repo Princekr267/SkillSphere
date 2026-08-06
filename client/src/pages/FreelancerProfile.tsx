@@ -22,7 +22,6 @@ interface PublicUser {
   skills: Array<{ name: string; level: 'Beginner' | 'Intermediate' | 'Expert' }>;
   hourlyRate?: number;
   portfolio: Array<{ title: string; description: string; link?: string }>;
-  resumeUrl?: string;
   certifications: string[];
   experience?: Array<{
     title: string;
@@ -37,6 +36,10 @@ interface PublicUser {
   bio?: string;
   companyName?: string;
   availability?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
+  resume?: {
+    url: string;
+    originalName?: string;
+  };
 }
 
 export const FreelancerProfile: React.FC = () => {
@@ -188,7 +191,7 @@ export const FreelancerProfile: React.FC = () => {
     return (
       <div className="flex-grow bg-cream flex flex-col items-center justify-center py-16 min-h-[50vh]">
         <Loader2 className="h-8 w-8 text-accent-teal animate-spin" />
-        <p className="text-xs font-mono text-ink/60 uppercase mt-2">Loading Node Profile...</p>
+        <p className="text-xs font-mono text-ink/60 uppercase mt-2">Loading Profile...</p>
       </div>
     );
   }
@@ -197,7 +200,7 @@ export const FreelancerProfile: React.FC = () => {
     return (
       <div className="flex-grow bg-cream flex flex-col items-center justify-center py-16 space-y-3 min-h-[50vh]">
         <AlertCircle className="h-8 w-8 text-accent-coral" />
-        <p className="text-sm text-ink">{error || 'Node profile not found.'}</p>
+        <p className="text-sm text-ink">{error || 'Profile not found.'}</p>
         <button onClick={() => navigate(-1)} className="text-xs text-accent-teal font-bold hover:underline cursor-pointer">
           ← Go Back
         </button>
@@ -386,22 +389,29 @@ export const FreelancerProfile: React.FC = () => {
                 </div>
               </div>
 
-              {/* Resume download */}
-              {freelancer.resumeUrl && (
-                <div className="border-t-2 border-ink pt-4 w-full">
+              {/* Resume / CV Download Section */}
+              {freelancer.resume?.url && (
+                <div className="border-t-2 border-ink pt-4 font-sans text-xs w-full">
                   <a
-                    href={freelancer.resumeUrl.startsWith('http') ? freelancer.resumeUrl : `${BACKEND_URL}${freelancer.resumeUrl}`}
+                    href={freelancer.resume.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full"
+                    className="flex items-center justify-between p-3 bg-accent-teal/10 hover:bg-accent-teal/20 border-2 border-ink rounded-lg shadow-retro-sm transition-all text-ink font-bold group"
                   >
-                    <Button variant="coral" className="w-full py-2 text-xs flex items-center justify-center space-x-1">
-                      <FileText className="h-3.5 w-3.5" />
-                      <span>View Freelancer Resume</span>
-                    </Button>
+                    <div className="flex items-center space-x-2.5 min-w-0 pr-2">
+                      <FileText className="h-5 w-5 text-accent-teal flex-shrink-0 group-hover:scale-110 transition-transform" />
+                      <div className="truncate text-left">
+                        <span className="block text-[11px] font-display uppercase tracking-wider">Freelancer Resume</span>
+                        <span className="block text-[9px] font-mono text-ink/70 truncate">{freelancer.resume.originalName || 'View Document'}</span>
+                      </div>
+                    </div>
+                    <Badge variant="teal" className="text-[9px] font-mono shadow-none flex-shrink-0 uppercase">
+                      View CV →
+                    </Badge>
                   </a>
                 </div>
               )}
+
             </div>
           </Card>
 
@@ -422,10 +432,10 @@ export const FreelancerProfile: React.FC = () => {
                         <select
                           value={slot.dayOfWeek}
                           onChange={e => handleUpdateTempSlot(idx, 'dayOfWeek', Number(e.target.value))}
-                          className="bg-cream border border-ink text-[10px] font-mono p-1 focus:outline-none rounded dark:bg-[#1A1A1A] dark:text-[#F5F0E6]"
+                          className="bg-cream border border-ink text-[10px] text-ink font-mono p-1 focus:outline-none rounded cursor-pointer"
                         >
                           {DAYS_OF_WEEK.map((d, i) => (
-                            <option key={i} value={i} className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">{d}</option>
+                            <option key={i} value={i} className="bg-cream text-ink">{d}</option>
                           ))}
                         </select>
                         <Input
@@ -548,11 +558,11 @@ export const FreelancerProfile: React.FC = () => {
                         required
                         value={bookingGigId}
                         onChange={e => setBookingGigId(e.target.value)}
-                        className="w-full px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans dark:bg-[#1A1A1A] dark:text-[#F5F0E6]"
+                        className="w-full px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans cursor-pointer"
                       >
-                        <option value="" className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">-- Choose Gig --</option>
+                        <option value="" className="bg-cream text-ink">-- Choose Gig --</option>
                         {myGigs.map(g => (
-                          <option key={g._id} value={g._id} className="bg-[#F5F0E6] text-[#1A1A1A] dark:bg-[#1A1A1A] dark:text-[#F5F0E6]">{g.title}</option>
+                          <option key={g._id} value={g._id} className="bg-cream text-ink">{g.title}</option>
                         ))}
                       </select>
                     </div>

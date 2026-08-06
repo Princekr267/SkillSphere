@@ -1,5 +1,12 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
+export interface INegotiationEntry {
+  proposedBy: 'client' | 'freelancer';
+  amount: number;
+  message?: string;
+  timestamp: Date;
+}
+
 export interface IProposal extends Document {
   gigId: Types.ObjectId;
   freelancerId: Types.ObjectId;
@@ -10,6 +17,7 @@ export interface IProposal extends Document {
   lastProposedBy: 'client' | 'freelancer';
   clientCounterAmount?: number;
   freelancerCounterAmount?: number;
+  negotiationHistory: INegotiationEntry[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,6 +66,26 @@ const ProposalSchema = new Schema<IProposal>(
     freelancerCounterAmount: {
       type: Number,
     },
+    negotiationHistory: [
+      {
+        proposedBy: {
+          type: String,
+          enum: ['client', 'freelancer'],
+          required: true,
+        },
+        amount: {
+          type: Number,
+          required: true,
+        },
+        message: {
+          type: String,
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
