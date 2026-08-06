@@ -68,7 +68,7 @@ export const ResetPassword: React.FC = () => {
           </div>
           <h2 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Configure Password</h2>
           <p className="text-xs text-ink/60 mt-1">
-            Specify a secure new password for your account node.
+            Specify a secure new password for your account.
           </p>
         </div>
 

@@ -8,6 +8,9 @@ export interface IDispute extends Document {
   evidenceUrl?: string;
   status: 'open' | 'resolved';
   resolutionNote?: string;
+  resolutionAction?: 'release' | 'refund' | 'partial';
+  partialAmount?: number;
+  resolvedBy?: Types.ObjectId;
   resolvedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +51,18 @@ const DisputeSchema = new Schema<IDispute>(
       type: String,
       trim: true,
       maxlength: 1000,
+    },
+    resolutionAction: {
+      type: String,
+      enum: ['release', 'refund', 'partial'],
+    },
+    partialAmount: {
+      type: Number,
+      min: 0,
+    },
+    resolvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
     resolvedAt: {
       type: Date,

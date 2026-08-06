@@ -18,7 +18,6 @@ export interface IUser {
   skills: Array<{ name: string; level: 'Beginner' | 'Intermediate' | 'Expert' }>;
   hourlyRate?: number;
   portfolio: Array<{ title: string; description: string; link?: string }>;
-  resumeUrl?: string;
   certifications: string[];
   experience?: Array<{
     title: string;
@@ -31,6 +30,10 @@ export interface IUser {
   reviewCount: number;
   isVerified?: boolean;
   twoFactorEnabled?: boolean;
+  resume?: {
+    url: string;
+    originalName?: string;
+  };
 }
 
 interface AuthContextType {
@@ -41,7 +44,6 @@ interface AuthContextType {
   register: (userData: any) => Promise<void>;
   logout: () => void;
   updateProfile: (profileData: any) => Promise<void>;
-  uploadResumeFile: (file: File) => Promise<string>;
   updateUser: (updatedUser: IUser) => void;
   verify2FA: (code: string, tempToken: string) => Promise<void>;
   googleLogin: (credential: string, role?: string, signupData?: any) => Promise<any>;
@@ -132,28 +134,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const uploadResumeFile = async (file: File): Promise<string> => {
-    try {
-      const formData = new FormData();
-      formData.append('resume', file);
-      
-      const res = await api.post('/users/upload-resume', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      if (res.data.success) {
-        setUser(res.data.user);
-        return res.data.resumeUrl;
-      }
-      throw new Error('Upload failed');
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Resume upload failed');
-    }
-  };
-
-
   const updateUser = (updatedUser: IUser) => {
     setUser(updatedUser);
   };
@@ -207,7 +187,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         register,
         logout,
         updateProfile,
-        uploadResumeFile,
         updateUser,
         verify2FA,
         googleLogin,

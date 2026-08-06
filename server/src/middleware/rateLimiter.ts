@@ -23,3 +23,27 @@ export const gigPostLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Limit registration and password-reset requests to prevent abuse / account enumeration
+export const sensitiveActionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again after 15 minutes',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Strict limiter for 2FA verification — a 6-digit TOTP is brute-forceable in minutes without throttling
+export const twoFactorLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 5,
+  message: {
+    success: false,
+    message: 'Too many 2FA attempts from this IP, please try again after 10 minutes',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

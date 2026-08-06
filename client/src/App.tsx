@@ -6,6 +6,9 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { TwoFactorChallenge } from './pages/TwoFactorChallenge';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { CompleteGoogleSignup } from './pages/CompleteGoogleSignup';
 import { ClientDashboard } from './pages/dashboards/ClientDashboard';
 import { FreelancerDashboard } from './pages/dashboards/FreelancerDashboard';
 import { AdminDashboard } from './pages/dashboards/AdminDashboard';
@@ -60,7 +63,10 @@ const AppContent: React.FC = () => {
         <Routes>
           {/* Public Auth Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/login/2fa" element={<TwoFactorChallenge />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/register/google-complete" element={<CompleteGoogleSignup />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 

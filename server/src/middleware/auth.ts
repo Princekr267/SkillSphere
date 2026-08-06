@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import { getJwtSecret } from '../utils/jwtSecret';
 
 // Extend Express Request interface to include the user
 export interface AuthRequest extends Request {
@@ -23,7 +24,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
       token = req.headers.authorization.split(' ')[1];
 
       // Verify token
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026');
+      const decoded: any = jwt.verify(token, getJwtSecret());
 
       // Get user from the token, excluding the password field
       req.user = await User.findById(decoded.id);

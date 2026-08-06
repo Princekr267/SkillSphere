@@ -1,6 +1,7 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
+import path from 'path';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import Proposal from '../models/Proposal';
@@ -97,7 +98,6 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
         skills: updatedUser.skills,
         portfolio: updatedUser.portfolio,
         hourlyRate: updatedUser.hourlyRate,
-        resumeUrl: updatedUser.resumeUrl,
         certifications: updatedUser.certifications,
         experience: updatedUser.experience,
         rating: updatedUser.rating,
@@ -109,84 +109,6 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Server error updating profile. Make sure format is correct.',
-      error: (error as Error).message,
-    });
-  }
-};
-
-/**
- * @desc    Upload user resume/portfolio document
- * @route   POST /api/users/upload-resume
- * @access  Private
- */
-export const uploadResume = async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Please upload a file' });
-    }
-
-    let fileUrl = '';
-
-    if (isCloudinaryConfigured()) {
-      // Upload to Cloudinary
-      try {
-        configureCloudinary();
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          resource_type: 'auto',
-          folder: 'skillsphere_resumes',
-        });
-        fileUrl = result.secure_url;
-
-        // Clean up the local temp file saved by multer
-        fs.unlinkSync(req.file.path);
-      } catch (cloudError) {
-        console.error('Cloudinary upload failure, falling back to local storage:', cloudError);
-        // Fallback to local file URL
-        const serverUrl = `${req.protocol}://${req.get('host')}`;
-        fileUrl = `${serverUrl}/uploads/${req.file.filename}`;
-      }
-    } else {
-      // Cloudinary not configured, serve locally
-      const serverUrl = `${req.protocol}://${req.get('host')}`;
-      fileUrl = `${serverUrl}/uploads/${req.file.filename}`;
-    }
-
-    // Save url to User document
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    user.resumeUrl = fileUrl;
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'File uploaded successfully',
-      resumeUrl: fileUrl,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        location: user.location,
-        companyName: user.companyName,
-        bio: user.bio,
-        skills: user.skills,
-        portfolio: user.portfolio,
-        hourlyRate: user.hourlyRate,
-        resumeUrl: user.resumeUrl,
-        certifications: user.certifications,
-        rating: user.rating,
-        reviewCount: user.reviewCount,
-        avatar: user.avatar,
-      },
-    });
-  } catch (error) {
-    console.error('File Upload Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error uploading file.',
       error: (error as Error).message,
     });
   }
@@ -247,7 +169,6 @@ export const uploadAvatar = async (req: AuthRequest, res: Response) => {
         skills: user.skills,
         portfolio: user.portfolio,
         hourlyRate: user.hourlyRate,
-        resumeUrl: user.resumeUrl,
         certifications: user.certifications,
         rating: user.rating,
         reviewCount: user.reviewCount,
@@ -429,8 +350,9 @@ export const deleteAvatar = async (req: AuthRequest, res: Response) => {
       _id: user._id, name: user.name, email: user.email, role: user.role,
       location: user.location, companyName: user.companyName, bio: user.bio,
       skills: user.skills, portfolio: user.portfolio, hourlyRate: user.hourlyRate,
-      resumeUrl: user.resumeUrl, certifications: user.certifications,
+      certifications: user.certifications,
       rating: user.rating, reviewCount: user.reviewCount, avatar: user.avatar,
+      resume: user.resume,
     };
 
     res.status(200).json({ success: true, message: 'Avatar removed successfully', user: userObj });
@@ -441,7 +363,72 @@ export const deleteAvatar = async (req: AuthRequest, res: Response) => {
 };
 
 /**
- * @desc    Remove user resume
+ * @desc    Upload freelancer resume
+ * @route   POST /api/users/resume
+ * @access  Private — Freelancers only
+ */
+export const uploadResume = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please upload a resume file (PDF, DOC, DOCX)' });
+    }
+
+    let fileUrl = '';
+    const originalName = req.file.originalname;
+
+    if (isCloudinaryConfigured()) {
+      try {
+        configureCloudinary();
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'skillsphere_resumes',
+          resource_type: 'auto',
+          access_mode: 'public',
+          type: 'upload',
+        });
+        fileUrl = result.secure_url;
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+      } catch (cloudError) {
+        console.error('Cloudinary resume upload failure, falling back to local:', cloudError);
+        const serverUrl = `${req.protocol}://${req.get('host')}`;
+        fileUrl = `${serverUrl}/uploads/${req.file.filename}`;
+      }
+    } else {
+      const serverUrl = `${req.protocol}://${req.get('host')}`;
+      fileUrl = `${serverUrl}/uploads/${req.file.filename}`;
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.resume = {
+      url: fileUrl,
+      originalName: originalName,
+    };
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Resume uploaded successfully',
+      resume: user.resume,
+      user,
+    });
+  } catch (error) {
+    console.error('Resume Upload Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error uploading resume.',
+      error: (error as Error).message,
+    });
+  }
+};
+
+/**
+ * @desc    Remove user profile resume
  * @route   DELETE /api/users/resume
  * @access  Private
  */
@@ -452,40 +439,30 @@ export const deleteResume = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if (user.resumeUrl) {
-      if (isCloudinaryConfigured() && user.resumeUrl.includes('cloudinary')) {
+    if (user.resume?.url) {
+      if (isCloudinaryConfigured() && user.resume.url.includes('cloudinary')) {
         try {
           configureCloudinary();
-          const parts = user.resumeUrl.split('/');
+          const parts = user.resume.url.split('/');
           const fileWithExt = parts[parts.length - 1];
           const publicId = `skillsphere_resumes/${fileWithExt.split('.')[0]}`;
-          try {
-            await cloudinary.uploader.destroy(publicId);
-          } catch (destroyErr) {
-            await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
-          }
+          await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
         } catch (e) {
           console.warn('Cloudinary resume delete failed:', e);
         }
       } else {
-        deleteLocalFile(user.resumeUrl, req.get('host') || '');
+        deleteLocalFile(user.resume.url, req.get('host') || '');
       }
     }
 
-    user.resumeUrl = undefined;
+    user.resume = undefined;
     await user.save();
 
-    const userObj = {
-      _id: user._id, name: user.name, email: user.email, role: user.role,
-      location: user.location, companyName: user.companyName, bio: user.bio,
-      skills: user.skills, portfolio: user.portfolio, hourlyRate: user.hourlyRate,
-      resumeUrl: user.resumeUrl, certifications: user.certifications,
-      rating: user.rating, reviewCount: user.reviewCount, avatar: user.avatar,
-    };
-
-    res.status(200).json({ success: true, message: 'Resume removed successfully', user: userObj });
+    res.status(200).json({ success: true, message: 'Resume removed successfully', user });
   } catch (error) {
     console.error('Delete Resume Error:', error);
     res.status(500).json({ success: false, message: 'Server error removing resume.' });
   }
 };
+
+

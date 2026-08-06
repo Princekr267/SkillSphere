@@ -3,6 +3,7 @@ import User from '../models/User';
 import Gig from '../models/Gig';
 import Review from '../models/Review';
 import Warning from '../models/Warning';
+import { AuthRequest } from '../middleware/auth';
 
 // ─── GET /api/admin/stats ───────────────────────────────────────────────────
 export const getStats = async (_req: Request, res: Response): Promise<any> => {
@@ -61,10 +62,23 @@ export const getAllUsers = async (req: Request, res: Response): Promise<any> => 
 };
 
 // ─── PUT /api/admin/users/:id/status ────────────────────────────────────────
-export const toggleUserStatus = async (req: Request, res: Response): Promise<any> => {
+export const toggleUserStatus = async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const adminId = (req as any).user?._id?.toString();
+    const targetId = req.params.id;
+
+    // Fix 6: Prevent an admin from deactivating their own account
+    if (adminId && adminId === targetId) {
+      return res.status(400).json({ success: false, message: 'You cannot deactivate your own account.' });
+    }
+
+    const user = await User.findById(targetId).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    // Prevent toggling another admin account
+    // TODO: Once a `super_admin` role is introduced, this function must also block regular admins
+    // from deactivating `super_admin` accounts, and should only allow `super_admin` to deactivate
+    // `admin` accounts. Do not implement the full hierarchy yet — just add the role check here.
     if (user.role === 'admin') return res.status(403).json({ success: false, message: 'Cannot ban another admin' });
 
     const current = (user as any).isActive;
@@ -104,8 +118,19 @@ export const getAllGigsAdmin = async (req: Request, res: Response): Promise<any>
 // ─── DELETE /api/admin/gigs/:id ────────────────────────────────────────────
 export const adminDeleteGig = async (req: Request, res: Response): Promise<any> => {
   try {
-    const gig = await Gig.findByIdAndDelete(req.params.id);
+    // Fix 5: Fetch the gig first to inspect escrow state before deleting
+    const gig = await Gig.findById(req.params.id);
     if (!gig) return res.status(404).json({ success: false, message: 'Gig not found' });
+
+    // Block deletion if funds are currently held in escrow
+    if (gig.escrowStatus === 'funds_deposited') {
+      return res.status(409).json({
+        success: false,
+        message: 'Cannot delete a gig with funds in escrow. Resolve via refund or release before deleting.',
+      });
+    }
+
+    await gig.deleteOne();
     return res.json({ success: true, message: 'Gig deleted by admin' });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });
@@ -136,6 +161,32 @@ export const dismissReviewFlag = async (req: Request, res: Response): Promise<an
       { new: true }
     );
     if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
+
+    // Fix 4: Re-trigger weighted rating recalculation for the reviewee now that this
+    // review has been cleared by an admin and should be included in the aggregate score.
+    const revieweeId = review.revieweeId;
+    const allReviews = await Review.find({ revieweeId }).populate('gigId');
+    const eligibleReviews = allReviews.filter(r => !r.isFlagged);
+    let totalWeight = 0;
+    let weightedSum = 0;
+
+    eligibleReviews.forEach(r => {
+      const ageMs = Date.now() - new Date(r.createdAt).getTime();
+      const ageDays = Math.max(0, ageMs / (1000 * 60 * 60 * 24));
+      const wTime = Math.max(0.1, 1 - ageDays / 365.0);
+      const isVerified = r.gigId && (r.gigId as any).escrowStatus === 'released';
+      const wVerified = isVerified ? 1.0 : 0.5;
+      const weight = wTime * wVerified;
+      weightedSum += r.rating * weight;
+      totalWeight += weight;
+    });
+
+    const smartRating = totalWeight > 0 ? weightedSum / totalWeight : 5.0;
+    await User.findByIdAndUpdate(revieweeId, {
+      rating: Math.round(smartRating * 10) / 10,
+      reviewCount: allReviews.length,
+    });
+
     return res.json({ success: true, review });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });

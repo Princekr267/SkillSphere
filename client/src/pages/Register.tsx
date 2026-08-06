@@ -15,8 +15,7 @@ import {
   AlertTriangle,
   Globe,
   Search,
-  WifiOff,
-  ShieldCheck
+  WifiOff
 } from 'lucide-react';
 import axios from 'axios';
 import { Card } from '../components/ui/Card';
@@ -38,7 +37,7 @@ export const Register: React.FC = () => {
 
   // Wizard state
   const [step, setStep] = useState(1);
-  const [role, setRole] = useState<'client' | 'freelancer' | 'admin' | null>(null);
+  const [role, setRole] = useState<'client' | 'freelancer' | null>(null);
 
   const handleGoogleLoginResponse = async (response: any) => {
     setError(null);
@@ -246,6 +245,8 @@ export const Register: React.FC = () => {
 
   // Already logged in — redirect to their dashboard
   if (token && user) {
+    // NOTE: the admin redirect below is for already-logged-in admins hitting /register;
+    // it is NOT part of the public registration flow (admin registration was removed).
     if (user.role === 'admin') return <Navigate to="/admin" replace />;
     if (user.role === 'client') return <Navigate to="/client-dashboard" replace />;
     return <Navigate to="/freelancer-dashboard" replace />;
@@ -299,7 +300,7 @@ export const Register: React.FC = () => {
           <div className="space-y-6 animate-fade-in text-left">
             <div className="text-left mb-6">
               <h3 className="text-xl font-display font-black text-ink uppercase tracking-tight">Select Account Path</h3>
-              <p className="text-xs font-sans text-ink/60 mt-1">Specify your node role inside the SkillSphere system.</p>
+              <p className="text-xs font-sans text-ink/60 mt-1">Specify your role inside the SkillSphere system.</p>
             </div>
             
             <div className="flex flex-col gap-4 font-sans">
@@ -316,7 +317,7 @@ export const Register: React.FC = () => {
                   <UserIcon className="h-5.5 w-5.5" />
                 </div>
                 <div className="flex-grow text-left">
-                  <h4 className="font-bold text-ink text-sm">Hiring Node (Client)</h4>
+                  <h4 className="font-bold text-ink text-sm">Client</h4>
                   <p className="text-xs text-ink/65 mt-0.5 leading-relaxed text-left">Configure gigs, review proximity metrics, and contract local experts.</p>
                 </div>
               </button>
@@ -334,26 +335,8 @@ export const Register: React.FC = () => {
                   <Briefcase className="h-5.5 w-5.5" />
                 </div>
                 <div className="flex-grow text-left">
-                  <h4 className="font-bold text-ink text-sm">Provider Node (Freelancer)</h4>
+                  <h4 className="font-bold text-ink text-sm">Freelancer</h4>
                   <p className="text-xs text-ink/65 mt-0.5 leading-relaxed text-left">List professional service skills and accept hyperlocal jobs.</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setRole('admin')}
-                className={`p-4 border-2 text-left rounded-xl transition-all shadow-retro cursor-pointer flex items-center space-x-4 ${
-                  role === 'admin'
-                    ? 'bg-accent-teal text-ink border-ink'
-                    : 'bg-cream border-ink hover:bg-accent-teal/10'
-                }`}
-              >
-                <div className="h-10 w-10 bg-cream text-ink flex items-center justify-center border-2 border-ink rounded-lg shadow-retro-sm flex-shrink-0">
-                  <ShieldCheck className="h-5.5 w-5.5" />
-                </div>
-                <div className="flex-grow text-left">
-                  <h4 className="font-bold text-ink text-sm">Admin Node (System Supervisor)</h4>
-                  <p className="text-xs text-ink/65 mt-0.5 leading-relaxed text-left">System oversight, user management, warnings review & platform metrics.</p>
                 </div>
               </button>
             </div>
@@ -461,7 +444,7 @@ export const Register: React.FC = () => {
         {step === 3 && (
           <div className="space-y-6 animate-fade-in text-left">
             <div className="text-left">
-              <h3 className="text-xl font-display font-black text-ink uppercase tracking-tight">System Node Location</h3>
+              <h3 className="text-xl font-display font-black text-ink uppercase tracking-tight">Your Location</h3>
               <p className="text-xs font-sans text-ink/60 mt-1">Specify coordinates to unlock proximity queries.</p>
             </div>
 
@@ -599,13 +582,11 @@ export const Register: React.FC = () => {
           <div className="space-y-6 animate-fade-in font-sans text-left">
             <div className="text-left">
               <h3 className="text-xl font-display font-black text-ink uppercase tracking-tight">
-                {role === 'client' ? 'Company Details' : role === 'admin' ? 'System Administrator setup' : 'Node Profile Config'}
+                {role === 'client' ? 'Company Details' : 'Freelancer Account Setup'}
               </h3>
               <p className="text-xs text-ink/60 mt-1">
-                {role === 'client' 
-                  ? 'Input corporate parameters.' 
-                  : role === 'admin'
-                  ? 'Finalise system administration portal node creation.'
+                {role === 'client'
+                  ? 'Input corporate parameters.'
                   : 'Skills can be loaded directly from your freelancer control dashboard.'
                 }
               </p>
@@ -642,18 +623,10 @@ export const Register: React.FC = () => {
                     </div>
                   </div>
                 </>
-              ) : role === 'admin' ? (
-                <div className="p-6 bg-cream border-2 border-ink border-dashed rounded-lg text-center space-y-3">
-                  <ShieldCheck className="h-8 w-8 mx-auto text-accent-teal" />
-                  <h4 className="font-bold text-ink text-sm">Admin Control Node Authorized</h4>
-                  <p className="text-xs text-ink/60 max-w-xs mx-auto leading-relaxed">
-                    Submit registration to load the platform control and supervisor analytics dashboard.
-                  </p>
-                </div>
               ) : (
                 <div className="p-6 bg-cream border-2 border-ink border-dashed rounded-lg text-center space-y-3">
                   <Briefcase className="h-8 w-8 mx-auto text-accent-teal" />
-                  <h4 className="font-bold text-ink text-sm">Provider Node Operational</h4>
+                  <h4 className="font-bold text-ink text-sm">Freelancer Account Ready</h4>
                   <p className="text-xs text-ink/60 max-w-xs mx-auto leading-relaxed">
                     Account configuration is locked. Submit registration to land on your freelancer workspace dashboard.
                   </p>

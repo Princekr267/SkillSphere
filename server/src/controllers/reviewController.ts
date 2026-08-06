@@ -13,8 +13,13 @@ export const createReview = async (req: Request, res: Response): Promise<any> =>
   const { gigId, revieweeId, rating, comment } = req.body;
   const user = (req as any).user;
 
-  if (!gigId || !revieweeId || !rating) {
-    return res.status(400).json({ success: false, message: 'gigId, revieweeId and rating are required' });
+  // Fix 3: Explicit range validation — reject anything that is not a number in [1, 5]
+  if (rating === undefined || rating === null || typeof rating !== 'number' || rating < 1 || rating > 5) {
+    return res.status(400).json({ success: false, message: 'Rating must be a number between 1 and 5' });
+  }
+
+  if (!gigId || !revieweeId) {
+    return res.status(400).json({ success: false, message: 'gigId and revieweeId are required' });
   }
 
   try {
@@ -78,11 +83,14 @@ export const createReview = async (req: Request, res: Response): Promise<any> =>
     });
 
     // Recalculate reviewee's weighted reputation rating
+    // Fix 4: Exclude reviews that are currently flagged (isFlagged === true).
+    // A review is re-included once admin clears the flag (sets isFlagged = false via dismissReviewFlag).
     const allReviews = await Review.find({ revieweeId }).populate('gigId');
+    const eligibleReviews = allReviews.filter(r => !r.isFlagged);
     let totalWeight = 0;
     let weightedSum = 0;
 
-    allReviews.forEach(r => {
+    eligibleReviews.forEach(r => {
       // Age decay: w_time = max(0.1, 1 - ageInDays / 365)
       const ageMs = Date.now() - new Date(r.createdAt).getTime();
       const ageDays = Math.max(0, ageMs / (1000 * 60 * 60 * 24));

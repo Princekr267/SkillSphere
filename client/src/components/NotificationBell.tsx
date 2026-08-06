@@ -146,7 +146,7 @@ export const NotificationBell: React.FC = () => {
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-6 text-center text-xs text-ink/60 font-sans">
-                You are all caught up node!
+                You are all caught up!
               </div>
             ) : (
               notifications.map(notif => (

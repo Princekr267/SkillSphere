@@ -14,19 +14,19 @@ import {
   googleLogin
 } from '../controllers/authController';
 import { protect } from '../middleware/auth';
-import { authLimiter } from '../middleware/rateLimiter';
+import { authLimiter, sensitiveActionLimiter, twoFactorLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
 
 // Public auth routes
-router.post('/register', registerUser);
+router.post('/register', sensitiveActionLimiter, registerUser);
 router.post('/login', authLimiter, loginUser);
 router.post('/verify-email', verifyEmail);
 router.get('/verify-email/:token', verifyEmail);
-router.post('/forgot-password', forgotPassword);
+router.post('/forgot-password', sensitiveActionLimiter, forgotPassword);
 router.post('/reset-password/:token', resetPassword);
 router.post('/google', googleLogin);
-router.post('/2fa/verify', verify2FACode);
+router.post('/2fa/verify', twoFactorLimiter, verify2FACode);
 
 // Protected profile & 2FA management routes
 router.get('/me', protect, getMe);
