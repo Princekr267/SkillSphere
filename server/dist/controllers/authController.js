@@ -12,12 +12,13 @@ const qrcode_1 = __importDefault(require("qrcode"));
 const google_auth_library_1 = require("google-auth-library");
 const User_1 = __importDefault(require("../models/User"));
 const emailService_1 = require("../services/emailService");
+const jwtSecret_1 = require("../utils/jwtSecret");
 const googleClient = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 /**
  * Generate JWT token for a user ID.
  */
 const generateToken = (id) => {
-    return jsonwebtoken_1.default.sign({ id }, process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026', { expiresIn: '30d' });
+    return jsonwebtoken_1.default.sign({ id }, (0, jwtSecret_1.getJwtSecret)(), { expiresIn: '30d' });
 };
 /**
  * @desc    Register a new user
@@ -32,6 +33,17 @@ const registerUser = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields: name, email, password, role, city, latitude, longitude',
+            });
+        }
+        // Privilege-escalation prevention: only allow public-facing roles at registration.
+        // Accepting 'role' blindly from req.body would let any unauthenticated caller
+        // POST { role: 'super_admin' } and immediately gain elevated access.
+        // TODO: role changes must go through an admin-only endpoint
+        const ALLOWED_REGISTRATION_ROLES = ['client', 'freelancer'];
+        if (!ALLOWED_REGISTRATION_ROLES.includes(role)) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid role. Allowed values are: ${ALLOWED_REGISTRATION_ROLES.join(', ')}`,
             });
         }
         // 2. Check if user already exists
@@ -94,7 +106,6 @@ const registerUser = async (req, res) => {
             skills: user.skills,
             portfolio: user.portfolio,
             hourlyRate: user.hourlyRate,
-            resumeUrl: user.resumeUrl,
             certifications: user.certifications,
             rating: user.rating,
             reviewCount: user.reviewCount,
@@ -157,7 +168,7 @@ const loginUser = async (req, res) => {
             });
             // Send Code to Email
             await (0, emailService_1.sendOTPEmail)(user.email, otpCode);
-            const tempToken = jsonwebtoken_1.default.sign({ tempUserId: user._id.toString() }, process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026', { expiresIn: '5m' });
+            const tempToken = jsonwebtoken_1.default.sign({ tempUserId: user._id.toString() }, (0, jwtSecret_1.getJwtSecret)(), { expiresIn: '5m' });
             return res.status(200).json({
                 success: true,
                 twoFactorRequired: true,
@@ -180,7 +191,6 @@ const loginUser = async (req, res) => {
                 skills: user.skills,
                 portfolio: user.portfolio,
                 hourlyRate: user.hourlyRate,
-                resumeUrl: user.resumeUrl,
                 certifications: user.certifications,
                 rating: user.rating,
                 reviewCount: user.reviewCount,
@@ -238,15 +248,15 @@ const verifyEmail = async (req, res) => {
         // Find user by token
         const user = await User_1.default.findOne({ verificationToken: token });
         if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: 'Verification token is invalid or has already been used.',
+            return res.status(200).json({
+                success: true,
+                message: 'Your email address is already verified or the link has already been used.',
             });
         }
         if (user.isVerified) {
             return res.status(200).json({
                 success: true,
-                message: 'Your email address is already verified! You can proceed to sign in.',
+                message: 'Your email address is already verified! You can proceed to use your account.',
             });
         }
         if (user.verificationTokenExpires && user.verificationTokenExpires < new Date()) {
@@ -295,7 +305,7 @@ const resendVerificationEmail = async (req, res) => {
         await (0, emailService_1.sendVerificationEmail)(user.email, verificationToken);
         res.status(200).json({
             success: true,
-            message: 'Fresh verification link generated! Check your terminal logs or Mailtrap inbox.',
+            message: 'Verification email sent successfully! Please check your email inbox or server logs.',
         });
     }
     catch (error) {
@@ -478,7 +488,7 @@ const verify2FACode = async (req, res) => {
         }
         let decoded;
         try {
-            decoded = jsonwebtoken_1.default.verify(tempToken, process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026');
+            decoded = jsonwebtoken_1.default.verify(tempToken, (0, jwtSecret_1.getJwtSecret)());
         }
         catch (jwtErr) {
             return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
@@ -512,7 +522,6 @@ const verify2FACode = async (req, res) => {
                 skills: user.skills,
                 portfolio: user.portfolio,
                 hourlyRate: user.hourlyRate,
-                resumeUrl: user.resumeUrl,
                 certifications: user.certifications,
                 rating: user.rating,
                 reviewCount: user.reviewCount,
@@ -556,6 +565,16 @@ const googleLogin = async (req, res) => {
                     name,
                 });
             }
+            // Privilege-escalation prevention: apply the same role allowlist as /register.
+            // A caller could otherwise pass { role: 'super_admin' } via the Google OAuth flow.
+            // TODO: role changes must go through an admin-only endpoint
+            const ALLOWED_REGISTRATION_ROLES = ['client', 'freelancer'];
+            if (!ALLOWED_REGISTRATION_ROLES.includes(role)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid role. Allowed values are: ${ALLOWED_REGISTRATION_ROLES.join(', ')}`,
+                });
+            }
             const { city, latitude, longitude } = req.body;
             const defaultCity = city || 'Mumbai';
             const defaultLat = latitude !== undefined ? parseFloat(latitude) : 19.076;
@@ -586,7 +605,7 @@ const googleLogin = async (req, res) => {
             user = await User_1.default.create(userData);
         }
         if (user.twoFactorEnabled) {
-            const tempToken = jsonwebtoken_1.default.sign({ tempUserId: user._id.toString() }, process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026', { expiresIn: '5m' });
+            const tempToken = jsonwebtoken_1.default.sign({ tempUserId: user._id.toString() }, (0, jwtSecret_1.getJwtSecret)(), { expiresIn: '5m' });
             return res.status(200).json({
                 success: true,
                 twoFactorRequired: true,
@@ -609,7 +628,6 @@ const googleLogin = async (req, res) => {
                 skills: user.skills,
                 portfolio: user.portfolio,
                 hourlyRate: user.hourlyRate,
-                resumeUrl: user.resumeUrl,
                 certifications: user.certifications,
                 rating: user.rating,
                 reviewCount: user.reviewCount,

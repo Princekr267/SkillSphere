@@ -247,7 +247,7 @@ export const Register: React.FC = () => {
   if (token && user) {
     // NOTE: the admin redirect below is for already-logged-in admins hitting /register;
     // it is NOT part of the public registration flow (admin registration was removed).
-    if (user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user.role === 'super_admin') return <Navigate to="/admin" replace />;
     if (user.role === 'client') return <Navigate to="/client-dashboard" replace />;
     return <Navigate to="/freelancer-dashboard" replace />;
   }

@@ -34,57 +34,36 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const DisputeSchema = new mongoose_1.Schema({
-    gigId: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'Gig',
-        required: [true, 'Dispute must be associated with a gig'],
-    },
-    raisedById: {
+// ─── Schema ──────────────────────────────────────────────────────────────────
+const CompanyMembershipSchema = new mongoose_1.Schema({
+    userId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
-        required: [true, 'Dispute must have a raiser'],
+        required: [true, 'Membership must belong to a user'],
     },
-    againstId: {
+    companyId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User',
-        required: [true, 'Dispute must be against a user'],
+        ref: 'Company',
+        required: [true, 'Membership must belong to a company'],
     },
-    reason: {
+    orgRole: {
         type: String,
-        required: [true, 'Reason for dispute is required'],
-        trim: true,
-        maxlength: 1000,
+        enum: ['owner', 'member'],
+        required: [true, 'Organisation role is required'],
     },
-    evidenceUrl: {
-        type: String,
-    },
-    status: {
-        type: String,
-        enum: ['open', 'resolved'],
-        default: 'open',
-    },
-    resolutionNote: {
-        type: String,
-        trim: true,
-        maxlength: 1000,
-    },
-    resolutionAction: {
-        type: String,
-        enum: ['release', 'refund', 'partial'],
-    },
-    partialAmount: {
-        type: Number,
-        min: 0,
-    },
-    resolvedBy: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User',
-    },
-    resolvedAt: {
+    joinedAt: {
         type: Date,
+        default: Date.now,
     },
 }, {
-    timestamps: true,
+    // No updatedAt needed — memberships are created once and not edited
+    timestamps: false,
 });
-exports.default = mongoose_1.default.model('Dispute', DisputeSchema);
+// ─── Indexes ─────────────────────────────────────────────────────────────────
+// Compound unique index: one membership row per user per company
+// (a user CAN have separate rows for different companies)
+CompanyMembershipSchema.index({ userId: 1, companyId: 1 }, { unique: true });
+// Individual indexes for efficient single-direction lookups
+CompanyMembershipSchema.index({ userId: 1 });
+CompanyMembershipSchema.index({ companyId: 1 });
+exports.default = mongoose_1.default.model('CompanyMembership', CompanyMembershipSchema);

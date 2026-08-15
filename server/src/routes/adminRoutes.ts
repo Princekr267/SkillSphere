@@ -10,6 +10,9 @@ import {
   dismissReviewFlag,
   deleteReview,
   getWarnings,
+  getPendingCompanies,
+  approveCompany,
+  rejectCompany,
 } from '../controllers/adminController';
 
 const router = express.Router();
@@ -25,6 +28,11 @@ router.delete('/gigs/:id',        adminDeleteGig);
 router.get('/flagged-reviews',     getFlaggedReviews);
 router.put('/reviews/:id/dismiss', dismissReviewFlag);
 router.delete('/reviews/:id',      deleteReview);
-router.get('/warnings',            getWarnings);
+router.get('/warnings',                     getWarnings);
+
+// Company management routes
+router.get('/companies/pending',            getPendingCompanies);
+router.put('/companies/:id/approve',        approveCompany);
+router.put('/companies/:id/reject',         rejectCompany);
 
 export default router;

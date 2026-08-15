@@ -571,7 +571,7 @@ export const ClientGigManager: React.FC = () => {
                     <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-accent-teal" /></div>
                   ) : gigProposals[gig._id].length === 0 ? (
                     <p className="text-xs text-ink/60 font-sans italic text-left">
-                      No proposals yet. Your gig is visible to freelancers {gig.radiusKm >= 3000 ? 'across all of India (Full Country India)' : `within ${gig.radiusKm}km`}.
+                      No proposals yet. Your gig is visible to freelancers {(gig.radiusKm ?? 25) >= 3000 ? 'across all of India (Full Country India)' : `within ${gig.radiusKm ?? 25}km`}.
                     </p>
                   ) : (
                     <div className="space-y-4">
@@ -612,7 +612,7 @@ export const ClientGigManager: React.FC = () => {
                           </p>
 
                           <div className="flex items-center justify-between mb-3 border-b border-ink/10 pb-3">
-                            <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider">Direct Candidate Node</span>
+                            <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider">Direct Candidate</span>
                             <Link to={`/gigs/${prop._id}/chat`} onClick={e => e.stopPropagation()}>
                               <Button
                                 variant="outline"

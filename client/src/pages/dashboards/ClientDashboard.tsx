@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Building, MapPin, Edit, FileText, Check, AlertCircle, Compass, Search, Calendar, Clock, User as UserIcon, Star, ExternalLink, Loader2, Mail } from 'lucide-react';
+import { Building, MapPin, Edit, FileText, Check, AlertCircle, Compass, Search, Calendar, Clock, User as UserIcon, Star, ExternalLink, Loader2, Mail, KeyRound, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import api from '../../utils/api';
 import { ClientGigManager } from './ClientGigManager';
@@ -19,7 +19,7 @@ interface CitySuggestion {
   lon: string;
 }
 
-type Tab = 'profile' | 'gigs' | 'calendar';
+type Tab = 'profile' | 'gigs' | 'calendar' | 'companies';
 
 export const ClientDashboard: React.FC = () => {
   const { user, updateProfile } = useAuth();
@@ -28,7 +28,7 @@ export const ClientDashboard: React.FC = () => {
 
   useEffect(() => {
     const tab = searchParams.get('tab') as Tab;
-    if (tab && ['profile', 'gigs', 'calendar'].includes(tab)) {
+    if (tab && ['profile', 'gigs', 'calendar', 'companies'].includes(tab)) {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -50,6 +50,20 @@ export const ClientDashboard: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
+
+  // Company state
+  const [myCompanies, setMyCompanies] = useState<any[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(false);
+
+  const loadMyCompanies = async () => {
+    setCompaniesLoading(true);
+    try {
+      const res = await api.get('/companies/mine');
+      if (res.data.success) setMyCompanies(res.data.companies);
+    } catch { /* silently ignore */ } finally {
+      setCompaniesLoading(false);
+    }
+  };
 
   // Bookings / Appointments state
   const [bookings, setBookings] = useState<any[]>([]);
@@ -209,14 +223,14 @@ export const ClientDashboard: React.FC = () => {
 
       <div className="mb-8 border-b-2 border-ink pb-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="pb-2 sm:pb-6 text-left">
-          <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Workspace Node</span>
+          <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Workspace</span>
           <h1 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Client Panel</h1>
         </div>
         <div className="flex items-end space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto -mb-[2px] scrollbar-none flex-nowrap">
-          {(['profile', 'gigs', 'calendar'] as Tab[]).map(tab => (
+          {(['profile', 'gigs', 'calendar', 'companies'] as Tab[]).map(tab => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => { setActiveTab(tab); if (tab === 'companies') loadMyCompanies(); }}
               className={`px-3 sm:px-5 py-2.5 text-[10px] sm:text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all cursor-pointer flex-shrink-0 ${
                 activeTab === tab
                   ? 'bg-accent-teal text-ink shadow-none translate-y-[2px]'
@@ -224,7 +238,7 @@ export const ClientDashboard: React.FC = () => {
               }`}
               style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}
             >
-              {tab === 'profile' ? 'My Profile' : tab === 'gigs' ? 'Gig Manager' : 'Calendar & Appointments'}
+              {tab === 'profile' ? 'My Profile' : tab === 'gigs' ? 'Gig Manager' : tab === 'calendar' ? 'Calendar & Appointments' : 'Companies'}
             </button>
           ))}
         </div>
@@ -246,7 +260,7 @@ export const ClientDashboard: React.FC = () => {
             </div>
           ) : bookings.length === 0 ? (
             <div className="text-center py-10 text-xs text-ink/60 font-sans italic">
-              No appointment slots booked. You can request interview & consultation slots from candidate node profile pages.
+              No appointment slots booked. You can request interview & consultation slots from candidate profile pages.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -292,7 +306,7 @@ export const ClientDashboard: React.FC = () => {
                           </div>
                           <div>
                             <p className="font-bold text-ink font-display uppercase text-xs">
-                              {b.freelancerId?.name || 'Candidate Node'}
+                              {b.freelancerId?.name || 'Candidate'}
                             </p>
                             <div className="flex items-center space-x-2 mt-0.5">
                               <StarRating value={b.freelancerId?.rating || 5} size="sm" />
@@ -386,7 +400,7 @@ export const ClientDashboard: React.FC = () => {
                 <div className="mt-4 border-t-2 border-ink w-full pt-4">
                   <h3 className="text-lg font-black font-display text-ink uppercase tracking-tight">{user.name}</h3>
                   <Badge variant="outline" className="mt-1 shadow-none">
-                    {user.role} node
+                    {user.role}
                   </Badge>
                 </div>
 
@@ -501,7 +515,7 @@ export const ClientDashboard: React.FC = () => {
                         <Badge variant="amber" className="shadow-none text-xs">{user.role}</Badge>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Primary Node Location</span>
+                        <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Primary Location</span>
                         <span className="font-bold text-ink text-xs">{user.location.city}</span>
                       </div>
                     </div>
@@ -512,6 +526,92 @@ export const ClientDashboard: React.FC = () => {
 
           </div>
         </>
+      )}
+
+      {/* ── COMPANIES TAB ─────────────────────────────────────────────────── */}
+      {activeTab === 'companies' && (
+        <div className="space-y-6 max-w-3xl">
+
+          {/* CTA cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link to="/register-company">
+              <Card className="p-5 h-full flex items-start gap-4 group hover:shadow-retro transition-shadow cursor-pointer">
+                <div className="h-10 w-10 flex-shrink-0 bg-accent-teal border-2 border-ink rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Building className="h-5 w-5 text-ink" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">Register a Company</h3>
+                  <p className="text-xs text-ink/60 font-sans mt-1 leading-relaxed">Submit your company for verification. Once approved, invite your team.</p>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold font-display text-accent-teal uppercase tracking-widest mt-2">
+                    Start Application <ArrowRight className="h-3 w-3" />
+                  </span>
+                </div>
+              </Card>
+            </Link>
+
+            <Link to="/join-company">
+              <Card className="p-5 h-full flex items-start gap-4 group hover:shadow-retro transition-shadow cursor-pointer">
+                <div className="h-10 w-10 flex-shrink-0 bg-accent-amber border-2 border-ink rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <KeyRound className="h-5 w-5 text-ink" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">Join a Company</h3>
+                  <p className="text-xs text-ink/60 font-sans mt-1 leading-relaxed">Got an invite key from your company owner? Enter it here to join.</p>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold font-display text-accent-amber uppercase tracking-widest mt-2">
+                    Enter Invite Key <ArrowRight className="h-3 w-3" />
+                  </span>
+                </div>
+              </Card>
+            </Link>
+          </div>
+
+          {/* Existing companies list */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[10px] font-bold font-display text-ink/50 uppercase tracking-widest">Your Companies</h3>
+              <button onClick={loadMyCompanies} className="text-[10px] font-bold font-display text-ink/40 hover:text-ink uppercase tracking-widest flex items-center gap-1 cursor-pointer">
+                <Loader2 className={`h-3 w-3 ${companiesLoading ? 'animate-spin' : 'hidden'}`} />
+                Refresh
+              </button>
+            </div>
+
+            {companiesLoading ? (
+              <div className="py-6 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-ink/40" /></div>
+            ) : myCompanies.length === 0 ? (
+              <Card className="p-6 text-center">
+                <Building className="h-7 w-7 text-ink/20 mx-auto mb-2" />
+                <p className="text-xs text-ink/50 font-sans">You haven't registered or joined any companies yet.</p>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {myCompanies.map(({ company: c, orgRole }) => (
+                  <Link key={c._id} to={`/company/${c._id}`}>
+                    <Card className="p-4 flex items-center justify-between gap-4 group hover:shadow-retro transition-shadow cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 flex-shrink-0 bg-accent-teal/20 border-2 border-ink rounded-lg flex items-center justify-center">
+                          <Building className="h-4.5 w-4.5 text-ink" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold font-display text-ink uppercase">{c.name}</p>
+                          <p className="text-[10px] text-ink/50 font-sans">{c.industry} · <span className="capitalize">{orgRole}</span></p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={c.status === 'approved' ? 'teal' : c.status === 'pending' ? 'amber' : 'coral'}
+                          className="shadow-none font-mono text-[9px]"
+                        >
+                          {c.status}
+                        </Badge>
+                        <ArrowRight className="h-4 w-4 text-ink/30 group-hover:text-ink transition-colors" />
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
     </div>

@@ -23,14 +23,20 @@ const storage = multer_1.default.diskStorage({
         cb(null, file.fieldname + '-' + uniqueSuffix + path_1.default.extname(file.originalname));
     },
 });
-// File filter to allow safe MIME types (image/jpeg, image/png, application/pdf)
+// File filter to allow safe MIME types (image/jpeg, image/png, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document)
 const fileFilter = (req, file, cb) => {
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const allowedMimeTypes = [
+        'image/jpeg',
+        'image/png',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
     if (allowedMimeTypes.includes(file.mimetype)) {
         cb(null, true);
     }
     else {
-        cb(new Error('Unsupported file format. Please upload PDF, JPG, or PNG.'), false);
+        cb(new Error('Unsupported file format. Please upload PDF, DOC, DOCX, JPG, or PNG.'), false);
     }
 };
 // Limit file size to 5MB

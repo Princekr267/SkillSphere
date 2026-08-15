@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -20,6 +21,9 @@ import { FreelancerProfile } from './pages/FreelancerProfile';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { ResetPassword } from './pages/ResetPassword';
 import { NotFound } from './pages/NotFound';
+import { RegisterCompany } from './pages/RegisterCompany';
+import { JoinCompany } from './pages/JoinCompany';
+import { CompanyDashboard } from './pages/CompanyDashboard';
 import './App.css';
 
 // Root level redirect based on user authentication and role
@@ -45,7 +49,7 @@ const HomeRedirect: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role === 'admin') return <Navigate to="/admin" replace />;
+  if (user.role === 'super_admin') return <Navigate to="/admin" replace />;
   if (user.role === 'client') return <Navigate to="/client-dashboard" replace />;
   if (user.role === 'freelancer') return <Navigate to="/freelancer-dashboard" replace />;
 
@@ -90,7 +94,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['super_admin']}>
                 <AdminDashboard />
               </ProtectedRoute>
             }
@@ -100,7 +104,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/gigs"
             element={
-              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'super_admin']}>
                 <BrowseGigs />
               </ProtectedRoute>
             }
@@ -108,7 +112,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/gigs/:id"
             element={
-              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'super_admin']}>
                 <GigDetail />
               </ProtectedRoute>
             }
@@ -118,7 +122,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/gigs/:id/chat"
             element={
-              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'super_admin']}>
                 <GigChat />
               </ProtectedRoute>
             }
@@ -128,7 +132,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/review/:gigId/:revieweeId"
             element={
-              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'super_admin']}>
                 <LeaveReview />
               </ProtectedRoute>
             }
@@ -138,8 +142,34 @@ const AppContent: React.FC = () => {
           <Route
             path="/profile/:id"
             element={
-              <ProtectedRoute allowedRoles={['freelancer', 'client', 'admin']}>
+              <ProtectedRoute allowedRoles={['freelancer', 'client', 'super_admin']}>
                 <FreelancerProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Company Routes */}
+          <Route
+            path="/register-company"
+            element={
+              <ProtectedRoute allowedRoles={['client']}>
+                <RegisterCompany />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/join-company"
+            element={
+              <ProtectedRoute allowedRoles={['client']}>
+                <JoinCompany />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/:id"
+            element={
+              <ProtectedRoute allowedRoles={['client']}>
+                <CompanyDashboard />
               </ProtectedRoute>
             }
           />
@@ -159,7 +189,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppContent />
+        <SocketProvider>
+          <AppContent />
+        </SocketProvider>
       </AuthProvider>
     </Router>
   );

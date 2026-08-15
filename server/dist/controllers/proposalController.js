@@ -124,12 +124,14 @@ const respondToProposal = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Not authorized to respond to this proposal' });
         }
         if (action === 'accepted') {
-            // Client accepts the proposal
-            if (!isClient) {
-                // Freelancer can accept too, but only if there is a pending counter-offer from the client
-                if (proposal.status !== 'negotiating' || proposal.lastProposedBy !== 'client') {
-                    return res.status(400).json({ success: false, message: 'Only clients can accept original bids' });
-                }
+            // A party can only accept if the OTHER party made the most recent offer/counter.
+            // i.e. client can accept only when lastProposedBy === 'freelancer', and vice versa.
+            const requiredProposer = isClient ? 'freelancer' : 'client';
+            if (proposal.lastProposedBy !== requiredProposer) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Cannot accept — waiting on the other party's response to the current offer",
+                });
             }
             proposal.status = 'accepted';
             await proposal.save();
@@ -181,9 +183,23 @@ const respondToProposal = async (req, res) => {
             if (!counterAmount || isNaN(Number(counterAmount)) || Number(counterAmount) <= 0) {
                 return res.status(400).json({ success: false, message: 'Please provide a valid counter-offer amount' });
             }
+            // Cap: no more than 10 negotiation rounds total
+            if (proposal.negotiationHistory.length >= 10) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Maximum negotiation rounds reached (10). Please accept, reject, or start a new proposal.',
+                });
+            }
+            // Append this offer to the history BEFORE updating bidAmount (append-only log)
+            proposal.negotiationHistory.push({
+                proposedBy: isClient ? 'client' : 'freelancer',
+                amount: Number(counterAmount),
+                message: req.body.message,
+                timestamp: new Date(),
+            });
             proposal.status = 'negotiating';
             proposal.bidAmount = Number(counterAmount);
-            proposal.lastProposedBy = user.role;
+            proposal.lastProposedBy = (isClient ? 'client' : 'freelancer');
             if (isClient) {
                 proposal.clientCounterAmount = Number(counterAmount);
             }

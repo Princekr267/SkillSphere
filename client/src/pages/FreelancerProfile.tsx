@@ -245,7 +245,7 @@ export const FreelancerProfile: React.FC = () => {
               )}
 
               <Badge variant="teal" className="mt-2.5 shadow-retro-sm border-2 border-ink text-ink font-bold font-sans">
-                Client node
+                Client
               </Badge>
 
               <div className="w-full border-t-2 border-ink mt-6 pt-6 space-y-4 text-left font-mono text-xs">
@@ -277,7 +277,7 @@ export const FreelancerProfile: React.FC = () => {
             <Card className="text-left">
               <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-3 pl-1">About Client</h3>
               <p className="text-sm text-ink leading-relaxed font-sans font-bold">
-                {freelancer.bio || 'No description configured on this client node.'}
+                {freelancer.bio || 'No description configured for this client.'}
               </p>
             </Card>
 
@@ -359,7 +359,7 @@ export const FreelancerProfile: React.FC = () => {
             </h1>
 
             <Badge variant="outline" className="mt-1.5 shadow-none">
-              {freelancer.role} node
+              {freelancer.role}
             </Badge>
 
             <div className="w-full border-t-2 border-ink mt-6 pt-6 space-y-4 text-left font-mono text-xs">
@@ -382,7 +382,7 @@ export const FreelancerProfile: React.FC = () => {
 
               {/* Overall score */}
               <div className="border-t-2 border-ink pt-4 flex flex-col items-start space-y-1">
-                <span className="text-[9px] font-mono text-ink/60 uppercase tracking-widest font-bold">Node Rep Score</span>
+                <span className="text-[9px] font-mono text-ink/60 uppercase tracking-widest font-bold">Reputation Score</span>
                 <div className="flex items-center space-x-2">
                   <StarRating value={freelancer.rating} size="sm" />
                   <span className="text-xs font-bold text-ink font-mono">({freelancer.reviewCount})</span>
@@ -612,9 +612,9 @@ export const FreelancerProfile: React.FC = () => {
           
           {/* Bio */}
           <Card className="text-left">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-3 pl-1">Bio / node description</h3>
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-3 pl-1">Bio / Description</h3>
             <p className="text-sm text-ink leading-relaxed font-sans font-bold">
-              {freelancer.bio || 'No bio configured on this node.'}
+              {freelancer.bio || 'No bio configured yet.'}
             </p>
           </Card>
 
@@ -641,7 +641,7 @@ export const FreelancerProfile: React.FC = () => {
 
             {/* Certs */}
             <Card className="text-left">
-              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Node Credentials</h3>
+              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Credentials</h3>
               {freelancer.certifications.length === 0 ? (
                 <p className="text-xs text-ink/60 font-sans pl-1 italic">No credentials listed.</p>
               ) : (
@@ -659,7 +659,7 @@ export const FreelancerProfile: React.FC = () => {
 
           {/* Portfolio */}
           <Card className="text-left">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Portfolio nodes</h3>
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Portfolio</h3>
             {freelancer.portfolio.length === 0 ? (
               <p className="text-xs text-ink/60 font-sans pl-1 italic">No portfolio items added.</p>
             ) : (
@@ -670,7 +670,7 @@ export const FreelancerProfile: React.FC = () => {
                     <p className="text-xs text-ink/60 mt-1.5 leading-relaxed font-sans">{p.description}</p>
                     {p.link && (
                       <a href={p.link} target="_blank" rel="noopener noreferrer" className="text-[10px] font-mono text-accent-teal hover:underline font-bold uppercase block mt-3">
-                        Visit project node →
+                        Visit project →
                       </a>
                     )}
                   </Card>

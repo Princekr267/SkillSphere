@@ -12,8 +12,11 @@ const Gig_1 = __importDefault(require("./models/Gig"));
 const User_1 = __importDefault(require("./models/User"));
 const moderationService_1 = require("./services/moderationService");
 const Warning_1 = __importDefault(require("./models/Warning"));
-const JWT_SECRET = process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026';
-const activeUsers = new Set();
+const jwtSecret_1 = require("./utils/jwtSecret");
+// Map from userId → count of active socket connections.
+// Using a count rather than a plain Set prevents multi-tab/device users from being
+// marked offline when only one of their connections drops.
+const activeUsers = new Map();
 async function resolveRoomParticipants(roomId) {
     try {
         let gig = null;
@@ -69,7 +72,7 @@ function initSocket(httpServer) {
         if (!token)
             return next(new Error('Authentication error: no token'));
         try {
-            const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+            const decoded = jsonwebtoken_1.default.verify(token, (0, jwtSecret_1.getJwtSecret)());
             const user = await User_1.default.findById(decoded.id).select('_id name role');
             if (!user)
                 return next(new Error('Authentication error: user not found'));
@@ -85,12 +88,17 @@ function initSocket(httpServer) {
         const userIdStr = socketUser._id.toString();
         // Join personal notification room
         socket.join(`user-${userIdStr}`);
-        // Register user as active and broadcast status change
-        activeUsers.add(userIdStr);
-        io.emit('user_status_changed', { userId: userIdStr, status: 'online' });
+        // Register user as active and broadcast status change.
+        // Only emit 'online' when this is the user's FIRST connection (count goes 0 → 1).
+        // Subsequent connections from other tabs/devices just increment the counter silently.
+        const prevCount = activeUsers.get(userIdStr) ?? 0;
+        activeUsers.set(userIdStr, prevCount + 1);
+        if (prevCount === 0) {
+            io.emit('user_status_changed', { userId: userIdStr, status: 'online' });
+        }
         // Handle check online query
         socket.on('get_online_users', () => {
-            socket.emit('online_users_list', Array.from(activeUsers));
+            socket.emit('online_users_list', Array.from(activeUsers.keys()));
         });
         // ── join_room (gigs/chat) ──────────────────────────────────────────────────
         socket.on('join_room', async (gigId) => {
@@ -205,8 +213,16 @@ function initSocket(httpServer) {
             }
         });
         socket.on('disconnect', () => {
-            activeUsers.delete(userIdStr);
-            io.emit('user_status_changed', { userId: userIdStr, status: 'offline' });
+            // Decrement the connection count. Only broadcast 'offline' once the last
+            // connection for this user is gone — their other tabs/devices are still live.
+            const remaining = (activeUsers.get(userIdStr) ?? 1) - 1;
+            if (remaining <= 0) {
+                activeUsers.delete(userIdStr);
+                io.emit('user_status_changed', { userId: userIdStr, status: 'offline' });
+            }
+            else {
+                activeUsers.set(userIdStr, remaining);
+            }
         });
     });
     return io;

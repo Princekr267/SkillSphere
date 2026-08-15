@@ -3,7 +3,11 @@ import User from '../models/User';
 import Gig from '../models/Gig';
 import Review from '../models/Review';
 import Warning from '../models/Warning';
+import Company from '../models/Company';
+import Notification from '../models/Notification';
 import { AuthRequest } from '../middleware/auth';
+import { sendNotification } from '../socket';
+import { sendCompanyApprovalEmail, sendCompanyRejectionEmail } from '../services/emailService';
 
 // ─── GET /api/admin/stats ───────────────────────────────────────────────────
 export const getStats = async (_req: Request, res: Response): Promise<any> => {
@@ -75,11 +79,8 @@ export const toggleUserStatus = async (req: AuthRequest, res: Response): Promise
     const user = await User.findById(targetId).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    // Prevent toggling another admin account
-    // TODO: Once a `super_admin` role is introduced, this function must also block regular admins
-    // from deactivating `super_admin` accounts, and should only allow `super_admin` to deactivate
-    // `admin` accounts. Do not implement the full hierarchy yet — just add the role check here.
-    if (user.role === 'admin') return res.status(403).json({ success: false, message: 'Cannot ban another admin' });
+    // Prevent toggling another super_admin account
+    if (user.role === 'super_admin') return res.status(403).json({ success: false, message: 'Cannot ban another super admin' });
 
     const current = (user as any).isActive;
     (user as any).isActive = current === undefined ? false : !current;
@@ -212,6 +213,96 @@ export const getWarnings = async (_req: Request, res: Response): Promise<any> =>
       .sort({ createdAt: -1 });
 
     return res.json({ success: true, warnings });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── GET /api/admin/companies/pending ────────────────────────────────────────
+export const getPendingCompanies = async (_req: Request, res: Response): Promise<any> => {
+  try {
+    const companies = await Company.find({ status: 'pending' })
+      .populate('createdBy', 'name email')
+      .sort({ createdAt: 1 }); // oldest first so admins review in order
+
+    return res.json({ success: true, companies });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── PUT /api/admin/companies/:id/approve ────────────────────────────────────
+export const approveCompany = async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const company = await Company.findById(req.params.id).populate('createdBy', 'name email');
+    if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
+
+    if (company.status === 'approved') {
+      return res.status(400).json({ success: false, message: 'Company is already approved' });
+    }
+
+    company.status = 'approved';
+    company.reviewedBy = req.user._id;
+    company.reviewedAt = new Date();
+    company.rejectionReason = undefined;
+    await company.save();
+
+    // Notify the company creator via in-app notification
+    const creator = company.createdBy as any;
+    const notif = await Notification.create({
+      userId: creator._id,
+      type: 'company_status_update',
+      title: 'Company Approved!',
+      body: `Your company "${company.name}" has been approved. You can now share your invite key with team members.`,
+      link: `/company/${company._id}`,
+    });
+    sendNotification(creator._id.toString(), notif);
+
+    // Fire-and-forget email — failure must not break this endpoint
+    sendCompanyApprovalEmail(creator.email, company.name).catch((e: any) =>
+      console.error('Company approval email failed:', e.message)
+    );
+
+    return res.json({ success: true, company });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── PUT /api/admin/companies/:id/reject ─────────────────────────────────────
+export const rejectCompany = async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { rejectionReason } = req.body;
+    if (!rejectionReason || !rejectionReason.trim()) {
+      return res.status(400).json({ success: false, message: 'A rejection reason is required' });
+    }
+
+    const company = await Company.findById(req.params.id).populate('createdBy', 'name email');
+    if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
+
+    company.status = 'rejected';
+    company.rejectionReason = rejectionReason.trim();
+    company.reviewedBy = req.user._id;
+    company.reviewedAt = new Date();
+    await company.save();
+
+    // Notify the company creator via in-app notification
+    const creator = company.createdBy as any;
+    const notif = await Notification.create({
+      userId: creator._id,
+      type: 'company_status_update',
+      title: 'Company Application Update',
+      body: `Your company "${company.name}" was not approved. Reason: ${rejectionReason.trim()}. You can edit and resubmit your application.`,
+      link: `/company/${company._id}`,
+    });
+    sendNotification(creator._id.toString(), notif);
+
+    // Fire-and-forget email
+    sendCompanyRejectionEmail(creator.email, company.name, rejectionReason.trim()).catch((e: any) =>
+      console.error('Company rejection email failed:', e.message)
+    );
+
+    return res.json({ success: true, company });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });
   }

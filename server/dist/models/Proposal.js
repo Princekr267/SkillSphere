@@ -77,6 +77,26 @@ const ProposalSchema = new mongoose_1.Schema({
     freelancerCounterAmount: {
         type: Number,
     },
+    negotiationHistory: [
+        {
+            proposedBy: {
+                type: String,
+                enum: ['client', 'freelancer'],
+                required: true,
+            },
+            amount: {
+                type: Number,
+                required: true,
+            },
+            message: {
+                type: String,
+            },
+            timestamp: {
+                type: Date,
+                default: Date.now,
+            },
+        },
+    ],
 }, {
     timestamps: true,
 });

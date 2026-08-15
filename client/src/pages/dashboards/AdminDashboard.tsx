@@ -3,7 +3,7 @@ import api from '../../utils/api';
 import {
   Users, Briefcase, CheckCircle2, TrendingUp,
   ShieldOff, Shield, Trash2, Loader2, RefreshCw,
-  Star, AlertCircle
+  Star, AlertCircle, Building, Check, X as XIcon, MapPin, Globe
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -58,6 +58,18 @@ interface AdminWarning {
   createdAt: string;
 }
 
+interface AdminCompany {
+  _id: string;
+  name: string;
+  industry: string;
+  description?: string;
+  website?: string;
+  registrationDetails: { country: string; city: string; businessRegistrationNumber?: string; taxId?: string };
+  status: 'pending' | 'approved' | 'rejected';
+  createdBy: { _id: string; name: string; email: string };
+  createdAt: string;
+}
+
 const STAT_COLORS = ['border-accent-teal', 'border-accent-amber', 'border-accent-coral', 'border-accent-pink'];
 
 const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode; colorClass: string }> =
@@ -71,7 +83,7 @@ const StatCard: React.FC<{ label: string; value: string | number; icon: React.Re
     </div>
   );
 
-type Tab = 'stats' | 'users' | 'gigs' | 'disputes' | 'flagged-reviews' | 'warnings';
+type Tab = 'stats' | 'users' | 'gigs' | 'disputes' | 'flagged-reviews' | 'warnings' | 'companies';
 
 export const AdminDashboard: React.FC = () => {
   const [tab, setTab] = useState<Tab>('stats');
@@ -81,7 +93,12 @@ export const AdminDashboard: React.FC = () => {
   const [disputes, setDisputes] = useState<any[]>([]);
   const [flaggedReviews, setFlaggedReviews] = useState<any[]>([]);
   const [warnings, setWarnings] = useState<AdminWarning[]>([]);
+  const [pendingCompanies, setPendingCompanies] = useState<AdminCompany[]>([]);
+  const [rejectionNotes, setRejectionNotes] = useState<Record<string, string>>({});
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [resolutionNotes, setResolutionNotes] = useState<Record<string, string>>({});
+  const [resolutionActions, setResolutionActions] = useState<Record<string, 'release' | 'refund' | 'partial'>>({});
+  const [partialAmounts, setPartialAmounts] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
@@ -134,6 +151,14 @@ export const AdminDashboard: React.FC = () => {
     } finally { setLoading(false); }
   };
 
+  const fetchPendingCompanies = async () => {
+    setLoading(true);
+    try {
+      const r = await api.get('/admin/companies/pending');
+      if (r.data.success) setPendingCompanies(r.data.companies);
+    } finally { setLoading(false); }
+  };
+
   useEffect(() => {
     if (tab === 'stats') fetchStats();
     else if (tab === 'users') fetchUsers();
@@ -141,6 +166,7 @@ export const AdminDashboard: React.FC = () => {
     else if (tab === 'disputes') fetchDisputes();
     else if (tab === 'flagged-reviews') fetchFlaggedReviews();
     else if (tab === 'warnings') fetchWarnings();
+    else if (tab === 'companies') fetchPendingCompanies();
   }, [tab]);
 
   const handleToggleUser = async (userId: string) => {
@@ -168,13 +194,27 @@ export const AdminDashboard: React.FC = () => {
 
   const handleResolveDispute = async (disputeId: string) => {
     const note = resolutionNotes[disputeId];
+    const action = resolutionActions[disputeId];
     if (!note || !note.trim()) {
       alert('Please enter a resolution note');
       return;
     }
+    if (!action) {
+      alert('Please select a resolution action (Release / Refund / Partial)');
+      return;
+    }
+    const body: Record<string, any> = { resolutionNote: note.trim(), resolutionAction: action };
+    if (action === 'partial') {
+      const amt = parseFloat(partialAmounts[disputeId] || '');
+      if (!amt || amt <= 0) {
+        alert('Please enter a valid partial amount for the freelancer');
+        return;
+      }
+      body.partialAmount = amt;
+    }
     setActionLoading(disputeId);
     try {
-      await api.put(`/disputes/${disputeId}/resolve`, { resolutionNote: note.trim() });
+      await api.put(`/disputes/${disputeId}/resolve`, body);
       setMsg('Dispute marked as resolved.');
       fetchDisputes();
     } catch (e: any) {
@@ -205,6 +245,34 @@ export const AdminDashboard: React.FC = () => {
     } finally { setActionLoading(null); }
   };
 
+  const handleApproveCompany = async (companyId: string) => {
+    setActionLoading(companyId);
+    try {
+      await api.put(`/admin/companies/${companyId}/approve`);
+      setMsg('Company approved. Owner has been notified.');
+      fetchPendingCompanies();
+    } catch (e: any) {
+      setMsg(e.response?.data?.message || 'Approval failed.');
+    } finally { setActionLoading(null); }
+  };
+
+  const handleRejectCompany = async (companyId: string) => {
+    const reason = rejectionNotes[companyId]?.trim();
+    if (!reason) {
+      alert('Please enter a rejection reason before rejecting.');
+      return;
+    }
+    setActionLoading(companyId);
+    try {
+      await api.put(`/admin/companies/${companyId}/reject`, { rejectionReason: reason });
+      setMsg('Company rejected. Owner has been notified.');
+      setRejectingId(null);
+      fetchPendingCompanies();
+    } catch (e: any) {
+      setMsg(e.response?.data?.message || 'Rejection failed.');
+    } finally { setActionLoading(null); }
+  };
+
   const STATUS_COLORS: Record<string, string> = {
     open:        'text-accent-teal bg-accent-teal/10',
     in_progress: 'text-accent-amber bg-accent-amber/10',
@@ -222,7 +290,7 @@ export const AdminDashboard: React.FC = () => {
           <h1 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Admin Dashboard</h1>
         </div>
         <div className="flex items-end space-x-2">
-          {(['stats', 'users', 'gigs', 'disputes', 'flagged-reviews', 'warnings'] as Tab[]).map(t => (
+          {(['stats', 'users', 'gigs', 'disputes', 'flagged-reviews', 'warnings', 'companies'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2.5 text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all cursor-pointer ${
                 tab === t ? 'bg-accent-teal text-ink shadow-none translate-y-[2px]' : 'bg-cream text-ink hover:bg-accent-teal/10'
@@ -296,7 +364,7 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-left">
-                        <Badge variant={u.role === 'admin' ? 'coral' : u.role === 'client' ? 'amber' : 'teal'} className="shadow-none font-mono">
+                        <Badge variant={u.role === 'super_admin' ? 'coral' : u.role === 'client' ? 'amber' : 'teal'} className="shadow-none font-mono">
                           {u.role}
                         </Badge>
                       </td>
@@ -311,7 +379,7 @@ export const AdminDashboard: React.FC = () => {
                         {new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
                       </td>
                       <td className="px-4 py-3 text-left">
-                        {u.role !== 'admin' && (
+                        {u.role !== 'super_admin' && (
                           <Button
                             onClick={() => handleToggleUser(u._id)}
                             disabled={actionLoading === u._id}
@@ -368,16 +436,23 @@ export const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-left text-[10px] font-mono text-ink/60">{g.location?.city || '—'}</td>
                       <td className="px-4 py-3 text-left">
-                        <Button
-                          onClick={() => handleDeleteGig(g._id)}
-                          disabled={actionLoading === g._id}
-                          variant="coral"
-                          size="sm"
-                          className="shadow-none py-1"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          <span>Delete</span>
-                        </Button>
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            onClick={() => handleDeleteGig(g._id)}
+                            disabled={actionLoading === g._id || g.escrowStatus === 'funds_deposited'}
+                            variant="coral"
+                            size="sm"
+                            className="shadow-none py-1"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            <span>Delete</span>
+                          </Button>
+                          {g.escrowStatus === 'funds_deposited' && (
+                            <span className="text-[8px] font-mono text-accent-coral leading-tight">
+                              Escrow funded — resolve via dispute first
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -442,6 +517,44 @@ export const AdminDashboard: React.FC = () => {
                       <td className="px-4 py-3 text-left">
                         {d.status === 'open' ? (
                           <div className="space-y-2">
+                            {/* Resolution action selector */}
+                            <div className="flex gap-1">
+                              {(['release', 'refund', 'partial'] as const).map(action => (
+                                <button
+                                  key={action}
+                                  type="button"
+                                  onClick={() => setResolutionActions(prev => ({ ...prev, [d._id]: action }))}
+                                  className={`flex-1 px-1.5 py-1 text-[9px] font-bold font-display uppercase tracking-wider border-2 border-ink rounded cursor-pointer transition-all ${
+                                    resolutionActions[d._id] === action
+                                      ? action === 'release'
+                                        ? 'bg-accent-teal text-ink shadow-retro-sm'
+                                        : action === 'refund'
+                                        ? 'bg-accent-coral text-ink shadow-retro-sm'
+                                        : 'bg-accent-amber text-ink shadow-retro-sm'
+                                      : 'bg-cream text-ink/60 hover:bg-ink/5'
+                                  }`}
+                                >
+                                  {action === 'release' ? '→ Freelancer' : action === 'refund' ? '← Client' : 'Split'}
+                                </button>
+                              ))}
+                            </div>
+                            {/* Partial amount input (shown only when 'partial' is selected) */}
+                            {resolutionActions[d._id] === 'partial' && (
+                              <div>
+                                <label className="block text-[9px] font-bold font-display uppercase tracking-wider text-ink/60 mb-1">
+                                  Amount to freelancer (₹) — remainder refunds to client
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  step="1"
+                                  placeholder="e.g. 500"
+                                  value={partialAmounts[d._id] || ''}
+                                  onChange={e => setPartialAmounts(prev => ({ ...prev, [d._id]: e.target.value }))}
+                                  className="w-full p-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-mono"
+                                />
+                              </div>
+                            )}
                             <textarea
                               placeholder="Resolution note..."
                               value={resolutionNotes[d._id] || ''}
@@ -451,7 +564,12 @@ export const AdminDashboard: React.FC = () => {
                             />
                             <Button
                               onClick={() => handleResolveDispute(d._id)}
-                              disabled={actionLoading === d._id}
+                              disabled={
+                                actionLoading === d._id ||
+                                !resolutionActions[d._id] ||
+                                !resolutionNotes[d._id]?.trim() ||
+                                (resolutionActions[d._id] === 'partial' && !partialAmounts[d._id])
+                              }
                               variant="secondary"
                               size="sm"
                               className="w-full py-1 shadow-none"
@@ -574,6 +692,139 @@ export const AdminDashboard: React.FC = () => {
               </table>
               {warnings.length === 0 && (
                 <div className="py-8 text-center text-xs text-ink/60 font-sans">No safety warnings logged.</div>
+              )}
+            </div>
+          )}
+
+          {/* ── COMPANIES ───────────────────────────────────────────────────────── */}
+          {tab === 'companies' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-ink/60 font-sans">
+                  {pendingCompanies.length} pending application{pendingCompanies.length !== 1 ? 's' : ''}
+                </p>
+                <button onClick={fetchPendingCompanies} className="inline-flex items-center space-x-2 text-xs text-ink/60 hover:text-ink font-bold font-display uppercase tracking-wider cursor-pointer">
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <span>Refresh</span>
+                </button>
+              </div>
+
+              {pendingCompanies.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <Building className="h-8 w-8 text-ink/30 mx-auto mb-2" />
+                  <p className="text-sm text-ink/50 font-sans">No pending company applications.</p>
+                </Card>
+              ) : (
+                pendingCompanies.map((c) => (
+                  <Card key={c._id} className="p-5 space-y-4">
+
+                    {/* Company header */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 flex-shrink-0 bg-accent-teal/20 border-2 border-ink rounded-lg flex items-center justify-center">
+                          <Building className="h-5 w-5 text-ink" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">{c.name}</h3>
+                          <p className="text-[10px] text-ink/60 font-sans">{c.industry}</p>
+                          {c.description && (
+                            <p className="text-xs text-ink/70 font-sans mt-1 leading-relaxed max-w-lg">{c.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant="amber" className="shadow-none font-mono flex-shrink-0">Pending</Badge>
+                    </div>
+
+                    {/* Details grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[10px] font-mono text-ink/60">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {c.registrationDetails.city}, {c.registrationDetails.country}
+                      </div>
+                      {c.website && (
+                        <div className="flex items-center gap-1">
+                          <Globe className="h-3 w-3" />
+                          <a href={c.website} target="_blank" rel="noopener noreferrer" className="hover:text-accent-teal truncate">
+                            {c.website.replace(/^https?:\/\//, '')}
+                          </a>
+                        </div>
+                      )}
+                      {c.registrationDetails.businessRegistrationNumber && (
+                        <div>Reg#: {c.registrationDetails.businessRegistrationNumber}</div>
+                      )}
+                      {c.registrationDetails.taxId && (
+                        <div>Tax ID: {c.registrationDetails.taxId}</div>
+                      )}
+                    </div>
+
+                    {/* Submitter info */}
+                    <div className="p-3 bg-ink/5 border border-ink/10 rounded-lg">
+                      <p className="text-[9px] font-bold font-display text-ink/40 uppercase tracking-widest mb-1">Submitted By</p>
+                      <p className="text-xs font-bold text-ink">{c.createdBy?.name}</p>
+                      <p className="text-[10px] text-ink/60 font-mono">{c.createdBy?.email}</p>
+                      <p className="text-[10px] text-ink/40 font-mono mt-0.5">
+                        {new Date(c.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+
+                    {/* Reject reason textarea — shown when rejectingId matches */}
+                    {rejectingId === c._id && (
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold font-display text-ink/70 uppercase tracking-widest block">
+                          Rejection Reason <span className="text-accent-coral">*</span>
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={rejectionNotes[c._id] || ''}
+                          onChange={(e) => setRejectionNotes((prev) => ({ ...prev, [c._id]: e.target.value }))}
+                          placeholder="Explain why this application is being rejected…"
+                          className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-sm text-ink resize-none focus:outline-none focus:border-accent-amber placeholder:text-ink/40"
+                        />
+                      </div>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex gap-3 pt-1">
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-accent-teal text-accent-teal hover:bg-accent-teal/10"
+                        onClick={() => handleApproveCompany(c._id)}
+                        disabled={actionLoading === c._id}
+                      >
+                        {actionLoading === c._id
+                          ? <Loader2 className="h-4 w-4 animate-spin" />
+                          : <><Check className="h-4 w-4 mr-1" /><span>Approve</span></>}
+                      </Button>
+
+                      {rejectingId === c._id ? (
+                        <>
+                          <Button variant="outline" className="flex-1" onClick={() => setRejectingId(null)} disabled={actionLoading === c._id}>
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="coral"
+                            className="flex-1"
+                            onClick={() => handleRejectCompany(c._id)}
+                            disabled={actionLoading === c._id || !rejectionNotes[c._id]?.trim()}
+                          >
+                            {actionLoading === c._id
+                              ? <Loader2 className="h-4 w-4 animate-spin" />
+                              : <><XIcon className="h-4 w-4 mr-1" /><span>Confirm Reject</span></>}
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="flex-1 border-accent-coral text-accent-coral hover:bg-accent-coral/10"
+                          onClick={() => setRejectingId(c._id)}
+                          disabled={actionLoading === c._id}
+                        >
+                          <XIcon className="h-4 w-4 mr-1" /><span>Reject</span>
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                ))
               )}
             </div>
           )}

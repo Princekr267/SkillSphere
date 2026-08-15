@@ -25,7 +25,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password?: string; // Optional for safety when returning queries
-  role: 'client' | 'freelancer' | 'admin';
+  role: 'client' | 'freelancer' | 'super_admin';
   avatar?: string;
   location: ILocation;
   // Freelancer specific
@@ -88,7 +88,7 @@ const UserSchema: Schema = new Schema(
     },
     role: {
       type: String,
-      enum: ['client', 'freelancer', 'admin'],
+      enum: ['client', 'freelancer', 'super_admin'],
       required: [true, 'Please specify a role'],
     },
     avatar: {

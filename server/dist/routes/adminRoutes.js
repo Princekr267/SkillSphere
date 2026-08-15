@@ -18,4 +18,8 @@ router.get('/flagged-reviews', adminController_1.getFlaggedReviews);
 router.put('/reviews/:id/dismiss', adminController_1.dismissReviewFlag);
 router.delete('/reviews/:id', adminController_1.deleteReview);
 router.get('/warnings', adminController_1.getWarnings);
+// Company management routes
+router.get('/companies/pending', adminController_1.getPendingCompanies);
+router.put('/companies/:id/approve', adminController_1.approveCompany);
+router.put('/companies/:id/reject', adminController_1.rejectCompany);
 exports.default = router;

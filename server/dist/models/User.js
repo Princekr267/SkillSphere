@@ -59,7 +59,7 @@ const UserSchema = new mongoose_1.Schema({
     },
     role: {
         type: String,
-        enum: ['client', 'freelancer', 'admin'],
+        enum: ['client', 'freelancer', 'super_admin'],
         required: [true, 'Please specify a role'],
     },
     avatar: {
@@ -104,9 +104,6 @@ const UserSchema = new mongoose_1.Schema({
             link: String,
         },
     ],
-    resumeUrl: {
-        type: String,
-    },
     certifications: [
         {
             type: String,
@@ -145,6 +142,10 @@ const UserSchema = new mongoose_1.Schema({
     profileViews: {
         type: Number,
         default: 0,
+    },
+    resume: {
+        url: { type: String },
+        originalName: { type: String },
     },
     // Client fields
     companyName: {

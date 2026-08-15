@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import api, { BACKEND_URL } from '../utils/api';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -26,7 +26,8 @@ const SOCKET_URL = BACKEND_URL;
 export const GigChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
+  const socket = useSocket();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -35,7 +36,6 @@ export const GigChat: React.FC = () => {
   const [gigTitle, setGigTitle] = useState('Gig Chat');
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-  const socketRef = useRef<Socket | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const chatFileRef = useRef<HTMLInputElement | null>(null);
 
@@ -71,25 +71,26 @@ export const GigChat: React.FC = () => {
     fetchHistory();
   }, [id, user]);
 
-  // Connect Socket.io
+  // Set up all socket listeners and join/leave the gig room
   useEffect(() => {
-    if (!token) return;
+    if (!socket) return;
 
-    const socket = io(SOCKET_URL, {
-      auth: { token },
-      transports: ['websocket'],
-    });
-
-    socket.on('connect', () => {
+    // Join the gig room — handle both already-connected and reconnect cases
+    if (socket.connected) {
       socket.emit('join_room', id);
       socket.emit('get_online_users');
-    });
+    }
 
-    socket.on('online_users_list', (list: string[]) => {
+    const handleConnect = () => {
+      socket.emit('join_room', id);
+      socket.emit('get_online_users');
+    };
+
+    const handleOnlineUsersList = (list: string[]) => {
       setOnlineUsers(list);
-    });
+    };
 
-    socket.on('user_status_changed', ({ userId, status }: { userId: string; status: 'online' | 'offline' }) => {
+    const handleUserStatusChanged = ({ userId, status }: { userId: string; status: 'online' | 'offline' }) => {
       setOnlineUsers(prev => {
         if (status === 'online') {
           if (prev.includes(userId)) return prev;
@@ -98,42 +99,57 @@ export const GigChat: React.FC = () => {
           return prev.filter(p => p !== userId);
         }
       });
-    });
+    };
 
-    socket.on('receive_message', (msg: Message) => {
+    const handleReceiveMessage = (msg: Message) => {
       setMessages(prev => {
         if (prev.some(m => m._id === msg._id)) return prev;
         return [...prev, msg];
       });
-    });
+    };
 
-    socket.on('user_typing', ({ userId }: { userId: string }) => {
-      if (userId === otherUserId) {
-        setOtherUserTyping(true);
-      }
-    });
+    const handleUserTyping = ({ userId }: { userId: string }) => {
+      if (userId === otherUserId) setOtherUserTyping(true);
+    };
 
-    socket.on('user_stop_typing', ({ userId }: { userId: string }) => {
-      if (userId === otherUserId) {
-        setOtherUserTyping(false);
-      }
-    });
+    const handleUserStopTyping = ({ userId }: { userId: string }) => {
+      if (userId === otherUserId) setOtherUserTyping(false);
+    };
 
-    socket.on('messages_read_receipt', ({ readerId }: { readerId: string }) => {
+    const handleMessagesReadReceipt = ({ readerId }: { readerId: string }) => {
       if (readerId === otherUserId) {
         setMessages(prev =>
           prev.map(m => (m.senderId?._id === user?._id ? { ...m, read: true } : m))
         );
       }
-    });
+    };
 
-    socket.on('error', (err: string) => {
+    const handleError = (err: string) => {
       setError(err);
-    });
+    };
 
-    socketRef.current = socket;
-    return () => { socket.disconnect(); };
-  }, [token, id, otherUserId]);
+    socket.on('connect', handleConnect);
+    socket.on('online_users_list', handleOnlineUsersList);
+    socket.on('user_status_changed', handleUserStatusChanged);
+    socket.on('receive_message', handleReceiveMessage);
+    socket.on('user_typing', handleUserTyping);
+    socket.on('user_stop_typing', handleUserStopTyping);
+    socket.on('messages_read_receipt', handleMessagesReadReceipt);
+    socket.on('error', handleError);
+
+    return () => {
+      // Leave the room — don't disconnect the shared socket
+      socket.emit('leave_room', id);
+      socket.off('connect', handleConnect);
+      socket.off('online_users_list', handleOnlineUsersList);
+      socket.off('user_status_changed', handleUserStatusChanged);
+      socket.off('receive_message', handleReceiveMessage);
+      socket.off('user_typing', handleUserTyping);
+      socket.off('user_stop_typing', handleUserStopTyping);
+      socket.off('messages_read_receipt', handleMessagesReadReceipt);
+      socket.off('error', handleError);
+    };
+  }, [socket, id, otherUserId, user]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -142,31 +158,31 @@ export const GigChat: React.FC = () => {
 
   // Read receipts sender trigger
   useEffect(() => {
-    if (socketRef.current && messages.length > 0) {
-      socketRef.current.emit('read_messages', { gigId: id });
+    if (socket && messages.length > 0) {
+      socket.emit('read_messages', { gigId: id });
     }
-  }, [messages, id]);
+  }, [messages, id, socket]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
-    if (socketRef.current) {
-      socketRef.current.emit('typing', { gigId: id });
+    if (socket) {
+      socket.emit('typing', { gigId: id });
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = setTimeout(() => {
-        socketRef.current?.emit('stop_typing', { gigId: id });
+        socket?.emit('stop_typing', { gigId: id });
       }, 2000);
     }
   };
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !socketRef.current) return;
+    if (!input.trim() || !socket) return;
     
     // Stop typing immediately
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    socketRef.current.emit('stop_typing', { gigId: id });
+    socket.emit('stop_typing', { gigId: id });
     
-    socketRef.current.emit('send_message', { gigId: id, body: input.trim() });
+    socket.emit('send_message', { gigId: id, body: input.trim() });
     setInput('');
   };
 
@@ -182,8 +198,8 @@ export const GigChat: React.FC = () => {
       const res = await api.post('/gigs/messages/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      if (res.data.success && socketRef.current) {
-        socketRef.current.emit('send_message', {
+      if (res.data.success && socket) {
+        socket.emit('send_message', {
           gigId: id,
           body: `Shared attachment: ${res.data.fileName}`,
           fileUrl: res.data.fileUrl,

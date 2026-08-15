@@ -123,11 +123,11 @@ const GigSchema = new mongoose_1.Schema({
         type: Number,
         default: 25,
         min: 1,
-        max: 500,
+        max: 5000, // 5000 km ceiling supports the Pan India sentinel value (4000 km)
     },
     status: {
         type: String,
-        enum: ['open', 'in_progress', 'completed', 'cancelled'],
+        enum: ['open', 'pending_payment', 'in_progress', 'completed', 'cancelled'],
         default: 'open',
     },
     applicants: [ApplicantSchema],

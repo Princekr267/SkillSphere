@@ -6,7 +6,7 @@ export interface IUser {
   _id: string;
   name: string;
   email: string;
-  role: 'client' | 'freelancer' | 'admin';
+  role: 'client' | 'freelancer' | 'super_admin';
   avatar?: string;
   location: {
     type?: string;

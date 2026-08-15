@@ -260,7 +260,7 @@ export const refundPayment = async (req: AuthRequest, res: Response) => {
     if (!gig) return res.status(404).json({ success: false, message: 'Gig not found' });
 
     const isOwner = gig.clientId.toString() === user?._id.toString();
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === 'super_admin';
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({ success: false, message: 'Not authorised to initiate refunds' });
@@ -344,7 +344,7 @@ export const getTransactionHistory = async (req: AuthRequest, res: Response) => 
       query.clientId = user._id;
     } else if (user.role === 'freelancer') {
       query.freelancerId = user._id;
-    } else if (user.role === 'admin') {
+    } else if (user.role === 'super_admin') {
       // Admin sees everything
     }
 

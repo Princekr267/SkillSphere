@@ -381,7 +381,9 @@ const updateGig = async (req, res) => {
         if (gig.clientId.toString() !== (user?._id).toString()) {
             return res.status(403).json({ success: false, message: 'Not authorised to update this gig' });
         }
-        const allowedUpdates = ['title', 'description', 'category', 'budget', 'budgetType', 'skillsRequired', 'radiusKm', 'status'];
+        // 'status' is intentionally excluded — status transitions must go through
+        // controlled flows (accept applicant → pay → verifyPayment → in_progress).
+        const allowedUpdates = ['title', 'description', 'category', 'budget', 'budgetType', 'skillsRequired', 'radiusKm'];
         allowedUpdates.forEach(field => {
             if (req.body[field] !== undefined)
                 gig[field] = req.body[field];
@@ -499,9 +501,11 @@ const updateApplicantStatus = async (req, res) => {
                 if (a._id.toString() !== req.params.applicantId)
                     a.status = 'rejected';
             });
-            gig.status = 'in_progress';
+            // Set the accepted freelancer but do NOT touch escrowStatus here.
+            // Escrow is only funded once the client completes payment via
+            // paymentController.verifyPayment — that is the single authoritative path.
+            gig.status = 'pending_payment';
             gig.acceptedFreelancerId = applicant.freelancerId;
-            gig.escrowStatus = 'funds_deposited'; // Simulated escrow
         }
         await gig.save();
         // Trigger notification
