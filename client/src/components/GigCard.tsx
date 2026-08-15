@@ -22,6 +22,7 @@ export interface GigCardData {
   clientId: {
     name: string;
     companyName?: string;
+    currentCompanyName?: string;
     rating?: number;
     avatar?: string;
   };
@@ -78,11 +79,11 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
           {gig.clientId?.avatar ? (
             <img src={gig.clientId.avatar} alt={gig.clientId.name} className="h-full w-full object-cover" />
           ) : (
-            (gig.clientId?.companyName || gig.clientId?.name || '?').charAt(0)
+            (gig.clientId?.currentCompanyName || gig.clientId?.name || '?').charAt(0)
           )}
         </div>
         <span className="text-[11px] text-ink/75 font-sans font-bold truncate">
-          {gig.clientId?.companyName || gig.clientId?.name || 'Unknown Client'}
+          {gig.clientId?.currentCompanyName || gig.clientId?.name || 'Unknown Client'}
         </span>
       </div>
 

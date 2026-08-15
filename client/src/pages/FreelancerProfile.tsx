@@ -35,6 +35,7 @@ interface PublicUser {
   createdAt: string;
   bio?: string;
   companyName?: string;
+  currentCompanyName?: string;
   availability?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
   resume?: {
     url: string;
@@ -238,9 +239,9 @@ export const FreelancerProfile: React.FC = () => {
                 {freelancer.name}
               </h1>
 
-              {freelancer.companyName && (
+              {freelancer.currentCompanyName && (
                 <p className="text-xs font-mono text-ink/70 font-bold uppercase mt-1">
-                  {freelancer.companyName}
+                  {freelancer.currentCompanyName}
                 </p>
               )}
 

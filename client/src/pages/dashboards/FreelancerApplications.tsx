@@ -18,6 +18,7 @@ interface MyApplication {
   clientId: {
     name: string;
     companyName?: string;
+    currentCompanyName?: string;
   };
   myApplication: {
     _id?: string;
@@ -104,7 +105,7 @@ export const FreelancerApplications: React.FC = () => {
                     {app.title}
                   </h3>
                   <p className="text-[11px] text-ink/60 font-sans font-bold">
-                    {app.clientId?.companyName || app.clientId?.name || 'Client'}
+                    {app.clientId?.currentCompanyName || app.clientId?.name || 'Client'}
                   </p>
                 </div>
                 <Badge variant="outline" className={`${APP_STATUS_STYLES[app.myApplication?.status] || APP_STATUS_STYLES.pending} shadow-none flex-shrink-0`}>

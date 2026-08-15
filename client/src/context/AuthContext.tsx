@@ -14,6 +14,7 @@ export interface IUser {
     city: string;
   };
   companyName?: string;
+  currentCompanyName?: string;
   bio?: string;
   skills: Array<{ name: string; level: 'Beginner' | 'Intermediate' | 'Expert' }>;
   hourlyRate?: number;

@@ -4,10 +4,11 @@ import Gig from '../models/Gig';
 import Review from '../models/Review';
 import Warning from '../models/Warning';
 import Company from '../models/Company';
+import CompanyMembership from '../models/CompanyMembership';
+import Dispute from '../models/Dispute';
 import Notification from '../models/Notification';
 import { AuthRequest } from '../middleware/auth';
 import { sendNotification } from '../socket';
-import { sendCompanyApprovalEmail, sendCompanyRejectionEmail } from '../services/emailService';
 
 // ─── GET /api/admin/stats ───────────────────────────────────────────────────
 export const getStats = async (_req: Request, res: Response): Promise<any> => {
@@ -218,92 +219,120 @@ export const getWarnings = async (_req: Request, res: Response): Promise<any> =>
   }
 };
 
-// ─── GET /api/admin/companies/pending ────────────────────────────────────────
-export const getPendingCompanies = async (_req: Request, res: Response): Promise<any> => {
+// ─── GET /api/admin/companies ───────────────────────────────────────────────
+export const getAllCompaniesForAdmin = async (req: Request, res: Response): Promise<any> => {
   try {
-    const companies = await Company.find({ status: 'pending' })
-      .populate('createdBy', 'name email')
-      .sort({ createdAt: 1 }); // oldest first so admins review in order
+    const page  = Math.max(1, Number(req.query.page)  || 1);
+    const limit = Math.min(100, Number(req.query.limit) || 50);
+    const skip  = (page - 1) * limit;
 
-    return res.json({ success: true, companies });
-  } catch (err: any) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
-};
+    const [companies, total, memberCounts] = await Promise.all([
+      Company.find()
+        .populate('createdBy', 'name email avatar location role')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Company.countDocuments(),
+      CompanyMembership.aggregate([
+        { $group: { _id: '$companyId', count: { $sum: 1 } } },
+      ]),
+    ]);
 
-// ─── PUT /api/admin/companies/:id/approve ────────────────────────────────────
-export const approveCompany = async (req: AuthRequest, res: Response): Promise<any> => {
-  try {
-    const company = await Company.findById(req.params.id).populate('createdBy', 'name email');
-    if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
-
-    if (company.status === 'approved') {
-      return res.status(400).json({ success: false, message: 'Company is already approved' });
+    const countMap = new Map<string, number>();
+    for (const mc of memberCounts) {
+      if (mc._id) {
+        countMap.set(mc._id.toString(), mc.count);
+      }
     }
 
-    company.status = 'approved';
-    company.reviewedBy = req.user._id;
-    company.reviewedAt = new Date();
-    company.rejectionReason = undefined;
-    await company.save();
-
-    // Notify the company creator via in-app notification
-    const creator = company.createdBy as any;
-    const notif = await Notification.create({
-      userId: creator._id,
-      type: 'company_status_update',
-      title: 'Company Approved!',
-      body: `Your company "${company.name}" has been approved. You can now share your invite key with team members.`,
-      link: `/company/${company._id}`,
+    const enrichedCompanies = companies.map((c) => {
+      const cObj: any = c.toObject();
+      cObj.memberCount = countMap.get(c._id.toString()) || 0;
+      return cObj;
     });
-    sendNotification(creator._id.toString(), notif);
 
-    // Fire-and-forget email — failure must not break this endpoint
-    sendCompanyApprovalEmail(creator.email, company.name).catch((e: any) =>
-      console.error('Company approval email failed:', e.message)
-    );
-
-    return res.json({ success: true, company });
+    return res.json({
+      success: true,
+      total,
+      page,
+      companies: enrichedCompanies,
+    });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─── PUT /api/admin/companies/:id/reject ─────────────────────────────────────
-export const rejectCompany = async (req: AuthRequest, res: Response): Promise<any> => {
+// ─── GET /api/admin/users/:userId/activity ──────────────────────────────────
+export const getUserActivity = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { rejectionReason } = req.body;
-    if (!rejectionReason || !rejectionReason.trim()) {
-      return res.status(400).json({ success: false, message: 'A rejection reason is required' });
+    const { userId } = req.params;
+
+    const [gigs, disputes, warnings] = await Promise.all([
+      Gig.find({ clientId: userId })
+        .select('title category budget budgetType status escrowStatus createdAt')
+        .sort({ createdAt: -1 }),
+      Dispute.find({
+        $or: [{ raisedById: userId }, { againstId: userId }],
+      })
+        .populate('gigId', 'title')
+        .populate('raisedById', 'name email role')
+        .populate('againstId', 'name email role')
+        .sort({ createdAt: -1 }),
+      Warning.find({ offenderId: userId })
+        .sort({ createdAt: -1 }),
+    ]);
+
+    return res.json({
+      success: true,
+      activity: {
+        gigs,
+        disputes,
+        warnings,
+      },
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── POST /api/admin/users/:userId/warn ──────────────────────────────────────
+export const warnUser = async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { userId } = req.params;
+    const { reason, content } = req.body;
+
+    if (!reason || !reason.trim() || !content || !content.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reason and content are required to issue a warning',
+      });
     }
 
-    const company = await Company.findById(req.params.id).populate('createdBy', 'name email');
-    if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
 
-    company.status = 'rejected';
-    company.rejectionReason = rejectionReason.trim();
-    company.reviewedBy = req.user._id;
-    company.reviewedAt = new Date();
-    await company.save();
-
-    // Notify the company creator via in-app notification
-    const creator = company.createdBy as any;
-    const notif = await Notification.create({
-      userId: creator._id,
-      type: 'company_status_update',
-      title: 'Company Application Update',
-      body: `Your company "${company.name}" was not approved. Reason: ${rejectionReason.trim()}. You can edit and resubmit your application.`,
-      link: `/company/${company._id}`,
+    const warning = await Warning.create({
+      type: 'manual',
+      offenderId: targetUser._id,
+      reason: reason.trim(),
+      content: content.trim(),
     });
-    sendNotification(creator._id.toString(), notif);
 
-    // Fire-and-forget email
-    sendCompanyRejectionEmail(creator.email, company.name, rejectionReason.trim()).catch((e: any) =>
-      console.error('Company rejection email failed:', e.message)
-    );
+    // Send in-app notification to the warned user
+    const notif = await Notification.create({
+      userId: targetUser._id,
+      type: 'safety_warning',
+      title: 'Administrative Warning',
+      body: `You have received an administrative warning from SkillSphere. Reason: ${reason.trim()}`,
+      link: '/profile/' + targetUser._id,
+    });
+    sendNotification(targetUser._id.toString(), notif);
 
-    return res.json({ success: true, company });
+    return res.status(201).json({ success: true, warning });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+

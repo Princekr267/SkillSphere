@@ -3,7 +3,8 @@ import api from '../../utils/api';
 import {
   Users, Briefcase, CheckCircle2, TrendingUp,
   ShieldOff, Shield, Trash2, Loader2, RefreshCw,
-  Star, AlertCircle, Building, Check, X as XIcon, MapPin, Globe
+  Star, AlertCircle, Building, Check, X as XIcon, MapPin, Globe,
+  Activity, AlertTriangle, Scale, Eye
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -50,8 +51,8 @@ interface AdminGig {
 
 interface AdminWarning {
   _id: string;
-  type: 'gig' | 'message';
-  targetId: string;
+  type: 'gig' | 'message' | 'manual';
+  targetId?: string;
   offenderId: { _id: string; name: string; email: string; role: string };
   content: string;
   reason: string;
@@ -65,8 +66,8 @@ interface AdminCompany {
   description?: string;
   website?: string;
   registrationDetails: { country: string; city: string; businessRegistrationNumber?: string; taxId?: string };
-  status: 'pending' | 'approved' | 'rejected';
   createdBy: { _id: string; name: string; email: string };
+  memberCount?: number;
   createdAt: string;
 }
 
@@ -93,15 +94,24 @@ export const AdminDashboard: React.FC = () => {
   const [disputes, setDisputes] = useState<any[]>([]);
   const [flaggedReviews, setFlaggedReviews] = useState<any[]>([]);
   const [warnings, setWarnings] = useState<AdminWarning[]>([]);
-  const [pendingCompanies, setPendingCompanies] = useState<AdminCompany[]>([]);
-  const [rejectionNotes, setRejectionNotes] = useState<Record<string, string>>({});
-  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<AdminCompany[]>([]);
   const [resolutionNotes, setResolutionNotes] = useState<Record<string, string>>({});
   const [resolutionActions, setResolutionActions] = useState<Record<string, 'release' | 'refund' | 'partial'>>({});
   const [partialAmounts, setPartialAmounts] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
+
+  // User Activity Modal State
+  const [activityModalUser, setActivityModalUser] = useState<{ _id: string; name: string; email: string } | null>(null);
+  const [activityData, setActivityData] = useState<{ gigs: any[]; disputes: any[]; warnings: any[] } | null>(null);
+  const [activityLoading, setActivityLoading] = useState(false);
+
+  // Warn User Modal State
+  const [warnModalUser, setWarnModalUser] = useState<{ _id: string; name: string; email: string } | null>(null);
+  const [warnReason, setWarnReason] = useState('');
+  const [warnContent, setWarnContent] = useState('');
+  const [warnSubmitting, setWarnSubmitting] = useState(false);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -151,11 +161,11 @@ export const AdminDashboard: React.FC = () => {
     } finally { setLoading(false); }
   };
 
-  const fetchPendingCompanies = async () => {
+  const fetchCompanies = async () => {
     setLoading(true);
     try {
-      const r = await api.get('/admin/companies/pending');
-      if (r.data.success) setPendingCompanies(r.data.companies);
+      const r = await api.get('/admin/companies');
+      if (r.data.success) setCompanies(r.data.companies);
     } finally { setLoading(false); }
   };
 
@@ -166,7 +176,7 @@ export const AdminDashboard: React.FC = () => {
     else if (tab === 'disputes') fetchDisputes();
     else if (tab === 'flagged-reviews') fetchFlaggedReviews();
     else if (tab === 'warnings') fetchWarnings();
-    else if (tab === 'companies') fetchPendingCompanies();
+    else if (tab === 'companies') fetchCompanies();
   }, [tab]);
 
   const handleToggleUser = async (userId: string) => {
@@ -241,36 +251,58 @@ export const AdminDashboard: React.FC = () => {
       setMsg('Review deleted.');
       fetchFlaggedReviews();
     } catch (e: any) {
-      setMsg(e.response?.data?.message || 'Action failed.');
+      setMsg(e.response?.data?.message || 'Delete failed.');
     } finally { setActionLoading(null); }
   };
 
-  const handleApproveCompany = async (companyId: string) => {
-    setActionLoading(companyId);
+  // Activity Modal handler
+  const handleOpenActivity = async (u: { _id: string; name: string; email: string }) => {
+    setActivityModalUser(u);
+    setActivityLoading(true);
     try {
-      await api.put(`/admin/companies/${companyId}/approve`);
-      setMsg('Company approved. Owner has been notified.');
-      fetchPendingCompanies();
-    } catch (e: any) {
-      setMsg(e.response?.data?.message || 'Approval failed.');
-    } finally { setActionLoading(null); }
+      const res = await api.get(`/admin/users/${u._id}/activity`);
+      if (res.data.success) {
+        setActivityData(res.data.activity);
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to fetch user activity');
+      setActivityModalUser(null);
+    } finally {
+      setActivityLoading(false);
+    }
   };
 
-  const handleRejectCompany = async (companyId: string) => {
-    const reason = rejectionNotes[companyId]?.trim();
-    if (!reason) {
-      alert('Please enter a rejection reason before rejecting.');
+  // Warn Modal handler
+  const handleOpenWarn = (u: { _id: string; name: string; email: string }) => {
+    setWarnModalUser(u);
+    setWarnReason('');
+    setWarnContent('');
+  };
+
+  const handleSubmitWarn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!warnModalUser) return;
+    if (!warnReason.trim() || !warnContent.trim()) {
+      alert('Please provide both reason and content for the warning.');
       return;
     }
-    setActionLoading(companyId);
+
+    setWarnSubmitting(true);
     try {
-      await api.put(`/admin/companies/${companyId}/reject`, { rejectionReason: reason });
-      setMsg('Company rejected. Owner has been notified.');
-      setRejectingId(null);
-      fetchPendingCompanies();
-    } catch (e: any) {
-      setMsg(e.response?.data?.message || 'Rejection failed.');
-    } finally { setActionLoading(null); }
+      const res = await api.post(`/admin/users/${warnModalUser._id}/warn`, {
+        reason: warnReason.trim(),
+        content: warnContent.trim(),
+      });
+      if (res.data.success) {
+        setMsg(`Warning issued to ${warnModalUser.name}.`);
+        setWarnModalUser(null);
+        if (tab === 'warnings') fetchWarnings();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to issue warning');
+    } finally {
+      setWarnSubmitting(false);
+    }
   };
 
   const STATUS_COLORS: Record<string, string> = {
@@ -284,20 +316,20 @@ export const AdminDashboard: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
 
       {/* Header */}
-      <div className="mb-8 border-b-2 border-ink pb-0 flex items-end justify-between">
-        <div className="pb-6 text-left">
+      <div className="mb-8 border-b-2 border-ink pb-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="pb-2 sm:pb-6 text-left">
           <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Control Hub</span>
           <h1 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Admin Dashboard</h1>
         </div>
-        <div className="flex items-end space-x-2">
+        <div className="flex items-end space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto -mb-[2px] scrollbar-none flex-nowrap">
           {(['stats', 'users', 'gigs', 'disputes', 'flagged-reviews', 'warnings', 'companies'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2.5 text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-2.5 text-[10px] sm:text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all cursor-pointer flex-shrink-0 ${
                 tab === t ? 'bg-accent-teal text-ink shadow-none translate-y-[2px]' : 'bg-cream text-ink hover:bg-accent-teal/10'
               }`}
               style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}
             >
-              {t === 'flagged-reviews' ? 'reviews' : t === 'warnings' ? 'warnings' : t}
+              {t === 'flagged-reviews' ? 'reviews' : t}
             </button>
           ))}
         </div>
@@ -349,7 +381,7 @@ export const AdminDashboard: React.FC = () => {
               <table className="w-full text-xs font-sans">
                 <thead className="bg-cream border-b-2 border-ink">
                   <tr>
-                    {['User', 'Role', 'City', 'Rating', 'Status', 'Joined', 'Action'].map(h => (
+                    {['User', 'Role', 'City', 'Rating', 'Status', 'Joined', 'Actions'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
                     ))}
                   </tr>
@@ -379,18 +411,44 @@ export const AdminDashboard: React.FC = () => {
                         {new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
                       </td>
                       <td className="px-4 py-3 text-left">
-                        {u.role !== 'super_admin' && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <Button
-                            onClick={() => handleToggleUser(u._id)}
-                            disabled={actionLoading === u._id}
-                            variant={u.isActive === false ? 'primary' : 'coral'}
+                            onClick={() => handleOpenActivity({ _id: u._id, name: u.name, email: u.email })}
+                            variant="outline"
                             size="sm"
-                            className="shadow-none py-1"
+                            className="py-1 px-2 text-[10px]"
+                            title="Inspect User Activity"
                           >
-                            {u.isActive === false ? <Shield className="h-3 w-3 mr-1" /> : <ShieldOff className="h-3 w-3 mr-1" />}
-                            <span>{u.isActive === false ? 'Unban' : 'Ban'}</span>
+                            <Activity className="h-3 w-3 sm:mr-1 text-accent-teal" />
+                            <span className="hidden sm:inline">Activity</span>
                           </Button>
-                        )}
+
+                          {u.role !== 'super_admin' && (
+                            <>
+                              <Button
+                                onClick={() => handleOpenWarn({ _id: u._id, name: u.name, email: u.email })}
+                                variant="outline"
+                                size="sm"
+                                className="py-1 px-2 text-[10px] border-accent-amber text-ink hover:bg-accent-amber/10"
+                                title="Issue Warning"
+                              >
+                                <AlertTriangle className="h-3 w-3 sm:mr-1 text-accent-amber" />
+                                <span className="hidden sm:inline">Warn</span>
+                              </Button>
+
+                              <Button
+                                onClick={() => handleToggleUser(u._id)}
+                                disabled={actionLoading === u._id}
+                                variant={u.isActive === false ? 'primary' : 'coral'}
+                                size="sm"
+                                className="shadow-none py-1 px-2 text-[10px]"
+                              >
+                                {u.isActive === false ? <Shield className="h-3 w-3 sm:mr-1" /> : <ShieldOff className="h-3 w-3 sm:mr-1" />}
+                                <span className="hidden sm:inline">{u.isActive === false ? 'Unban' : 'Ban'}</span>
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -408,7 +466,7 @@ export const AdminDashboard: React.FC = () => {
               <table className="w-full text-xs font-sans">
                 <thead className="bg-cream border-b-2 border-ink">
                   <tr>
-                    {['Title', 'Client', 'Category', 'Budget', 'Status', 'City', 'Action'].map(h => (
+                    {['Title', 'Category', 'Budget', 'Status', 'Escrow', 'Client', 'Flagged', 'Action'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
                     ))}
                   </tr>
@@ -416,43 +474,36 @@ export const AdminDashboard: React.FC = () => {
                 <tbody className="divide-y-2 divide-ink/10">
                   {gigs.map(g => (
                     <tr key={g._id} className="hover:bg-accent-amber/5 transition-colors">
-                      <td className="px-4 py-3 text-left font-bold text-ink font-display uppercase text-xs max-w-[160px] truncate">
-                        <div className="flex flex-col">
-                          <span>{g.title}</span>
-                          {g.isFlagged && (
-                            <span className="inline-block self-start text-[8px] bg-accent-coral/20 text-accent-coral border border-ink font-mono px-1 rounded-sm mt-0.5" title={g.flagReason}>
-                              FLAGGED · {g.flagReason}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-left text-[10px] text-ink/60 font-sans">{g.clientId?.name || '—'}</td>
-                      <td className="px-4 py-3 text-left text-[10px] text-ink/60 font-mono">{g.category}</td>
-                      <td className="px-4 py-3 text-left text-[10px] font-mono text-ink">₹{g.budget?.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-left max-w-xs truncate font-bold text-ink">{g.title}</td>
+                      <td className="px-4 py-3 text-left font-mono text-[10px] text-ink/60">{g.category}</td>
+                      <td className="px-4 py-3 text-left font-mono font-bold text-ink">₹{g.budget.toLocaleString()}{g.budgetType === 'hourly' ? '/hr' : ''}</td>
                       <td className="px-4 py-3 text-left">
-                        <Badge variant="outline" className={`${STATUS_COLORS[g.status] || ''} shadow-none`}>
-                          {g.status}
+                        <Badge variant={g.status === 'open' ? 'teal' : g.status === 'in_progress' ? 'amber' : 'coral'} className="shadow-none font-mono">
+                          {g.status.replace('_', ' ')}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-left text-[10px] font-mono text-ink/60">{g.location?.city || '—'}</td>
+                      <td className="px-4 py-3 text-left font-mono text-[10px] capitalize text-ink/60">{g.escrowStatus}</td>
+                      <td className="px-4 py-3 text-left font-mono text-[10px] text-ink/60">{g.clientId?.name || '—'}</td>
                       <td className="px-4 py-3 text-left">
-                        <div className="flex flex-col gap-1">
-                          <Button
-                            onClick={() => handleDeleteGig(g._id)}
-                            disabled={actionLoading === g._id || g.escrowStatus === 'funds_deposited'}
-                            variant="coral"
-                            size="sm"
-                            className="shadow-none py-1"
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            <span>Delete</span>
-                          </Button>
-                          {g.escrowStatus === 'funds_deposited' && (
-                            <span className="text-[8px] font-mono text-accent-coral leading-tight">
-                              Escrow funded — resolve via dispute first
-                            </span>
-                          )}
-                        </div>
+                        {g.isFlagged ? (
+                          <span className="text-accent-coral font-bold font-mono text-[10px] flex items-center space-x-1">
+                            <AlertCircle className="h-3 w-3" />
+                            <span>{g.flagReason || 'Flagged'}</span>
+                          </span>
+                        ) : (
+                          <span className="text-ink/40 font-mono text-[10px]">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-left">
+                        <Button
+                          onClick={() => handleDeleteGig(g._id)}
+                          disabled={actionLoading === g._id}
+                          variant="coral"
+                          size="sm"
+                          className="shadow-none py-1"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -466,206 +517,119 @@ export const AdminDashboard: React.FC = () => {
 
           {/* ── DISPUTES ──────────────────────────────────────────────────────── */}
           {tab === 'disputes' && (
-            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
-              <table className="w-full text-xs font-sans">
-                <thead className="bg-cream border-b-2 border-ink">
-                  <tr>
-                    {['Gig / Reason', 'Raised By', 'Against', 'Evidence', 'Status / Resolution', 'Action'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y-2 divide-ink/10">
-                  {disputes.map(d => (
-                    <tr key={d._id} className="hover:bg-accent-amber/5 transition-colors">
-                      <td className="px-4 py-3 text-left max-w-[200px]">
-                        <p className="font-bold text-ink uppercase font-display text-xs">{d.gigId?.title || '—'}</p>
-                        <p className="text-ink/60 font-sans mt-1">Reason: "{d.reason}"</p>
-                      </td>
-                      <td className="px-4 py-3 text-left">
-                        <p className="font-bold text-ink uppercase font-display text-[10px]">{d.raisedById?.name}</p>
-                        <p className="text-ink/60 text-[9px] font-mono">{d.raisedById?.role.toUpperCase()}</p>
-                      </td>
-                      <td className="px-4 py-3 text-left">
-                        <p className="font-bold text-ink uppercase font-display text-[10px]">{d.againstId?.name}</p>
-                        <p className="text-ink/60 text-[9px] font-mono">{d.againstId?.role.toUpperCase()}</p>
-                      </td>
-                      <td className="px-4 py-3 text-left">
-                        {d.evidenceUrl ? (
-                          <a
-                            href={d.evidenceUrl.startsWith('http') ? d.evidenceUrl : `${api.defaults.baseURL?.replace('/api', '')}${d.evidenceUrl}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-accent-teal font-bold hover:underline font-mono text-[10px]"
-                          >
-                            View Evidence
-                          </a>
-                        ) : (
-                          <span className="text-ink/60 font-mono text-[10px]">No Evidence</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-left">
-                        <div className="space-y-1">
-                          <Badge variant={d.status === 'resolved' ? 'teal' : 'coral'} className="shadow-none">
-                            {d.status}
-                          </Badge>
-                          {d.resolutionNote && (
-                            <p className="text-ink/60 text-[10px] italic">Note: "{d.resolutionNote}"</p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-left">
-                        {d.status === 'open' ? (
-                          <div className="space-y-2">
-                            {/* Resolution action selector */}
-                            <div className="flex gap-1">
-                              {(['release', 'refund', 'partial'] as const).map(action => (
-                                <button
-                                  key={action}
-                                  type="button"
-                                  onClick={() => setResolutionActions(prev => ({ ...prev, [d._id]: action }))}
-                                  className={`flex-1 px-1.5 py-1 text-[9px] font-bold font-display uppercase tracking-wider border-2 border-ink rounded cursor-pointer transition-all ${
-                                    resolutionActions[d._id] === action
-                                      ? action === 'release'
-                                        ? 'bg-accent-teal text-ink shadow-retro-sm'
-                                        : action === 'refund'
-                                        ? 'bg-accent-coral text-ink shadow-retro-sm'
-                                        : 'bg-accent-amber text-ink shadow-retro-sm'
-                                      : 'bg-cream text-ink/60 hover:bg-ink/5'
-                                  }`}
-                                >
-                                  {action === 'release' ? '→ Freelancer' : action === 'refund' ? '← Client' : 'Split'}
-                                </button>
-                              ))}
-                            </div>
-                            {/* Partial amount input (shown only when 'partial' is selected) */}
-                            {resolutionActions[d._id] === 'partial' && (
-                              <div>
-                                <label className="block text-[9px] font-bold font-display uppercase tracking-wider text-ink/60 mb-1">
-                                  Amount to freelancer (₹) — remainder refunds to client
-                                </label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  step="1"
-                                  placeholder="e.g. 500"
-                                  value={partialAmounts[d._id] || ''}
-                                  onChange={e => setPartialAmounts(prev => ({ ...prev, [d._id]: e.target.value }))}
-                                  className="w-full p-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-mono"
-                                />
-                              </div>
-                            )}
-                            <textarea
-                              placeholder="Resolution note..."
-                              value={resolutionNotes[d._id] || ''}
-                              onChange={e => setResolutionNotes(prev => ({ ...prev, [d._id]: e.target.value }))}
-                              className="w-full p-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs resize-none focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans"
-                              rows={2}
+            <div className="space-y-4">
+              {disputes.map(d => (
+                <Card key={d._id} className="p-5 text-left space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest">Dispute #{d._id.slice(-6)}</span>
+                      <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight mt-0.5">{d.gigId?.title || 'Unknown Gig'}</h3>
+                    </div>
+                    <Badge variant={d.status === 'open' ? 'coral' : 'teal'} className="font-mono shadow-none">
+                      {d.status}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-mono text-ink/70 bg-ink/5 p-3 rounded-lg">
+                    <div><span className="text-ink/40">Raised By:</span> <span className="font-bold">{d.raisedById?.name}</span> ({d.raisedById?.role})</div>
+                    <div><span className="text-ink/40">Against:</span> <span className="font-bold">{d.againstId?.name}</span> ({d.againstId?.role})</div>
+                    <div><span className="text-ink/40">Gig Budget:</span> <span className="font-bold">₹{d.gigId?.budget?.toLocaleString()}</span></div>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold font-display uppercase tracking-widest text-ink/60 block mb-1">Reason</span>
+                    <p className="text-xs text-ink bg-cream border border-ink/20 p-3 rounded-lg leading-relaxed">{d.reason}</p>
+                  </div>
+
+                  {d.status === 'open' && (
+                    <div className="border-t-2 border-ink pt-4 space-y-3">
+                      <span className="text-[10px] font-bold font-display uppercase tracking-widest text-ink/60 block">Resolve Dispute</span>
+                      <textarea
+                        rows={2}
+                        value={resolutionNotes[d._id] || ''}
+                        onChange={e => setResolutionNotes(prev => ({ ...prev, [d._id]: e.target.value }))}
+                        placeholder="Enter resolution explanation..."
+                        className="w-full px-3 py-2 bg-cream border-2 border-ink rounded-lg text-xs text-ink resize-none outline-none focus:border-accent-teal placeholder:text-ink/40"
+                      />
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {(['release', 'refund', 'partial'] as const).map(action => (
+                          <label key={action} className="flex items-center space-x-1 text-xs text-ink cursor-pointer font-bold uppercase font-display">
+                            <input
+                              type="radio"
+                              name={`action-${d._id}`}
+                              value={action}
+                              checked={resolutionActions[d._id] === action}
+                              onChange={() => setResolutionActions(prev => ({ ...prev, [d._id]: action }))}
+                              className="accent-accent-teal"
                             />
-                            <Button
-                              onClick={() => handleResolveDispute(d._id)}
-                              disabled={
-                                actionLoading === d._id ||
-                                !resolutionActions[d._id] ||
-                                !resolutionNotes[d._id]?.trim() ||
-                                (resolutionActions[d._id] === 'partial' && !partialAmounts[d._id])
-                              }
-                              variant="secondary"
-                              size="sm"
-                              className="w-full py-1 shadow-none"
-                            >
-                              Resolve
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-ink/60 text-[10px] italic font-mono">Resolved</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            <span>{action === 'release' ? 'Pay Freelancer' : action === 'refund' ? 'Refund Client' : 'Partial Split'}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      {resolutionActions[d._id] === 'partial' && (
+                        <div className="max-w-xs">
+                          <Input
+                            type="number"
+                            placeholder="Freelancer share (₹)"
+                            value={partialAmounts[d._id] || ''}
+                            onChange={e => setPartialAmounts(prev => ({ ...prev, [d._id]: e.target.value }))}
+                          />
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={() => handleResolveDispute(d._id)}
+                        disabled={actionLoading === d._id}
+                        variant="primary"
+                        size="sm"
+                      >
+                        Confirm Resolution
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              ))}
               {disputes.length === 0 && (
-                <div className="py-8 text-center text-xs text-ink/60 font-sans">No disputes logged.</div>
+                <div className="py-8 text-center text-xs text-ink/60 font-sans">No disputes recorded.</div>
               )}
             </div>
           )}
 
           {/* ── FLAGGED REVIEWS ────────────────────────────────────────────────── */}
           {tab === 'flagged-reviews' && (
-            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
-              <table className="w-full text-xs font-sans">
-                <thead className="bg-cream border-b-2 border-ink">
-                  <tr>
-                    {['Gig / Review details', 'Reviewer', 'Reviewee', 'Rating', 'Flags', 'Action'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y-2 divide-ink/10">
-                  {flaggedReviews.map(r => (
-                    <tr key={r._id} className="hover:bg-accent-amber/5 transition-colors">
-                      <td className="px-4 py-3 text-left max-w-[220px]">
-                        <p className="font-bold text-ink uppercase font-display text-[10px]">{r.gigId?.title || '—'}</p>
-                        <p className="text-ink/60 font-sans mt-1">Comment: "{r.comment || 'no comment'}"</p>
-                      </td>
-                      <td className="px-4 py-3 text-left">
-                        <p className="font-bold text-ink uppercase font-display text-[10px]">{r.reviewerId?.name}</p>
-                        <p className="text-ink/60 text-[9px] font-mono">{r.reviewerId?.role.toUpperCase()}</p>
-                      </td>
-                      <td className="px-4 py-3 text-left">
-                        <p className="font-bold text-ink uppercase font-display text-[10px]">{r.revieweeId?.name}</p>
-                        <p className="text-ink/60 text-[9px] font-mono">{r.revieweeId?.role.toUpperCase()}</p>
-                      </td>
-                      <td className="px-4 py-3 text-left font-mono text-[10px] text-accent-amber font-bold">{r.rating} ★</td>
-                      <td className="px-4 py-3 text-left">
-                        <div className="flex flex-wrap gap-1">
-                          {r.fraudFlags?.map((f: string) => (
-                            <Badge key={f} variant="coral" className="shadow-none font-mono text-[8px] px-1.5 py-0">
-                              {f.replace(/_/g, ' ')}
-                            </Badge>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-left">
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button
-                            onClick={() => handleDismissFlag(r._id)}
-                            disabled={actionLoading === r._id}
-                            variant="secondary"
-                            size="sm"
-                            className="shadow-none py-1 text-[9px]"
-                          >
-                            Dismiss
-                          </Button>
-                          <Button
-                            onClick={() => handleDeleteReview(r._id)}
-                            disabled={actionLoading === r._id}
-                            variant="coral"
-                            size="sm"
-                            className="shadow-none py-1 text-[9px]"
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {flaggedReviews.map(r => (
+                <Card key={r._id} className="p-5 text-left space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-ink uppercase font-display">Review for {r.revieweeId?.name}</p>
+                      <p className="text-[10px] text-ink/60 font-mono">By {r.reviewerId?.name} · {r.rating} ★</p>
+                    </div>
+                    <Badge variant="coral" className="font-mono shadow-none">Flagged</Badge>
+                  </div>
+                  <p className="text-xs text-ink bg-cream border border-ink/20 p-3 rounded-lg leading-relaxed">{r.comment}</p>
+                  <p className="text-[10px] text-accent-coral font-mono font-bold">Flag reason: {r.flagReason || 'Flagged by user'}</p>
+                  <div className="flex space-x-2 pt-2 border-t border-ink/10">
+                    <Button onClick={() => handleDismissFlag(r._id)} disabled={actionLoading === r._id} variant="outline" size="sm">Dismiss Flag</Button>
+                    <Button onClick={() => handleDeleteReview(r._id)} disabled={actionLoading === r._id} variant="coral" size="sm">Delete Review</Button>
+                  </div>
+                </Card>
+              ))}
               {flaggedReviews.length === 0 && (
-                <div className="py-8 text-center text-xs text-ink/60 font-sans">No flagged reviews in the queue.</div>
+                <div className="py-8 text-center text-xs text-ink/60 font-sans">No flagged reviews.</div>
               )}
             </div>
           )}
 
-          {/* ── SAFETY WARNINGS ────────────────────────────────────────────────── */}
+          {/* ── WARNINGS ──────────────────────────────────────────────────────── */}
           {tab === 'warnings' && (
             <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
               <table className="w-full text-xs font-sans">
                 <thead className="bg-cream border-b-2 border-ink">
                   <tr>
-                    {['Date', 'Type', 'Target ID', 'Offender', 'Infracting Content', 'Reason'].map(h => (
+                    {['Timestamp', 'Type', 'Target / User', 'Offender', 'Content', 'Reason'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-[10px] font-bold font-display uppercase tracking-widest text-ink">{h}</th>
                     ))}
                   </tr>
@@ -675,14 +639,14 @@ export const AdminDashboard: React.FC = () => {
                     <tr key={w._id} className="hover:bg-accent-amber/5 transition-colors">
                       <td className="px-4 py-3 text-left font-mono text-[10px] text-ink/60">{new Date(w.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</td>
                       <td className="px-4 py-3 text-left">
-                        <Badge variant={w.type === 'gig' ? 'amber' : 'coral'} className="shadow-none font-mono text-[8px]">
+                        <Badge variant={w.type === 'manual' ? 'teal' : w.type === 'gig' ? 'amber' : 'coral'} className="shadow-none font-mono text-[8px] uppercase">
                           {w.type}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-left font-mono text-[10px] text-ink/60">{w.targetId}</td>
+                      <td className="px-4 py-3 text-left font-mono text-[10px] text-ink/60">{w.targetId || 'Direct User'}</td>
                       <td className="px-4 py-3 text-left">
                         <p className="font-bold text-ink uppercase font-display text-[10px]">{w.offenderId?.name || '—'}</p>
-                        <p className="text-ink/60 text-[9px] font-mono">{w.offenderId?.email} · {w.offenderId?.role.toUpperCase()}</p>
+                        <p className="text-ink/60 text-[9px] font-mono">{w.offenderId?.email} · {w.offenderId?.role?.toUpperCase()}</p>
                       </td>
                       <td className="px-4 py-3 text-left max-w-[250px] font-mono text-[10px] text-ink whitespace-pre-wrap break-all">{w.content}</td>
                       <td className="px-4 py-3 text-left font-mono text-[10px] text-accent-coral font-bold">{w.reason}</td>
@@ -696,140 +660,272 @@ export const AdminDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* ── COMPANIES ───────────────────────────────────────────────────────── */}
+          {/* ── COMPANIES (ALL COMPANIES OVERSIGHT) ────────────────────────────── */}
           {tab === 'companies' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-ink/60 font-sans">
-                  {pendingCompanies.length} pending application{pendingCompanies.length !== 1 ? 's' : ''}
+                  {companies.length} active organization{companies.length !== 1 ? 's' : ''} on SkillSphere
                 </p>
-                <button onClick={fetchPendingCompanies} className="inline-flex items-center space-x-2 text-xs text-ink/60 hover:text-ink font-bold font-display uppercase tracking-wider cursor-pointer">
+                <button onClick={fetchCompanies} className="inline-flex items-center space-x-2 text-xs text-ink/60 hover:text-ink font-bold font-display uppercase tracking-wider cursor-pointer">
                   <RefreshCw className="h-3.5 w-3.5" />
                   <span>Refresh</span>
                 </button>
               </div>
 
-              {pendingCompanies.length === 0 ? (
+              {companies.length === 0 ? (
                 <Card className="p-8 text-center">
                   <Building className="h-8 w-8 text-ink/30 mx-auto mb-2" />
-                  <p className="text-sm text-ink/50 font-sans">No pending company applications.</p>
+                  <p className="text-sm text-ink/50 font-sans">No registered companies found.</p>
                 </Card>
               ) : (
-                pendingCompanies.map((c) => (
-                  <Card key={c._id} className="p-5 space-y-4">
-
-                    {/* Company header */}
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3">
-                        <div className="h-10 w-10 flex-shrink-0 bg-accent-teal/20 border-2 border-ink rounded-lg flex items-center justify-center">
-                          <Building className="h-5 w-5 text-ink" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {companies.map((c) => (
+                    <Card key={c._id} className="p-5 space-y-3 text-left">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="h-10 w-10 flex-shrink-0 bg-accent-teal/20 border-2 border-ink rounded-lg flex items-center justify-center">
+                            <Building className="h-5 w-5 text-ink" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">{c.name}</h3>
+                            <p className="text-[10px] text-ink/60 font-sans">{c.industry}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">{c.name}</h3>
-                          <p className="text-[10px] text-ink/60 font-sans">{c.industry}</p>
-                          {c.description && (
-                            <p className="text-xs text-ink/70 font-sans mt-1 leading-relaxed max-w-lg">{c.description}</p>
-                          )}
-                        </div>
+                        <Badge variant="teal" className="shadow-none font-mono text-[9px]">
+                          {c.memberCount || 1} Member{(c.memberCount || 1) !== 1 ? 's' : ''}
+                        </Badge>
                       </div>
-                      <Badge variant="amber" className="shadow-none font-mono flex-shrink-0">Pending</Badge>
-                    </div>
 
-                    {/* Details grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[10px] font-mono text-ink/60">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {c.registrationDetails.city}, {c.registrationDetails.country}
-                      </div>
-                      {c.website && (
+                      {c.description && (
+                        <p className="text-xs text-ink/70 font-sans leading-relaxed line-clamp-2">{c.description}</p>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-ink/60 pt-2 border-t border-ink/10">
                         <div className="flex items-center gap-1">
-                          <Globe className="h-3 w-3" />
-                          <a href={c.website} target="_blank" rel="noopener noreferrer" className="hover:text-accent-teal truncate">
-                            {c.website.replace(/^https?:\/\//, '')}
-                          </a>
+                          <MapPin className="h-3 w-3" />
+                          <span>{c.registrationDetails?.city}, {c.registrationDetails?.country}</span>
                         </div>
-                      )}
-                      {c.registrationDetails.businessRegistrationNumber && (
-                        <div>Reg#: {c.registrationDetails.businessRegistrationNumber}</div>
-                      )}
-                      {c.registrationDetails.taxId && (
-                        <div>Tax ID: {c.registrationDetails.taxId}</div>
-                      )}
-                    </div>
-
-                    {/* Submitter info */}
-                    <div className="p-3 bg-ink/5 border border-ink/10 rounded-lg">
-                      <p className="text-[9px] font-bold font-display text-ink/40 uppercase tracking-widest mb-1">Submitted By</p>
-                      <p className="text-xs font-bold text-ink">{c.createdBy?.name}</p>
-                      <p className="text-[10px] text-ink/60 font-mono">{c.createdBy?.email}</p>
-                      <p className="text-[10px] text-ink/40 font-mono mt-0.5">
-                        {new Date(c.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </p>
-                    </div>
-
-                    {/* Reject reason textarea — shown when rejectingId matches */}
-                    {rejectingId === c._id && (
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold font-display text-ink/70 uppercase tracking-widest block">
-                          Rejection Reason <span className="text-accent-coral">*</span>
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={rejectionNotes[c._id] || ''}
-                          onChange={(e) => setRejectionNotes((prev) => ({ ...prev, [c._id]: e.target.value }))}
-                          placeholder="Explain why this application is being rejected…"
-                          className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-sm text-ink resize-none focus:outline-none focus:border-accent-amber placeholder:text-ink/40"
-                        />
+                        {c.website ? (
+                          <div className="flex items-center gap-1 truncate">
+                            <Globe className="h-3 w-3" />
+                            <a href={c.website} target="_blank" rel="noopener noreferrer" className="hover:text-accent-teal truncate">
+                              {c.website.replace(/^https?:\/\//, '')}
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="text-ink/40">No website</div>
+                        )}
                       </div>
-                    )}
 
-                    {/* Action buttons */}
-                    <div className="flex gap-3 pt-1">
-                      <Button
-                        variant="outline"
-                        className="flex-1 border-accent-teal text-accent-teal hover:bg-accent-teal/10"
-                        onClick={() => handleApproveCompany(c._id)}
-                        disabled={actionLoading === c._id}
-                      >
-                        {actionLoading === c._id
-                          ? <Loader2 className="h-4 w-4 animate-spin" />
-                          : <><Check className="h-4 w-4 mr-1" /><span>Approve</span></>}
-                      </Button>
-
-                      {rejectingId === c._id ? (
-                        <>
-                          <Button variant="outline" className="flex-1" onClick={() => setRejectingId(null)} disabled={actionLoading === c._id}>
-                            Cancel
-                          </Button>
+                      {/* Owner info */}
+                      <div className="flex items-center justify-between pt-2 border-t border-ink/10">
+                        <div className="text-[10px]">
+                          <span className="text-ink/40 font-mono">Owner: </span>
+                          <span className="font-bold text-ink">{c.createdBy?.name || '—'}</span>
+                          <span className="text-ink/50 font-mono block text-[9px]">{c.createdBy?.email}</span>
+                        </div>
+                        {c.createdBy?._id && (
                           <Button
-                            variant="coral"
-                            className="flex-1"
-                            onClick={() => handleRejectCompany(c._id)}
-                            disabled={actionLoading === c._id || !rejectionNotes[c._id]?.trim()}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenActivity({ _id: c.createdBy._id, name: c.createdBy.name, email: c.createdBy.email })}
+                            className="py-1 px-2.5 text-[10px]"
                           >
-                            {actionLoading === c._id
-                              ? <Loader2 className="h-4 w-4 animate-spin" />
-                              : <><XIcon className="h-4 w-4 mr-1" /><span>Confirm Reject</span></>}
+                            <Activity className="h-3 w-3 mr-1 text-accent-teal" />
+                            <span>Owner Activity</span>
                           </Button>
-                        </>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          className="flex-1 border-accent-coral text-accent-coral hover:bg-accent-coral/10"
-                          onClick={() => setRejectingId(c._id)}
-                          disabled={actionLoading === c._id}
-                        >
-                          <XIcon className="h-4 w-4 mr-1" /><span>Reject</span>
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                ))
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               )}
             </div>
           )}
         </>
       )}
+
+      {/* ── USER ACTIVITY MODAL ─────────────────────────────────────────────── */}
+      {activityModalUser && (
+        <div className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-cream border-2 border-ink rounded-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-retro animate-slide-up text-left">
+            {/* Modal Header */}
+            <div className="p-4 border-b-2 border-ink flex items-center justify-between bg-accent-teal/10">
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-accent-teal" />
+                <div>
+                  <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">
+                    User Activity: {activityModalUser.name}
+                  </h3>
+                  <p className="text-[10px] font-mono text-ink/60">{activityModalUser.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActivityModalUser(null)}
+                className="text-ink hover:text-accent-coral font-bold text-lg cursor-pointer p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 overflow-y-auto space-y-6">
+              {activityLoading ? (
+                <div className="py-12 flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-accent-teal" />
+                </div>
+              ) : activityData ? (
+                <>
+                  {/* Gigs Section */}
+                  <div>
+                    <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
+                      <span>Posted Gigs ({activityData.gigs?.length || 0})</span>
+                    </h4>
+                    {activityData.gigs?.length === 0 ? (
+                      <p className="text-xs text-ink/40 font-sans italic">No gigs posted.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {activityData.gigs.map((g: any) => (
+                          <div key={g._id} className="p-3 bg-ink/5 border border-ink/10 rounded-lg flex items-center justify-between text-xs font-sans">
+                            <div className="min-w-0 pr-2">
+                              <p className="font-bold text-ink truncate">{g.title}</p>
+                              <p className="text-[10px] text-ink/60 font-mono">
+                                ₹{g.budget?.toLocaleString()}{g.budgetType === 'hourly' ? '/hr' : ''} · {g.category}
+                              </p>
+                            </div>
+                            <Badge variant={g.status === 'open' ? 'teal' : g.status === 'in_progress' ? 'amber' : 'coral'} className="text-[9px] shadow-none">
+                              {g.status}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Disputes Section */}
+                  <div>
+                    <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
+                      <span>Disputes Involved ({activityData.disputes?.length || 0})</span>
+                    </h4>
+                    {activityData.disputes?.length === 0 ? (
+                      <p className="text-xs text-ink/40 font-sans italic">No disputes on record.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {activityData.disputes.map((d: any) => (
+                          <div key={d._id} className="p-3 bg-ink/5 border border-ink/10 rounded-lg space-y-1 text-xs font-sans">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-ink">{d.gigId?.title || 'Dispute'}</span>
+                              <Badge variant={d.status === 'open' ? 'coral' : 'teal'} className="text-[9px] shadow-none">
+                                {d.status}
+                              </Badge>
+                            </div>
+                            <p className="text-[10px] text-ink/60 font-mono">
+                              By: {d.raisedById?.name} vs. {d.againstId?.name}
+                            </p>
+                            <p className="text-xs text-ink/80 bg-cream p-2 border border-ink/10 rounded mt-1">{d.reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Warnings Section */}
+                  <div>
+                    <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
+                      <span>Warnings Logged ({activityData.warnings?.length || 0})</span>
+                    </h4>
+                    {activityData.warnings?.length === 0 ? (
+                      <p className="text-xs text-ink/40 font-sans italic">No safety or admin warnings.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {activityData.warnings.map((w: any) => (
+                          <div key={w._id} className="p-3 bg-accent-coral/10 border-2 border-accent-coral/30 rounded-lg text-xs font-sans">
+                            <div className="flex items-center justify-between mb-1">
+                              <Badge variant="coral" className="text-[8px] font-mono shadow-none uppercase">{w.type}</Badge>
+                              <span className="text-[10px] text-ink/50 font-mono">{new Date(w.createdAt).toLocaleDateString('en-IN')}</span>
+                            </div>
+                            <p className="font-bold text-accent-coral text-xs">{w.reason}</p>
+                            <p className="text-xs text-ink/80 mt-0.5">{w.content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t-2 border-ink flex justify-end bg-cream">
+              <Button variant="outline" size="sm" onClick={() => setActivityModalUser(null)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── WARN USER MODAL ─────────────────────────────────────────────────── */}
+      {warnModalUser && (
+        <div className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-cream border-2 border-ink rounded-xl w-full max-w-md overflow-hidden flex flex-col shadow-retro animate-slide-up text-left">
+            <div className="p-4 border-b-2 border-ink flex items-center justify-between bg-accent-amber/20">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-accent-coral" />
+                <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">
+                  Issue Warning: {warnModalUser.name}
+                </h3>
+              </div>
+              <button
+                onClick={() => setWarnModalUser(null)}
+                className="text-ink hover:text-accent-coral font-bold text-lg cursor-pointer p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitWarn} className="p-5 space-y-4 font-sans text-xs">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">
+                  Warning Reason <span className="text-accent-coral">*</span>
+                </label>
+                <Input
+                  type="text"
+                  required
+                  value={warnReason}
+                  onChange={(e) => setWarnReason(e.target.value)}
+                  placeholder="e.g. Inappropriate behavior / Policy violation"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block">
+                  Warning Content & Details <span className="text-accent-coral">*</span>
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={warnContent}
+                  onChange={(e) => setWarnContent(e.target.value)}
+                  placeholder="Detailed explanation of the issue sent to the user..."
+                  className="w-full px-3 py-2 bg-cream border-2 border-ink rounded-lg text-xs text-ink resize-none outline-none focus:border-accent-amber placeholder:text-ink/40"
+                />
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setWarnModalUser(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="coral" className="flex-1" disabled={warnSubmitting}>
+                  {warnSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send Warning'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

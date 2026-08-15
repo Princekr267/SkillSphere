@@ -5,6 +5,7 @@ import Gig from '../models/Gig';
 import { AuthRequest } from '../middleware/auth';
 import Notification from '../models/Notification';
 import { sendNotification } from '../socket';
+import { getApprovedCompanyNamesForUsers } from '../utils/companyHelper';
 
 // @desc    Create a calendar booking
 // @route   POST /api/bookings
@@ -90,7 +91,24 @@ export const getBookings = async (req: AuthRequest, res: Response): Promise<any>
       .populate('gigId', 'title status budget budgetType category')
       .sort({ date: 1, startTime: 1 });
 
-    return res.json({ success: true, bookings });
+    const clientIds = bookings
+      .map((b: any) => b.clientId?._id || b.clientId)
+      .filter(Boolean);
+    const companyMap = await getApprovedCompanyNamesForUsers(clientIds);
+
+    const enrichedBookings = bookings.map((b: any) => {
+      const bObj = b.toObject();
+      if (bObj.clientId && typeof bObj.clientId === 'object') {
+        const cIdStr = (bObj.clientId._id || bObj.clientId).toString();
+        const approvedName = companyMap.get(cIdStr);
+        if (approvedName) {
+          bObj.clientId.currentCompanyName = approvedName;
+        }
+      }
+      return bObj;
+    });
+
+    return res.json({ success: true, bookings: enrichedBookings });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });
   }

@@ -38,7 +38,6 @@ export const registerUser = async (req: Request, res: Response) => {
       city,
       latitude,
       longitude,
-      companyName,
       bio,
     } = req.body;
 
@@ -98,7 +97,6 @@ export const registerUser = async (req: Request, res: Response) => {
     };
 
     if (role === 'client') {
-      userData.companyName = companyName || '';
       userData.bio = bio || '';
     } else if (role === 'freelancer') {
       userData.skills = [];
@@ -661,7 +659,6 @@ export const googleLogin = async (req: Request, res: Response) => {
       };
 
       if (role === 'client') {
-        userData.companyName = '';
         userData.bio = '';
       } else if (role === 'freelancer') {
         userData.skills = [];

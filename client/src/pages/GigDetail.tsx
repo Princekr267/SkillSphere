@@ -35,6 +35,7 @@ interface IGigDetail {
     _id: string;
     name: string;
     companyName?: string;
+    currentCompanyName?: string;
     rating: number;
     reviewCount: number;
     location: { city: string };
@@ -788,10 +789,10 @@ export const GigDetail: React.FC = () => {
               </div>
               <div>
                 <h4 className="font-bold text-ink text-sm uppercase font-display tracking-tight leading-none mb-1 text-left">{gig.clientId.name}</h4>
-                {gig.clientId.companyName && (
+                {gig.clientId.currentCompanyName && (
                   <p className="text-xs text-ink/60 font-sans flex items-center space-x-1 font-bold text-left">
                     <Building className="h-3 w-3" />
-                    <span>{gig.clientId.companyName}</span>
+                    <span>{gig.clientId.currentCompanyName}</span>
                   </p>
                 )}
               </div>

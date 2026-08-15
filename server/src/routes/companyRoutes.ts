@@ -8,7 +8,7 @@ import {
   regenerateInviteKey,
   joinCompanyByInviteKey,
   getCompanyGigs,
-  resubmitCompany,
+  removeCompanyMember,
 } from '../controllers/companyController';
 
 const router = express.Router();
@@ -17,13 +17,13 @@ const router = express.Router();
 router.use(protect);
 
 // ─── Self-service routes ──────────────────────────────────────────────────────
-router.post('/register',                 registerCompany);
-router.get('/mine',                      getMyCompanies);
-router.post('/join',                     joinCompanyByInviteKey);
-router.get('/:id',                       getCompanyDetails);
-router.get('/:id/members',              getCompanyMembers);
-router.get('/:id/gigs',                 getCompanyGigs);
-router.post('/:id/regenerate-key',      regenerateInviteKey);
-router.put('/:id/resubmit',             resubmitCompany);
+router.post('/register',                             registerCompany);
+router.get('/mine',                                  getMyCompanies);
+router.post('/join',                                 joinCompanyByInviteKey);
+router.get('/:id',                                   getCompanyDetails);
+router.get('/:id/members',                          getCompanyMembers);
+router.delete('/:companyId/members/:userId',         removeCompanyMember);
+router.get('/:id/gigs',                             getCompanyGigs);
+router.post('/:id/regenerate-key',                  regenerateInviteKey);
 
 export default router;

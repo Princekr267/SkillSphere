@@ -9,6 +9,7 @@ import { moderateText } from '../services/moderationService';
 import Warning from '../models/Warning';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
+import { enrichGigsWithCompanyName, getApprovedCompanyNamesForUsers } from '../utils/companyHelper';
 
 const isCloudinaryConfigured = (): boolean => {
   const cloud = process.env.CLOUDINARY_CLOUD_NAME;
@@ -178,7 +179,9 @@ export const getGigs = async (req: Request, res: Response) => {
       Gig.countDocuments(filter),
     ]);
 
-    res.status(200).json({ success: true, total, page: pageNum, gigs });
+    const enrichedGigs = await enrichGigsWithCompanyName(gigs);
+
+    res.status(200).json({ success: true, total, page: pageNum, gigs: enrichedGigs });
   } catch (error) {
     console.error('getGigs error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching gigs' });
@@ -244,7 +247,9 @@ export const getNearbyGigs = async (req: Request, res: Response) => {
       .limit(100);
 
 
-    res.status(200).json({ success: true, count: gigs.length, gigs });
+    const enrichedGigs = await enrichGigsWithCompanyName(gigs);
+
+    res.status(200).json({ success: true, count: enrichedGigs.length, gigs: enrichedGigs });
   } catch (error) {
     console.error('getNearbyGigs error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching nearby gigs' });
@@ -273,11 +278,14 @@ export const getGigById = async (req: Request, res: Response) => {
         if (baseGig) {
           const gigObj = baseGig.toObject();
           gigObj.acceptedFreelancerId = proposal.freelancerId;
-          return res.status(200).json({ success: true, gig: gigObj });
+          const [enriched] = await enrichGigsWithCompanyName([gigObj]);
+          return res.status(200).json({ success: true, gig: enriched });
         }
       }
       return res.status(404).json({ success: false, message: 'Gig not found' });
     }
+
+    const [enrichedGig] = await enrichGigsWithCompanyName([gig]);
 
     // Automated 24-hour deadline reminder checks
     if (gig.status === 'in_progress' && gig.acceptedFreelancerId && gig.milestones.length > 0) {
@@ -309,7 +317,7 @@ export const getGigById = async (req: Request, res: Response) => {
       }
     }
 
-    res.status(200).json({ success: true, gig });
+    res.status(200).json({ success: true, gig: enrichedGig });
   } catch (error) {
     console.error('getGigById error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching gig' });
@@ -353,12 +361,13 @@ export const getMyApplications = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ success: false, message: 'Only freelancers can access this route' });
     }
 
-    const gigs = await Gig.find({
+    const rawGigs = await Gig.find({
       'applicants.freelancerId': user._id,
     })
       .populate('clientId', 'name companyName location rating avatar')
       .sort({ updatedAt: -1 });
 
+    const gigs = await enrichGigsWithCompanyName(rawGigs);
 
     const Proposal = require('../models/Proposal').default;
     const proposals = await Proposal.find({ freelancerId: user._id });

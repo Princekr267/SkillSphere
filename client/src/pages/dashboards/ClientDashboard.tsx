@@ -35,7 +35,6 @@ export const ClientDashboard: React.FC = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || '');
-  const [companyName, setCompanyName] = useState(user?.companyName || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [city, setCity] = useState(user?.location.city || '');
   const [latitude, setLatitude] = useState<number | null>(user?.location.coordinates[1] || null);
@@ -64,6 +63,10 @@ export const ClientDashboard: React.FC = () => {
       setCompaniesLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadMyCompanies();
+  }, []);
 
   // Bookings / Appointments state
   const [bookings, setBookings] = useState<any[]>([]);
@@ -167,7 +170,6 @@ export const ClientDashboard: React.FC = () => {
     try {
       await updateProfile({
         name,
-        companyName,
         bio,
         city,
         latitude,
@@ -405,10 +407,27 @@ export const ClientDashboard: React.FC = () => {
                 </div>
 
                 <div className="w-full border-t-2 border-ink mt-6 pt-4 space-y-3 text-left font-sans text-xs">
-                  <div className="flex items-center space-x-2 text-ink/70">
-                    <Building className="h-4 w-4 text-accent-teal flex-shrink-0" />
-                    <span className="font-bold text-ink">{user.companyName || 'Individual Client'}</span>
-                  </div>
+                  {(() => {
+                    const primaryCompany = myCompanies[0]?.company;
+                    const displayedCompanyName = primaryCompany?.name || user.currentCompanyName;
+
+                    return (
+                      <div className="flex items-start space-x-2 text-ink/70">
+                        <Building className="h-4 w-4 text-accent-teal flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold text-ink">{displayedCompanyName || 'Individual Client'}</span>
+                          {!displayedCompanyName && myCompanies.length === 0 && (
+                            <Link
+                              to="/register-company"
+                              className="block text-[10px] text-accent-teal hover:underline font-bold mt-0.5"
+                            >
+                              + Register your company
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <div className="flex items-center space-x-2 text-ink/70">
                     <MapPin className="h-4 w-4 text-accent-teal flex-shrink-0" />
                     <span className="font-bold text-ink">{user.location.city}</span>
@@ -449,14 +468,9 @@ export const ClientDashboard: React.FC = () => {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Company / Organization Name</label>
-                      <Input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Acme Corp" />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Company Bio / Description</label>
+                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Client Bio / Description</label>
                       <textarea rows={4} value={bio} onChange={e => setBio(e.target.value)}
-                        placeholder="Tell freelancers about your company or projects..."
+                        placeholder="Tell freelancers about your projects or requirements..."
                         className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm resize-none outline-none focus:bg-accent-amber/10 focus:border-accent-amber placeholder:text-ink/40" />
                     </div>
 
@@ -597,11 +611,8 @@ export const ClientDashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge
-                          variant={c.status === 'approved' ? 'teal' : c.status === 'pending' ? 'amber' : 'coral'}
-                          className="shadow-none font-mono text-[9px]"
-                        >
-                          {c.status}
+                        <Badge variant={orgRole === 'owner' ? 'coral' : 'teal'} className="shadow-none font-mono text-[9px] capitalize">
+                          {orgRole}
                         </Badge>
                         <ArrowRight className="h-4 w-4 text-ink/30 group-hover:text-ink transition-colors" />
                       </div>
