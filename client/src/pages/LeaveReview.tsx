@@ -66,7 +66,7 @@ export const LeaveReview: React.FC = () => {
             <Button
               onClick={() => {
                 const dashboardPath =
-                  user.role === 'admin'
+                  user.role === 'super_admin'
                     ? '/admin'
                     : user.role === 'client'
                     ? '/client-dashboard'

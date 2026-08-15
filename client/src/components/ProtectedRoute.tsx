@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: Array<'client' | 'freelancer' | 'admin'>;
+  allowedRoles?: Array<'client' | 'freelancer' | 'super_admin'>;
 }
 
 /**
@@ -41,7 +41,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // If role isn't authorized, redirect to the user's own dashboard
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user.role === 'super_admin') return <Navigate to="/admin" replace />;
     if (user.role === 'client') return <Navigate to="/client-dashboard" replace />;
     if (user.role === 'freelancer') return <Navigate to="/freelancer-dashboard" replace />;
     return <Navigate to="/" replace />;

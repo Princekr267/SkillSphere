@@ -14,8 +14,8 @@ router.put('/profile/availability', auth_1.protect, userController_1.updateAvail
 router.get('/freelancer/analytics', auth_1.protect, userController_1.getFreelancerAnalytics);
 router.get('/:id', auth_1.protect, userController_1.getUserById);
 // File uploads
-router.post('/upload-resume', auth_1.protect, upload_1.upload.single('resume'), userController_1.uploadResume);
 router.post('/avatar', auth_1.protect, upload_1.upload.single('avatar'), userController_1.uploadAvatar);
+router.post('/resume', auth_1.protect, upload_1.upload.single('resume'), userController_1.uploadResume);
 // File removals
 router.delete('/avatar', auth_1.protect, userController_1.deleteAvatar);
 router.delete('/resume', auth_1.protect, userController_1.deleteResume);

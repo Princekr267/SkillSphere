@@ -34,57 +34,69 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const DisputeSchema = new mongoose_1.Schema({
-    gigId: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'Gig',
-        required: [true, 'Dispute must be associated with a gig'],
-    },
-    raisedById: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User',
-        required: [true, 'Dispute must have a raiser'],
-    },
-    againstId: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User',
-        required: [true, 'Dispute must be against a user'],
-    },
-    reason: {
+// ─── Schema ──────────────────────────────────────────────────────────────────
+const CompanySchema = new mongoose_1.Schema({
+    name: {
         type: String,
-        required: [true, 'Reason for dispute is required'],
+        required: [true, 'Company name is required'],
+        trim: true,
+        maxlength: 120,
+    },
+    industry: {
+        type: String,
+        required: [true, 'Industry is required'],
+        trim: true,
+    },
+    description: {
+        type: String,
         trim: true,
         maxlength: 1000,
     },
-    evidenceUrl: {
+    website: {
         type: String,
+        trim: true,
+    },
+    registrationDetails: {
+        businessRegistrationNumber: { type: String, trim: true },
+        taxId: { type: String, trim: true },
+        country: { type: String, required: [true, 'Country is required'], trim: true },
+        city: { type: String, required: [true, 'City is required'], trim: true },
     },
     status: {
         type: String,
-        enum: ['open', 'resolved'],
-        default: 'open',
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending',
     },
-    resolutionNote: {
+    rejectionReason: {
         type: String,
         trim: true,
-        maxlength: 1000,
     },
-    resolutionAction: {
+    inviteKey: {
         type: String,
-        enum: ['release', 'refund', 'partial'],
+        required: true,
+        unique: true,
+        trim: true,
     },
-    partialAmount: {
-        type: Number,
-        min: 0,
+    createdBy: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'User',
+        required: [true, 'Company must have a creator'],
     },
-    resolvedBy: {
+    reviewedBy: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
     },
-    resolvedAt: {
+    reviewedAt: {
         type: Date,
     },
 }, {
     timestamps: true,
 });
-exports.default = mongoose_1.default.model('Dispute', DisputeSchema);
+// ─── Indexes ─────────────────────────────────────────────────────────────────
+// Unique index on inviteKey for fast join-by-key lookups
+CompanySchema.index({ inviteKey: 1 }, { unique: true });
+// Index for admin pending-review queries
+CompanySchema.index({ status: 1, createdAt: -1 });
+// Index for looking up companies owned/created by a user
+CompanySchema.index({ createdBy: 1 });
+exports.default = mongoose_1.default.model('Company', CompanySchema);

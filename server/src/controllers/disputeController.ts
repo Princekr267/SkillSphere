@@ -123,7 +123,7 @@ export const getDisputes = async (req: AuthRequest, res: Response) => {
     if (!user) return res.status(401).json({ success: false, message: 'Not authorised' });
 
     let query: any = {};
-    if (user.role !== 'admin') {
+    if (user.role !== 'super_admin') {
       query.$or = [{ raisedById: user._id }, { againstId: user._id }];
     }
 
@@ -145,7 +145,7 @@ export const getDisputes = async (req: AuthRequest, res: Response) => {
 export const resolveDispute = async (req: AuthRequest, res: Response) => {
   try {
     const user = req.user;
-    if (!user || user.role !== 'admin') {
+    if (!user || user.role !== 'super_admin') {
       return res.status(403).json({ success: false, message: 'Only administrators can resolve disputes' });
     }
 

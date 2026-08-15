@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTransactionHistory = exports.refundPayment = exports.releasePayment = exports.verifyPayment = exports.createOrder = void 0;
+exports.executeReleaseEscrow = executeReleaseEscrow;
+exports.executeRefundEscrow = executeRefundEscrow;
 const crypto_1 = __importDefault(require("crypto"));
 const razorpay_1 = __importDefault(require("razorpay"));
 const Payment_1 = __importDefault(require("../models/Payment"));
@@ -87,7 +89,7 @@ const verifyPayment = async (req, res) => {
         if (!user || user.role !== 'client') {
             return res.status(403).json({ success: false, message: 'Only clients can verify payments' });
         }
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, proposalId, mode, } = req.body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, proposalId, } = req.body;
         if (!razorpay_order_id || !proposalId) {
             return res.status(400).json({ success: false, message: 'Order ID and Proposal ID are required' });
         }
@@ -97,9 +99,11 @@ const verifyPayment = async (req, res) => {
         const gig = await Gig_1.default.findById(proposal.gigId);
         if (!gig)
             return res.status(404).json({ success: false, message: 'Gig not found' });
-        // Cryptographic signature verification for real payments
+        // Simulation mode is determined by server config only — never trust client input for this.
+        // If real Razorpay credentials are configured, signature verification is MANDATORY.
+        // Simulation (skipping verification) only happens when no credentials are set in the environment.
         const razorpay = getRazorpayInstance();
-        if (razorpay && mode !== 'simulation') {
+        if (razorpay) {
             if (!razorpay_payment_id || !razorpay_signature) {
                 return res.status(400).json({ success: false, message: 'Signature elements missing' });
             }
@@ -232,7 +236,7 @@ const refundPayment = async (req, res) => {
         if (!gig)
             return res.status(404).json({ success: false, message: 'Gig not found' });
         const isOwner = gig.clientId.toString() === user?._id.toString();
-        const isAdmin = user?.role === 'admin';
+        const isAdmin = user?.role === 'super_admin';
         if (!isOwner && !isAdmin) {
             return res.status(403).json({ success: false, message: 'Not authorised to initiate refunds' });
         }
@@ -310,7 +314,7 @@ const getTransactionHistory = async (req, res) => {
         else if (user.role === 'freelancer') {
             query.freelancerId = user._id;
         }
-        else if (user.role === 'admin') {
+        else if (user.role === 'super_admin') {
             // Admin sees everything
         }
         const payments = await Payment_1.default.find(query)
@@ -325,3 +329,110 @@ const getTransactionHistory = async (req, res) => {
     }
 };
 exports.getTransactionHistory = getTransactionHistory;
+// ─── INTERNAL HELPERS FOR DISPUTE RESOLUTION ─────────────────────────────────
+// These functions encapsulate escrow write logic so disputeController can call
+// them without duplicating Payment mutations.
+/**
+ * Move escrowed funds to the freelancer (admin-triggered by dispute resolution).
+ * Idempotent: throws if not in 'funds_deposited' state.
+ */
+async function executeReleaseEscrow(gigId) {
+    const gig = await Gig_1.default.findById(gigId);
+    if (!gig)
+        throw new Error('Gig not found');
+    if (gig.escrowStatus !== 'funds_deposited') {
+        throw new Error(`Cannot release: escrow is in state '${gig.escrowStatus}'`);
+    }
+    const originalPayment = await Payment_1.default.findOne({ gigId, status: 'escrowed', transactionType: 'deposit' });
+    if (!originalPayment)
+        throw new Error('Escrow transaction record not found');
+    originalPayment.status = 'released';
+    await originalPayment.save();
+    await Payment_1.default.create({
+        gigId: gig._id,
+        proposalId: originalPayment.proposalId,
+        clientId: gig.clientId,
+        freelancerId: gig.acceptedFreelancerId,
+        razorpayOrderId: originalPayment.razorpayOrderId,
+        razorpayPaymentId: originalPayment.razorpayPaymentId,
+        amount: originalPayment.amount,
+        status: 'released',
+        transactionType: 'payout',
+    });
+    gig.escrowStatus = 'released';
+    gig.status = 'completed';
+    await gig.save();
+    if (gig.acceptedFreelancerId) {
+        const freelancer = await User_1.default.findById(gig.acceptedFreelancerId);
+        if (freelancer) {
+            const score = freelancer.rating * freelancer.reviewCount + 5;
+            freelancer.reviewCount += 1;
+            freelancer.rating = parseFloat((score / freelancer.reviewCount).toFixed(2));
+            freelancer.completedGigsCount = (freelancer.completedGigsCount || 0) + 1;
+            await freelancer.save();
+        }
+        const notif = await Notification_1.default.create({
+            userId: gig.acceptedFreelancerId,
+            type: 'escrow_released',
+            title: 'Dispute Resolved — Funds Released',
+            body: `Admin resolved the dispute for "${gig.title}" in your favour. Payment released!`,
+            link: `/freelancer-dashboard`,
+        });
+        (0, socket_1.sendNotification)(gig.acceptedFreelancerId.toString(), notif);
+    }
+}
+/**
+ * Refund escrowed funds to the client (admin-triggered by dispute resolution).
+ * Idempotent: throws if not in 'funds_deposited' state.
+ */
+async function executeRefundEscrow(gigId) {
+    const gig = await Gig_1.default.findById(gigId);
+    if (!gig)
+        throw new Error('Gig not found');
+    if (gig.escrowStatus !== 'funds_deposited') {
+        throw new Error(`Cannot refund: escrow is in state '${gig.escrowStatus}'`);
+    }
+    const originalPayment = await Payment_1.default.findOne({ gigId, status: 'escrowed', transactionType: 'deposit' });
+    if (!originalPayment)
+        throw new Error('Escrow transaction record not found');
+    const razorpay = getRazorpayInstance();
+    let refundId = 'sim_refund_id';
+    if (razorpay && originalPayment.razorpayPaymentId && !originalPayment.razorpayPaymentId.startsWith('sim_')) {
+        try {
+            const refund = await razorpay.payments.refund(originalPayment.razorpayPaymentId, {
+                amount: Math.round(originalPayment.amount * 100),
+            });
+            refundId = refund.id;
+        }
+        catch (err) {
+            throw new Error(`Razorpay refund failed: ${err.message}`);
+        }
+    }
+    originalPayment.status = 'refunded';
+    await originalPayment.save();
+    await Payment_1.default.create({
+        gigId: gig._id,
+        proposalId: originalPayment.proposalId,
+        clientId: gig.clientId,
+        freelancerId: gig.acceptedFreelancerId,
+        razorpayOrderId: originalPayment.razorpayOrderId,
+        razorpayPaymentId: originalPayment.razorpayPaymentId,
+        razorpayRefundId: refundId,
+        amount: originalPayment.amount,
+        status: 'refunded',
+        transactionType: 'refund',
+    });
+    gig.escrowStatus = 'refunded';
+    gig.status = 'cancelled';
+    await gig.save();
+    if (gig.acceptedFreelancerId) {
+        const notif = await Notification_1.default.create({
+            userId: gig.acceptedFreelancerId,
+            type: 'application_rejected',
+            title: 'Dispute Resolved — Refund Issued',
+            body: `Admin resolved the dispute for "${gig.title}" in the client's favour. Escrow refunded.`,
+            link: `/freelancer-dashboard`,
+        });
+        (0, socket_1.sendNotification)(gig.acceptedFreelancerId.toString(), notif);
+    }
+}

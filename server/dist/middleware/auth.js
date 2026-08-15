@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.adminOnly = exports.authorize = exports.protect = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importDefault(require("../models/User"));
+const jwtSecret_1 = require("../utils/jwtSecret");
 /**
  * Protect routes middleware - verifies JWT token in request headers.
  */
@@ -18,7 +19,7 @@ const protect = async (req, res, next) => {
             // Get token from header
             token = req.headers.authorization.split(' ')[1];
             // Verify token
-            const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'skillsphere_secure_jwt_secret_key_2026');
+            const decoded = jsonwebtoken_1.default.verify(token, (0, jwtSecret_1.getJwtSecret)());
             // Get user from the token, excluding the password field
             req.user = await User_1.default.findById(decoded.id);
             if (!req.user) {
@@ -58,4 +59,4 @@ exports.authorize = authorize;
 /**
  * Shorthand middleware that restricts access to admin role only.
  */
-exports.adminOnly = (0, exports.authorize)('admin');
+exports.adminOnly = (0, exports.authorize)('super_admin');

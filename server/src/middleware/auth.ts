@@ -70,5 +70,5 @@ export const authorize = (...roles: string[]) => {
 /**
  * Shorthand middleware that restricts access to admin role only.
  */
-export const adminOnly = authorize('admin');
+export const adminOnly = authorize('super_admin');
 

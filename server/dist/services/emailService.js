@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendOTPEmail = exports.sendPasswordResetEmail = exports.sendVerificationEmail = exports.getTransporter = void 0;
+exports.sendCompanyRejectionEmail = exports.sendCompanyApprovalEmail = exports.sendOTPEmail = exports.sendPasswordResetEmail = exports.sendVerificationEmail = exports.getTransporter = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 /**
  * Establishes a nodemailer SMTP transporter using Gmail or defined SMTP variables.
@@ -187,3 +187,100 @@ const sendOTPEmail = async (to, otp) => {
     }
 };
 exports.sendOTPEmail = sendOTPEmail;
+/**
+ * Send company approval notification email
+ */
+const sendCompanyApprovalEmail = async (to, companyName) => {
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+    console.log('\n==================================================');
+    console.log('🏢 COMPANY APPROVED EMAIL (LOCAL DEV FALLBACK)');
+    console.log(`To: ${to}`);
+    console.log(`Company: ${companyName}`);
+    console.log('==================================================\n');
+    try {
+        const transporter = (0, exports.getTransporter)();
+        if (!transporter) {
+            console.warn('⚠️ SMTP Transporter is not configured. Email cannot be sent.');
+            return;
+        }
+        const fromAddress = process.env.EMAIL_USER
+            ? `"SkillSphere" <${process.env.EMAIL_USER}>`
+            : '"SkillSphere" <noreply@skillsphere.in>';
+        const mailOptions = {
+            from: fromAddress,
+            to,
+            subject: `Your company "${companyName}" has been approved on SkillSphere`,
+            html: `
+        <div style="font-family: sans-serif; padding: 20px; background-color: #EFF2ED; color: #1B2621; border: 2px solid #1B2621; border-radius: 4px;">
+          <h2 style="font-family: cursive; text-transform: uppercase;">Company Approved! 🎉</h2>
+          <p>Great news — your company <strong>${companyName}</strong> has been reviewed and approved by the SkillSphere team.</p>
+          <p>You can now:</p>
+          <ul>
+            <li>Access your invite key and invite team members</li>
+            <li>View all company-wide gigs from your Company Dashboard</li>
+          </ul>
+          <div style="margin: 20px 0;">
+            <a href="${frontendUrl}" style="background-color: #0F7A73; color: white; border: 2px solid #1B2621; padding: 10px 20px; text-decoration: none; font-weight: bold; text-transform: uppercase; display: inline-block;">
+              Go to Dashboard
+            </a>
+          </div>
+        </div>
+      `,
+            text: `Your company "${companyName}" has been approved on SkillSphere. Log in to access your invite key and company dashboard.`,
+        };
+        const result = await transporter.sendMail(mailOptions);
+        console.log('✅ Company approval email sent successfully via Nodemailer SMTP.');
+        return result;
+    }
+    catch (err) {
+        console.error('❌ Nodemailer SMTP dispatch error:', err.message);
+        // Do not rethrow — email failure should not break the approve endpoint
+    }
+};
+exports.sendCompanyApprovalEmail = sendCompanyApprovalEmail;
+/**
+ * Send company rejection notification email
+ */
+const sendCompanyRejectionEmail = async (to, companyName, reason) => {
+    console.log('\n==================================================');
+    console.log('🏢 COMPANY REJECTED EMAIL (LOCAL DEV FALLBACK)');
+    console.log(`To: ${to}`);
+    console.log(`Company: ${companyName}`);
+    console.log(`Reason: ${reason}`);
+    console.log('==================================================\n');
+    try {
+        const transporter = (0, exports.getTransporter)();
+        if (!transporter) {
+            console.warn('⚠️ SMTP Transporter is not configured. Email cannot be sent.');
+            return;
+        }
+        const fromAddress = process.env.EMAIL_USER
+            ? `"SkillSphere" <${process.env.EMAIL_USER}>`
+            : '"SkillSphere" <noreply@skillsphere.in>';
+        const mailOptions = {
+            from: fromAddress,
+            to,
+            subject: `Update on your company application — "${companyName}"`,
+            html: `
+        <div style="font-family: sans-serif; padding: 20px; background-color: #EFF2ED; color: #1B2621; border: 2px solid #1B2621; border-radius: 4px;">
+          <h2 style="font-family: cursive; text-transform: uppercase;">Company Application Update</h2>
+          <p>Your company application for <strong>${companyName}</strong> has been reviewed.</p>
+          <p>Unfortunately, your application was not approved at this time. Reason:</p>
+          <blockquote style="border-left: 4px solid #E2543C; margin: 12px 0; padding: 8px 16px; background-color: #fdf2f0;">
+            ${reason}
+          </blockquote>
+          <p>You can update your application details and resubmit from your Company Dashboard.</p>
+        </div>
+      `,
+            text: `Your company application for "${companyName}" was not approved. Reason: ${reason}. You can resubmit via your dashboard.`,
+        };
+        const result = await transporter.sendMail(mailOptions);
+        console.log('✅ Company rejection email sent successfully via Nodemailer SMTP.');
+        return result;
+    }
+    catch (err) {
+        console.error('❌ Nodemailer SMTP dispatch error:', err.message);
+        // Do not rethrow — email failure should not break the reject endpoint
+    }
+};
+exports.sendCompanyRejectionEmail = sendCompanyRejectionEmail;

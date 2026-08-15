@@ -52,7 +52,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
     // Privilege-escalation prevention: only allow public-facing roles at registration.
     // Accepting 'role' blindly from req.body would let any unauthenticated caller
-    // POST { role: 'admin' } and immediately gain elevated access.
+    // POST { role: 'super_admin' } and immediately gain elevated access.
     // TODO: role changes must go through an admin-only endpoint
     const ALLOWED_REGISTRATION_ROLES = ['client', 'freelancer'];
     if (!ALLOWED_REGISTRATION_ROLES.includes(role)) {
@@ -629,7 +629,7 @@ export const googleLogin = async (req: Request, res: Response) => {
       }
 
       // Privilege-escalation prevention: apply the same role allowlist as /register.
-      // A caller could otherwise pass { role: 'admin' } via the Google OAuth flow.
+      // A caller could otherwise pass { role: 'super_admin' } via the Google OAuth flow.
       // TODO: role changes must go through an admin-only endpoint
       const ALLOWED_REGISTRATION_ROLES = ['client', 'freelancer'];
       if (!ALLOWED_REGISTRATION_ROLES.includes(role)) {

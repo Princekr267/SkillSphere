@@ -78,7 +78,7 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const dashboardPath = user
-    ? user.role === 'admin'
+    ? user.role === 'super_admin'
       ? '/admin'
       : user.role === 'client'
       ? '/client-dashboard'
@@ -148,7 +148,7 @@ export const Navbar: React.FC = () => {
               {user && (
                 <div className="flex flex-col items-center">
                   <Link 
-                    to={user.role === 'admin' ? dashboardPath : `/profile/${user._id}`} 
+                    to={user.role === 'super_admin' ? dashboardPath : `/profile/${user._id}`} 
                     className="flex flex-col items-center group"
                   >
                     <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
@@ -334,7 +334,7 @@ export const Navbar: React.FC = () => {
                   <span>Marketplace</span>
                 </Link>
 
-                {user.role !== 'admin' && (
+                {user.role !== 'super_admin' && (
                   <Link
                     to={`/profile/${user._id}`}
                     onClick={() => setMobileOpen(false)}
