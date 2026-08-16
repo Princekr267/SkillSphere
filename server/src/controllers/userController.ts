@@ -49,6 +49,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
       latitude,
       longitude,
       // Client specific
+      businessName,
       bio,
       // Freelancer specific
       skills,
@@ -72,6 +73,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
 
     // 3. Role-specific Updates
     if (user.role === 'client') {
+      if (businessName !== undefined) user.businessName = businessName ? businessName.trim() : '';
       if (bio !== undefined) user.bio = bio;
     } else if (user.role === 'freelancer') {
       if (skills !== undefined) user.skills = skills;
@@ -93,6 +95,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
         role: updatedUser.role,
         location: updatedUser.location,
         companyName: updatedUser.companyName,
+        businessName: updatedUser.businessName,
         bio: updatedUser.bio,
         skills: updatedUser.skills,
         portfolio: updatedUser.portfolio,
@@ -208,6 +211,8 @@ export const getUserById = async (req: AuthRequest, res: Response) => {
       const approvedName = companyMap.get(user._id.toString());
       if (approvedName) {
         userObj.currentCompanyName = approvedName;
+      } else if (user.businessName && user.businessName.trim()) {
+        userObj.currentCompanyName = user.businessName.trim();
       }
     }
 

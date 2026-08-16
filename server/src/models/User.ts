@@ -56,8 +56,10 @@ export interface IUser extends Document {
   resetPasswordTokenExpires?: Date;
   twoFactorEnabled?: boolean;
   twoFactorSecret?: string;
+  isActive?: boolean;
   // Client specific
   companyName?: string;
+  businessName?: string;
   bio?: string;
   comparePassword(password: string): Promise<boolean>;
 }
@@ -181,6 +183,11 @@ const UserSchema: Schema = new Schema(
       type: String,
       trim: true,
     },
+    businessName: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
     bio: {
       type: String,
       maxlength: 500,
@@ -199,6 +206,10 @@ const UserSchema: Schema = new Schema(
       default: false,
     },
     twoFactorSecret: String,
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

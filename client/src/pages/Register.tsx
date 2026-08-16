@@ -88,6 +88,7 @@ export const Register: React.FC = () => {
   const [longitude, setLongitude] = useState<number | null>(null);
   
   // Client details
+  const [businessName, setBusinessName] = useState('');
   const [bio, setBio] = useState('');
 
   // Location search helper states
@@ -212,6 +213,7 @@ export const Register: React.FC = () => {
       city,
       latitude,
       longitude,
+      businessName: role === 'client' ? (businessName.trim() || undefined) : undefined,
       bio: role === 'client' ? bio : undefined,
     };
 
@@ -593,6 +595,25 @@ export const Register: React.FC = () => {
             <div className="space-y-4">
               {role === 'client' ? (
                 <>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">
+                      Business Name <span className="text-ink/40 font-normal font-sans">(Optional)</span>
+                    </label>
+                    <div className="relative">
+                      <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
+                      <Input
+                        type="text"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        placeholder="e.g. Acme Corp (optional)"
+                        className="pl-10"
+                      />
+                    </div>
+                    <p className="text-[10px] text-ink/50 font-sans pl-1">
+                      Solo clients can set a cosmetic business label here. You can also register a full company later from your dashboard.
+                    </p>
+                  </div>
+
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Short Bio</label>
                     <div className="relative">

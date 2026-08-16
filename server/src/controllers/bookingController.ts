@@ -86,7 +86,7 @@ export const getBookings = async (req: AuthRequest, res: Response): Promise<any>
       : { clientId: userId };
 
     const bookings = await Booking.find(query)
-      .populate('clientId', 'name email location companyName avatar bio')
+      .populate('clientId', 'name email location businessName companyName avatar bio')
       .populate('freelancerId', 'name email location avatar rating reviewCount hourlyRate skills bio certifications')
       .populate('gigId', 'title status budget budgetType category')
       .sort({ date: 1, startTime: 1 });
@@ -103,6 +103,8 @@ export const getBookings = async (req: AuthRequest, res: Response): Promise<any>
         const approvedName = companyMap.get(cIdStr);
         if (approvedName) {
           bObj.clientId.currentCompanyName = approvedName;
+        } else if (bObj.clientId.businessName && bObj.clientId.businessName.trim()) {
+          bObj.clientId.currentCompanyName = bObj.clientId.businessName.trim();
         }
       }
       return bObj;

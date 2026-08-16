@@ -6,6 +6,8 @@ import Warning from '../models/Warning';
 import Company from '../models/Company';
 import CompanyMembership from '../models/CompanyMembership';
 import Dispute from '../models/Dispute';
+import Proposal from '../models/Proposal';
+import Booking from '../models/Booking';
 import Notification from '../models/Notification';
 import { AuthRequest } from '../middleware/auth';
 import { sendNotification } from '../socket';
@@ -266,11 +268,12 @@ export const getAllCompaniesForAdmin = async (req: Request, res: Response): Prom
 export const getUserActivity = async (req: Request, res: Response): Promise<any> => {
   try {
     const { userId } = req.params;
+    const targetUser = await User.findById(userId).select('name email role');
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
 
-    const [gigs, disputes, warnings] = await Promise.all([
-      Gig.find({ clientId: userId })
-        .select('title category budget budgetType status escrowStatus createdAt')
-        .sort({ createdAt: -1 }),
+    const [disputes, warnings] = await Promise.all([
       Dispute.find({
         $or: [{ raisedById: userId }, { againstId: userId }],
       })
@@ -282,10 +285,40 @@ export const getUserActivity = async (req: Request, res: Response): Promise<any>
         .sort({ createdAt: -1 }),
     ]);
 
+    let gigs: any[] = [];
+    let proposals: any[] = [];
+    let assignedGigs: any[] = [];
+    let bookings: any[] = [];
+
+    if (targetUser.role === 'client') {
+      gigs = await Gig.find({ clientId: userId })
+        .select('title category budget budgetType status escrowStatus createdAt')
+        .sort({ createdAt: -1 });
+    } else if (targetUser.role === 'freelancer') {
+      [proposals, assignedGigs, bookings] = await Promise.all([
+        Proposal.find({ freelancerId: userId })
+          .populate('gigId', 'title category budget budgetType status')
+          .sort({ createdAt: -1 }),
+        Gig.find({ acceptedFreelancerId: userId })
+          .populate('clientId', 'name email')
+          .select('title category budget budgetType status escrowStatus createdAt')
+          .sort({ createdAt: -1 }),
+        Booking.find({ freelancerId: userId })
+          .populate('clientId', 'name email')
+          .populate('gigId', 'title')
+          .sort({ date: -1 }),
+      ]);
+    }
+
     return res.json({
       success: true,
+      user: targetUser,
       activity: {
+        role: targetUser.role,
         gigs,
+        proposals,
+        assignedGigs,
+        bookings,
         disputes,
         warnings,
       },

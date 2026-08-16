@@ -171,7 +171,7 @@ export const getGigs = async (req: Request, res: Response) => {
 
     const [gigs, total] = await Promise.all([
       Gig.find(filter)
-        .populate('clientId', 'name companyName location rating avatar')
+        .populate('clientId', 'name businessName companyName location rating avatar')
         .sort({ createdAt: -1 })
 
         .skip(skip)
@@ -243,7 +243,7 @@ export const getNearbyGigs = async (req: Request, res: Response) => {
     }
 
     const gigs = await Gig.find(filter)
-      .populate('clientId', 'name companyName location rating avatar')
+      .populate('clientId', 'name businessName companyName location rating avatar')
       .limit(100);
 
 
@@ -265,7 +265,7 @@ export const getNearbyGigs = async (req: Request, res: Response) => {
 export const getGigById = async (req: Request, res: Response) => {
   try {
     let gig = await Gig.findById(req.params.id)
-      .populate('clientId', 'name companyName location rating reviewCount avatar')
+      .populate('clientId', 'name businessName companyName location rating reviewCount avatar')
       .populate('applicants.freelancerId', 'name skills hourlyRate rating location avatar');
 
     if (!gig) {
@@ -273,7 +273,7 @@ export const getGigById = async (req: Request, res: Response) => {
       const proposal = await Proposal.findById(req.params.id).populate('freelancerId', 'name skills hourlyRate rating location avatar');
       if (proposal) {
         const baseGig = await Gig.findById(proposal.gigId)
-          .populate('clientId', 'name companyName location rating reviewCount avatar')
+          .populate('clientId', 'name businessName companyName location rating reviewCount avatar')
           .populate('applicants.freelancerId', 'name skills hourlyRate rating location avatar');
         if (baseGig) {
           const gigObj = baseGig.toObject();
@@ -364,7 +364,7 @@ export const getMyApplications = async (req: AuthRequest, res: Response) => {
     const rawGigs = await Gig.find({
       'applicants.freelancerId': user._id,
     })
-      .populate('clientId', 'name companyName location rating avatar')
+      .populate('clientId', 'name businessName companyName location rating avatar')
       .sort({ updatedAt: -1 });
 
     const gigs = await enrichGigsWithCompanyName(rawGigs);

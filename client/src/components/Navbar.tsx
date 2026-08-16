@@ -111,44 +111,44 @@ export const Navbar: React.FC = () => {
             </Badge>
           </div>
 
-          {/* Navigation Route Line (desktop only) */}
-          <div className="flex-grow max-w-xl mx-8 hidden md:block relative">
-            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[4px] bg-ink/10 dark:bg-cream/15 border-y border-ink/40"></div>
-            <div className="relative flex justify-around items-center">
-              
-              {/* Station 1: Dashboard */}
-              <div className="flex flex-col items-center">
-                <Link to={dashboardPath} className="flex flex-col items-center group">
-                  <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
-                    isActive(dashboardPath) ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
-                  }`}>
-                    Dashboard
-                  </span>
-                  <div className={`w-4.5 h-4.5 border-2 border-ink transition-all rounded-md ${
-                    isActive(dashboardPath) ? 'bg-accent-amber scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-amber/20'
-                  }`}></div>
-                </Link>
-              </div>
+          {/* Navigation Route Line (desktop only, authenticated users only) */}
+          {user ? (
+            <div className="flex-grow max-w-xl mx-8 hidden md:block relative">
+              <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[4px] bg-ink/10 dark:bg-cream/15 border-y border-ink/40"></div>
+              <div className="relative flex justify-around items-center">
+                
+                {/* Station 1: Dashboard */}
+                <div className="flex flex-col items-center">
+                  <Link to={dashboardPath} className="flex flex-col items-center group">
+                    <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
+                      isActive(dashboardPath) ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
+                    }`}>
+                      {user.role === 'super_admin' ? 'Admin Hub' : 'Dashboard'}
+                    </span>
+                    <div className={`w-4.5 h-4.5 border-2 border-ink transition-all rounded-md ${
+                      isActive(dashboardPath) ? 'bg-accent-amber scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-amber/20'
+                    }`}></div>
+                  </Link>
+                </div>
 
-              {/* Station 2: Marketplace / Gigs */}
-              <div className="flex flex-col items-center">
-                <Link to="/gigs" className="flex flex-col items-center group">
-                  <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
-                    isActive('/gigs') ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
-                  }`}>
-                    Marketplace
-                  </span>
-                  <div className={`w-4.5 h-4.5 border-2 border-ink transition-all rounded-md ${
-                    isActive('/gigs') ? 'bg-accent-teal scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-teal/20'
-                  }`}></div>
-                </Link>
-              </div>
+                {/* Station 2: Marketplace / Gigs */}
+                <div className="flex flex-col items-center">
+                  <Link to="/gigs" className="flex flex-col items-center group">
+                    <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
+                      isActive('/gigs') ? 'text-accent-teal font-extrabold' : 'text-ink/60 group-hover:text-ink'
+                    }`}>
+                      Marketplace
+                    </span>
+                    <div className={`w-4.5 h-4.5 border-2 border-ink transition-all rounded-md ${
+                      isActive('/gigs') ? 'bg-accent-teal scale-110 shadow-retro-sm' : 'bg-cream group-hover:bg-accent-teal/20'
+                    }`}></div>
+                  </Link>
+                </div>
 
-              {/* Station 3: Node Profile */}
-              {user && (
+                {/* Station 3: Node Profile */}
                 <div className="flex flex-col items-center">
                   <Link 
-                    to={user.role === 'super_admin' ? dashboardPath : `/profile/${user._id}`} 
+                    to={`/profile/${user._id}`} 
                     className="flex flex-col items-center group"
                   >
                     <span className={`text-[10px] font-display font-bold uppercase tracking-wider mb-1.5 transition-colors ${
@@ -161,10 +161,12 @@ export const Navbar: React.FC = () => {
                     }`}></div>
                   </Link>
                 </div>
-              )}
 
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex-grow" />
+          )}
 
           {/* User Controls (desktop) */}
           <div className="hidden md:flex items-center space-x-4">
@@ -334,20 +336,18 @@ export const Navbar: React.FC = () => {
                   <span>Marketplace</span>
                 </Link>
 
-                {user.role !== 'super_admin' && (
-                  <Link
-                    to={`/profile/${user._id}`}
-                    onClick={() => setMobileOpen(false)}
-                    className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-sans font-bold transition-all border-2 ${
-                      isActive(`/profile/${user._id}`)
-                        ? 'bg-accent-pink/10 border-ink shadow-retro-sm scale-[1.02]'
-                        : 'border-transparent hover:border-ink hover:bg-accent-pink/15'
-                    }`}
-                  >
-                    <span className="w-2.5 h-2.5 rounded-full bg-accent-pink border border-ink flex-shrink-0" />
-                    <span>Profile</span>
-                  </Link>
-                )}
+                <Link
+                  to={`/profile/${user._id}`}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-sans font-bold transition-all border-2 ${
+                    isActive(`/profile/${user._id}`)
+                      ? 'bg-accent-pink/10 border-ink shadow-retro-sm scale-[1.02]'
+                      : 'border-transparent hover:border-ink hover:bg-accent-pink/15'
+                  }`}
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent-pink border border-ink flex-shrink-0" />
+                  <span>Profile</span>
+                </Link>
 
                 <button
                   onClick={handleLogout}

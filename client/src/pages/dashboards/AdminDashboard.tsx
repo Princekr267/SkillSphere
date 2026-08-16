@@ -104,8 +104,8 @@ export const AdminDashboard: React.FC = () => {
 
   // User Activity Modal State
   const [activityModalUser, setActivityModalUser] = useState<{ _id: string; name: string; email: string } | null>(null);
-  const [activityData, setActivityData] = useState<{ gigs: any[]; disputes: any[]; warnings: any[] } | null>(null);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [activityData, setActivityData] = useState<{ role?: string; gigs?: any[]; proposals?: any[]; assignedGigs?: any[]; bookings?: any[]; disputes?: any[]; warnings?: any[] } | null>(null);
 
   // Warn User Modal State
   const [warnModalUser, setWarnModalUser] = useState<{ _id: string; name: string; email: string } | null>(null);
@@ -777,38 +777,123 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               ) : activityData ? (
                 <>
-                  {/* Gigs Section */}
-                  <div>
-                    <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
-                      <span>Posted Gigs ({activityData.gigs?.length || 0})</span>
-                    </h4>
-                    {activityData.gigs?.length === 0 ? (
-                      <p className="text-xs text-ink/40 font-sans italic">No gigs posted.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {activityData.gigs.map((g: any) => (
-                          <div key={g._id} className="p-3 bg-ink/5 border border-ink/10 rounded-lg flex items-center justify-between text-xs font-sans">
-                            <div className="min-w-0 pr-2">
-                              <p className="font-bold text-ink truncate">{g.title}</p>
-                              <p className="text-[10px] text-ink/60 font-mono">
-                                ₹{g.budget?.toLocaleString()}{g.budgetType === 'hourly' ? '/hr' : ''} · {g.category}
-                              </p>
+                  {/* Client: Posted Gigs Section */}
+                  {activityData.role === 'client' && (
+                    <div>
+                      <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
+                        <span>Posted Gigs ({activityData.gigs?.length || 0})</span>
+                      </h4>
+                      {(!activityData.gigs || activityData.gigs.length === 0) ? (
+                        <p className="text-xs text-ink/40 font-sans italic">No gigs posted by this client.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {activityData.gigs.map((g: any) => (
+                            <div key={g._id} className="p-3 bg-ink/5 border border-ink/10 rounded-lg flex items-center justify-between text-xs font-sans">
+                              <div className="min-w-0 pr-2">
+                                <p className="font-bold text-ink truncate">{g.title}</p>
+                                <p className="text-[10px] text-ink/60 font-mono">
+                                  ₹{g.budget?.toLocaleString()}{g.budgetType === 'hourly' ? '/hr' : ''} · {g.category}
+                                </p>
+                              </div>
+                              <Badge variant={g.status === 'open' ? 'teal' : g.status === 'in_progress' ? 'amber' : 'coral'} className="text-[9px] shadow-none font-mono">
+                                {g.status}
+                              </Badge>
                             </div>
-                            <Badge variant={g.status === 'open' ? 'teal' : g.status === 'in_progress' ? 'amber' : 'coral'} className="text-[9px] shadow-none">
-                              {g.status}
-                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Freelancer: Applications & Proposals Section */}
+                  {activityData.role === 'freelancer' && (
+                    <div className="space-y-4">
+                      {/* Proposals */}
+                      <div>
+                        <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
+                          <span>Proposals & Applications ({activityData.proposals?.length || 0})</span>
+                        </h4>
+                        {(!activityData.proposals || activityData.proposals.length === 0) ? (
+                          <p className="text-xs text-ink/40 font-sans italic">No proposals submitted yet.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {activityData.proposals.map((p: any) => (
+                              <div key={p._id} className="p-3 bg-ink/5 border border-ink/10 rounded-lg flex items-center justify-between text-xs font-sans">
+                                <div className="min-w-0 pr-2">
+                                  <p className="font-bold text-ink truncate">{p.gigId?.title || 'Gig Opportunity'}</p>
+                                  <p className="text-[10px] text-ink/60 font-mono">
+                                    Bid: ₹{p.bidAmount?.toLocaleString()} · {p.completionTime} days · {p.gigId?.category || 'Category'}
+                                  </p>
+                                </div>
+                                <Badge variant={p.status === 'accepted' ? 'teal' : p.status === 'rejected' ? 'coral' : 'amber'} className="text-[9px] shadow-none font-mono">
+                                  {p.status}
+                                </Badge>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
-                    )}
-                  </div>
+
+                      {/* Assigned Contracts */}
+                      <div>
+                        <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
+                          <span>Assigned Contracts / Jobs ({activityData.assignedGigs?.length || 0})</span>
+                        </h4>
+                        {(!activityData.assignedGigs || activityData.assignedGigs.length === 0) ? (
+                          <p className="text-xs text-ink/40 font-sans italic">No active contracts assigned.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {activityData.assignedGigs.map((g: any) => (
+                              <div key={g._id} className="p-3 bg-accent-teal/5 border border-accent-teal/20 rounded-lg flex items-center justify-between text-xs font-sans">
+                                <div className="min-w-0 pr-2">
+                                  <p className="font-bold text-ink truncate">{g.title}</p>
+                                  <p className="text-[10px] text-ink/60 font-mono">
+                                    Client: {g.clientId?.name || '—'} · ₹{g.budget?.toLocaleString()} · Escrow: {g.escrowStatus}
+                                  </p>
+                                </div>
+                                <Badge variant={g.status === 'completed' ? 'teal' : 'amber'} className="text-[9px] shadow-none font-mono">
+                                  {g.status}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Appointments */}
+                      <div>
+                        <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
+                          <span>Consultation Appointments ({activityData.bookings?.length || 0})</span>
+                        </h4>
+                        {(!activityData.bookings || activityData.bookings.length === 0) ? (
+                          <p className="text-xs text-ink/40 font-sans italic">No appointments booked.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {activityData.bookings.map((b: any) => (
+                              <div key={b._id} className="p-3 bg-ink/5 border border-ink/10 rounded-lg flex items-center justify-between text-xs font-sans">
+                                <div className="min-w-0 pr-2">
+                                  <p className="font-bold text-ink truncate">{b.gigId?.title || 'Appointment'}</p>
+                                  <p className="text-[10px] text-ink/60 font-mono">
+                                    Client: {b.clientId?.name} · {new Date(b.date).toLocaleDateString('en-IN')} ({b.startTime} - {b.endTime})
+                                  </p>
+                                </div>
+                                <Badge variant={b.status === 'confirmed' ? 'teal' : b.status === 'cancelled' ? 'coral' : 'amber'} className="text-[9px] shadow-none font-mono">
+                                  {b.status}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Disputes Section */}
                   <div>
                     <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
                       <span>Disputes Involved ({activityData.disputes?.length || 0})</span>
                     </h4>
-                    {activityData.disputes?.length === 0 ? (
+                    {(!activityData.disputes || activityData.disputes.length === 0) ? (
                       <p className="text-xs text-ink/40 font-sans italic">No disputes on record.</p>
                     ) : (
                       <div className="space-y-2">
@@ -816,7 +901,7 @@ export const AdminDashboard: React.FC = () => {
                           <div key={d._id} className="p-3 bg-ink/5 border border-ink/10 rounded-lg space-y-1 text-xs font-sans">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-ink">{d.gigId?.title || 'Dispute'}</span>
-                              <Badge variant={d.status === 'open' ? 'coral' : 'teal'} className="text-[9px] shadow-none">
+                              <Badge variant={d.status === 'open' ? 'coral' : 'teal'} className="text-[9px] shadow-none font-mono">
                                 {d.status}
                               </Badge>
                             </div>
@@ -835,7 +920,7 @@ export const AdminDashboard: React.FC = () => {
                     <h4 className="text-[10px] font-bold font-display text-ink uppercase tracking-widest mb-2 flex items-center justify-between">
                       <span>Warnings Logged ({activityData.warnings?.length || 0})</span>
                     </h4>
-                    {activityData.warnings?.length === 0 ? (
+                    {(!activityData.warnings || activityData.warnings.length === 0) ? (
                       <p className="text-xs text-ink/40 font-sans italic">No safety or admin warnings.</p>
                     ) : (
                       <div className="space-y-2">
