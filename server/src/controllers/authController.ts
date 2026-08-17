@@ -38,7 +38,7 @@ export const registerUser = async (req: Request, res: Response) => {
       city,
       latitude,
       longitude,
-      companyName,
+      businessName,
       bio,
     } = req.body;
 
@@ -98,7 +98,7 @@ export const registerUser = async (req: Request, res: Response) => {
     };
 
     if (role === 'client') {
-      userData.companyName = companyName || '';
+      if (businessName) userData.businessName = businessName.trim();
       userData.bio = bio || '';
     } else if (role === 'freelancer') {
       userData.skills = [];
@@ -125,6 +125,7 @@ export const registerUser = async (req: Request, res: Response) => {
       role: user.role,
       location: user.location,
       companyName: user.companyName,
+      businessName: user.businessName,
       bio: user.bio,
       skills: user.skills,
       portfolio: user.portfolio,
@@ -186,6 +187,14 @@ export const loginUser = async (req: Request, res: Response) => {
       });
     }
 
+    // 4. Check if account is suspended/banned
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been suspended. Please contact support.',
+      });
+    }
+
     // 4. Check 2FA
     if (user.twoFactorEnabled) {
       // Generate OTP Code
@@ -222,6 +231,7 @@ export const loginUser = async (req: Request, res: Response) => {
         role: user.role,
         location: user.location,
         companyName: user.companyName,
+        businessName: user.businessName,
         bio: user.bio,
         skills: user.skills,
         portfolio: user.portfolio,
@@ -576,6 +586,7 @@ export const verify2FACode = async (req: Request, res: Response) => {
         role: user.role,
         location: user.location,
         companyName: user.companyName,
+        businessName: user.businessName,
         bio: user.bio,
         skills: user.skills,
         portfolio: user.portfolio,
@@ -661,7 +672,6 @@ export const googleLogin = async (req: Request, res: Response) => {
       };
 
       if (role === 'client') {
-        userData.companyName = '';
         userData.bio = '';
       } else if (role === 'freelancer') {
         userData.skills = [];
@@ -670,6 +680,14 @@ export const googleLogin = async (req: Request, res: Response) => {
       }
 
       user = await User.create(userData);
+    }
+
+    // Check if account is suspended/banned
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been suspended. Please contact support.',
+      });
     }
 
     if (user.twoFactorEnabled) {
@@ -698,6 +716,7 @@ export const googleLogin = async (req: Request, res: Response) => {
         location: user.location,
         avatar: user.avatar,
         companyName: user.companyName,
+        businessName: user.businessName,
         bio: user.bio,
         skills: user.skills,
         portfolio: user.portfolio,

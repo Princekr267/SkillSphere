@@ -10,9 +10,9 @@ import {
   dismissReviewFlag,
   deleteReview,
   getWarnings,
-  getPendingCompanies,
-  approveCompany,
-  rejectCompany,
+  getAllCompaniesForAdmin,
+  getUserActivity,
+  warnUser,
 } from '../controllers/adminController';
 
 const router = express.Router();
@@ -20,19 +20,19 @@ const router = express.Router();
 // All admin routes require auth + admin role
 router.use(protect, adminOnly);
 
-router.get('/stats',              getStats);
-router.get('/users',              getAllUsers);
-router.put('/users/:id/status',   toggleUserStatus);
-router.get('/gigs',               getAllGigsAdmin);
-router.delete('/gigs/:id',        adminDeleteGig);
-router.get('/flagged-reviews',     getFlaggedReviews);
-router.put('/reviews/:id/dismiss', dismissReviewFlag);
-router.delete('/reviews/:id',      deleteReview);
-router.get('/warnings',                     getWarnings);
+router.get('/stats',                       getStats);
+router.get('/users',                       getAllUsers);
+router.put('/users/:id/status',            toggleUserStatus);
+router.get('/users/:userId/activity',       getUserActivity);
+router.post('/users/:userId/warn',         warnUser);
+router.get('/gigs',                        getAllGigsAdmin);
+router.delete('/gigs/:id',                 adminDeleteGig);
+router.get('/flagged-reviews',              getFlaggedReviews);
+router.put('/reviews/:id/dismiss',          dismissReviewFlag);
+router.delete('/reviews/:id',               deleteReview);
+router.get('/warnings',                    getWarnings);
 
-// Company management routes
-router.get('/companies/pending',            getPendingCompanies);
-router.put('/companies/:id/approve',        approveCompany);
-router.put('/companies/:id/reject',         rejectCompany);
+// Company oversight routes
+router.get('/companies',                   getAllCompaniesForAdmin);
 
 export default router;

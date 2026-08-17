@@ -530,10 +530,10 @@ export const FreelancerDashboard: React.FC = () => {
                           <p className="font-bold text-ink font-display uppercase text-xs">
                             {b.clientId?.name || 'Client'}
                           </p>
-                          {b.clientId?.companyName && (
+                          {b.clientId?.currentCompanyName && (
                             <p className="text-[10px] text-ink/75 font-mono flex items-center space-x-1 font-bold">
                               <Building className="h-3 w-3 text-accent-teal" />
-                              <span>{b.clientId.companyName}</span>
+                              <span>{b.clientId.currentCompanyName}</span>
                             </p>
                           )}
                         </div>

@@ -17,12 +17,8 @@ export interface ICompany extends Document {
   description?: string;
   website?: string;
   registrationDetails: IRegistrationDetails;
-  status: 'pending' | 'approved' | 'rejected';
-  rejectionReason?: string;
   inviteKey: string;
   createdBy: Types.ObjectId;
-  reviewedBy?: Types.ObjectId;
-  reviewedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,15 +53,6 @@ const CompanySchema = new Schema<ICompany>(
       country: { type: String, required: [true, 'Country is required'], trim: true },
       city: { type: String, required: [true, 'City is required'], trim: true },
     },
-    status: {
-      type: String,
-      enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',
-    },
-    rejectionReason: {
-      type: String,
-      trim: true,
-    },
     inviteKey: {
       type: String,
       required: true,
@@ -77,13 +64,6 @@ const CompanySchema = new Schema<ICompany>(
       ref: 'User',
       required: [true, 'Company must have a creator'],
     },
-    reviewedBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-    },
-    reviewedAt: {
-      type: Date,
-    },
   },
   {
     timestamps: true,
@@ -94,9 +74,6 @@ const CompanySchema = new Schema<ICompany>(
 
 // Unique index on inviteKey for fast join-by-key lookups
 CompanySchema.index({ inviteKey: 1 }, { unique: true });
-
-// Index for admin pending-review queries
-CompanySchema.index({ status: 1, createdAt: -1 });
 
 // Index for looking up companies owned/created by a user
 CompanySchema.index({ createdBy: 1 });

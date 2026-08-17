@@ -6,6 +6,7 @@ import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import Proposal from '../models/Proposal';
 import Payment from '../models/Payment';
+import { getApprovedCompanyNamesForUsers } from '../utils/companyHelper';
 
 // Configure Cloudinary only if credentials are not default placeholders
 const isCloudinaryConfigured = (): boolean => {
@@ -48,7 +49,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
       latitude,
       longitude,
       // Client specific
-      companyName,
+      businessName,
       bio,
       // Freelancer specific
       skills,
@@ -72,7 +73,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
 
     // 3. Role-specific Updates
     if (user.role === 'client') {
-      if (companyName !== undefined) user.companyName = companyName;
+      if (businessName !== undefined) user.businessName = businessName ? businessName.trim() : '';
       if (bio !== undefined) user.bio = bio;
     } else if (user.role === 'freelancer') {
       if (skills !== undefined) user.skills = skills;
@@ -94,6 +95,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
         role: updatedUser.role,
         location: updatedUser.location,
         companyName: updatedUser.companyName,
+        businessName: updatedUser.businessName,
         bio: updatedUser.bio,
         skills: updatedUser.skills,
         portfolio: updatedUser.portfolio,
@@ -203,7 +205,18 @@ export const getUserById = async (req: AuthRequest, res: Response) => {
       await user.save();
     }
 
-    res.status(200).json({ success: true, user });
+    const userObj: any = user.toObject();
+    if (user.role === 'client') {
+      const companyMap = await getApprovedCompanyNamesForUsers([user._id]);
+      const approvedName = companyMap.get(user._id.toString());
+      if (approvedName) {
+        userObj.currentCompanyName = approvedName;
+      } else if (user.businessName && user.businessName.trim()) {
+        userObj.currentCompanyName = user.businessName.trim();
+      }
+    }
+
+    res.status(200).json({ success: true, user: userObj });
   } catch (error) {
     console.error('getUserById error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching user profile' });

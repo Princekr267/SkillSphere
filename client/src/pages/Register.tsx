@@ -88,7 +88,7 @@ export const Register: React.FC = () => {
   const [longitude, setLongitude] = useState<number | null>(null);
   
   // Client details
-  const [companyName, setCompanyName] = useState('');
+  const [businessName, setBusinessName] = useState('');
   const [bio, setBio] = useState('');
 
   // Location search helper states
@@ -213,7 +213,7 @@ export const Register: React.FC = () => {
       city,
       latitude,
       longitude,
-      companyName: role === 'client' ? companyName : undefined,
+      businessName: role === 'client' ? (businessName.trim() || undefined) : undefined,
       bio: role === 'client' ? bio : undefined,
     };
 
@@ -582,11 +582,11 @@ export const Register: React.FC = () => {
           <div className="space-y-6 animate-fade-in font-sans text-left">
             <div className="text-left">
               <h3 className="text-xl font-display font-black text-ink uppercase tracking-tight">
-                {role === 'client' ? 'Company Details' : 'Freelancer Account Setup'}
+                {role === 'client' ? 'Client Profile Setup' : 'Freelancer Account Setup'}
               </h3>
               <p className="text-xs text-ink/60 mt-1">
                 {role === 'client'
-                  ? 'Input corporate parameters.'
+                  ? 'Provide a brief intro bio for your client profile.'
                   : 'Skills can be loaded directly from your freelancer control dashboard.'
                 }
               </p>
@@ -596,17 +596,22 @@ export const Register: React.FC = () => {
               {role === 'client' ? (
                 <>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Company Name</label>
+                    <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">
+                      Business Name <span className="text-ink/40 font-normal font-sans">(Optional)</span>
+                    </label>
                     <div className="relative">
                       <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
                       <Input
                         type="text"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="e.g. Acme Hyperlocal"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        placeholder="e.g. Acme Corp (optional)"
                         className="pl-10"
                       />
                     </div>
+                    <p className="text-[10px] text-ink/50 font-sans pl-1">
+                      Solo clients can set a cosmetic business label here. You can also register a full company later from your dashboard.
+                    </p>
                   </div>
 
                   <div className="space-y-1.5">
@@ -621,6 +626,11 @@ export const Register: React.FC = () => {
                         className="w-full pl-10 pr-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm resize-none focus:outline-none focus:border-accent-amber placeholder:text-ink/40"
                       />
                     </div>
+                  </div>
+
+                  <div className="p-3 bg-accent-teal/10 border-2 border-ink rounded-lg text-xs text-ink/70 font-sans">
+                    <p className="font-bold text-ink">Representing an organization?</p>
+                    <p className="text-[11px] mt-0.5">You can register your company from your dashboard after signing up.</p>
                   </div>
                 </>
               ) : (

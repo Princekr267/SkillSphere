@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ReviewList } from '../components/ReviewList';
 import { StarRating } from '../components/StarRating';
+import { TwoFactorSetup } from '../components/TwoFactorSetup';
 import { useAuth } from '../context/AuthContext';
 import api, { BACKEND_URL } from '../utils/api';
 import { Card } from '../components/ui/Card';
@@ -10,12 +11,13 @@ import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import {
   ArrowLeft, MapPin, DollarSign, Award,
-  Briefcase, Calendar, Loader2, AlertCircle, Clock, Trash2, Plus, FileText
+  Briefcase, Calendar, Loader2, AlertCircle, Clock, Trash2, Plus, FileText, Shield
 } from 'lucide-react';
 
 interface PublicUser {
   _id: string;
   name: string;
+  email?: string;
   role: string;
   avatar?: string;
   location: { city: string };
@@ -35,6 +37,7 @@ interface PublicUser {
   createdAt: string;
   bio?: string;
   companyName?: string;
+  currentCompanyName?: string;
   availability?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
   resume?: {
     url: string;
@@ -208,6 +211,99 @@ export const FreelancerProfile: React.FC = () => {
     );
   }
 
+  if (freelancer.role === 'super_admin') {
+    const isSelf = user?._id === freelancer._id;
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
+        <div className="text-left mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors font-bold font-display uppercase tracking-wider cursor-pointer"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back</span>
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Main Administrator Profile Card */}
+          <Card className="p-8 text-left">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-6 border-b-2 border-ink">
+              <div className="h-20 w-20 bg-accent-coral border-2 border-ink overflow-hidden flex items-center justify-center font-display text-2xl font-black text-ink uppercase rounded-xl shadow-retro">
+                {freelancer.avatar ? (
+                  <img src={freelancer.avatar} alt={freelancer.name} className="h-full w-full object-cover" />
+                ) : (
+                  freelancer.name.charAt(0)
+                )}
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-2xl font-display font-black text-ink uppercase tracking-tight">
+                    {freelancer.name}
+                  </h1>
+                  <Badge variant="coral" className="font-mono text-xs shadow-none uppercase font-bold">
+                    Super Administrator
+                  </Badge>
+                </div>
+                <p className="text-xs text-ink/60 font-mono">{freelancer.email}</p>
+                <div className="flex items-center gap-4 text-xs font-mono text-ink/70 pt-1">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 text-accent-teal" />
+                    {freelancer.location?.city || 'HQ'}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5 text-accent-teal" />
+                    Admin since {new Date(freelancer.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Privileges & Scope */}
+            <div className="pt-6 space-y-4">
+              <h3 className="text-xs font-bold font-display uppercase tracking-widest text-ink/70">
+                Platform Administrative Scope
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-sans text-xs">
+                <div className="p-4 bg-ink/5 border-2 border-ink rounded-lg space-y-1">
+                  <span className="font-bold text-ink block">Platform Governance</span>
+                  <p className="text-[11px] text-ink/60">Full authorization to moderate users, gigs, and platform disputes.</p>
+                </div>
+                <div className="p-4 bg-ink/5 border-2 border-ink rounded-lg space-y-1">
+                  <span className="font-bold text-ink block">Safety & Oversight</span>
+                  <p className="text-[11px] text-ink/60">Issue direct warnings, enforce policies, and monitor real-time company activities.</p>
+                </div>
+                <div className="p-4 bg-ink/5 border-2 border-ink rounded-lg space-y-1">
+                  <span className="font-bold text-ink block">Escrow & Financials</span>
+                  <p className="text-[11px] text-ink/60">Resolve contested escrow funds, manage refunds, and audit system revenues.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            {isSelf && (
+              <div className="pt-6 border-t-2 border-ink flex flex-wrap gap-4 items-center justify-between">
+                <p className="text-xs text-ink/60 font-sans">
+                  Manage platform operations, review disputes, or audit users in the control center.
+                </p>
+                <Button
+                  onClick={() => navigate('/admin')}
+                  variant="primary"
+                  size="md"
+                >
+                  Go to Admin Control Hub →
+                </Button>
+              </div>
+            )}
+          </Card>
+
+          {/* Security details if viewing self */}
+          {isSelf && <TwoFactorSetup />}
+        </div>
+      </div>
+    );
+  }
+
   if (freelancer.role === 'client') {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
@@ -225,8 +321,8 @@ export const FreelancerProfile: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Summary Info */}
           <div className="space-y-6 lg:col-span-1">
-            <Card className="flex flex-col items-center text-center">
-              <div className="h-24 w-24 bg-cream border-2 border-ink overflow-hidden flex items-center justify-center font-display text-3xl font-black text-ink uppercase mb-4 rounded-lg shadow-retro animate-fade-in">
+            <Card className="flex flex-col items-center text-center p-6">
+              <div className="h-28 w-28 bg-cream border-2 border-ink overflow-hidden flex items-center justify-center font-display text-3xl font-black text-ink uppercase mb-4 rounded-xl shadow-retro animate-fade-in">
                 {freelancer.avatar ? (
                   <img src={freelancer.avatar} alt={freelancer.name} className="h-full w-full object-cover" />
                 ) : (
@@ -234,17 +330,17 @@ export const FreelancerProfile: React.FC = () => {
                 )}
               </div>
 
-              <h1 className="text-xl font-black font-display text-ink uppercase tracking-tight">
+              <h1 className="text-2xl font-black font-display text-ink uppercase tracking-tight">
                 {freelancer.name}
               </h1>
 
-              {freelancer.companyName && (
+              {freelancer.currentCompanyName && (
                 <p className="text-xs font-mono text-ink/70 font-bold uppercase mt-1">
-                  {freelancer.companyName}
+                  {freelancer.currentCompanyName}
                 </p>
               )}
 
-              <Badge variant="teal" className="mt-2.5 shadow-retro-sm border-2 border-ink text-ink font-bold font-sans">
+              <Badge variant="teal" className="mt-2.5 shadow-retro-sm border-2 border-ink text-ink font-bold font-sans px-3 py-1">
                 Client
               </Badge>
 
@@ -274,7 +370,7 @@ export const FreelancerProfile: React.FC = () => {
           {/* Right Column: Bio, Posted Gigs, Reviews */}
           <div className="lg:col-span-2 space-y-8 text-left">
             {/* Bio / Description */}
-            <Card className="text-left">
+            <Card className="text-left p-6">
               <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-3 pl-1">About Client</h3>
               <p className="text-sm text-ink leading-relaxed font-sans font-bold">
                 {freelancer.bio || 'No description configured for this client.'}
@@ -282,7 +378,7 @@ export const FreelancerProfile: React.FC = () => {
             </Card>
 
             {/* Client's Gigs Listings */}
-            <Card className="text-left">
+            <Card className="text-left p-6">
               <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Posted Gigs</h3>
               {loadingGigs ? (
                 <div className="flex justify-center py-6">
@@ -296,30 +392,27 @@ export const FreelancerProfile: React.FC = () => {
                     <div key={gig._id} className="p-4 border-2 border-ink bg-cream rounded-lg shadow-retro-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div className="space-y-1 flex-1 min-w-0">
                         <h4 className="font-bold text-ink text-sm font-display uppercase tracking-tight truncate">{gig.title}</h4>
-                        <p className="text-[10px] text-ink/60 leading-relaxed font-sans line-clamp-2 max-w-xl mt-1">{gig.description}</p>
+                        <p className="text-[10px] text-ink/60 leading-relaxed font-sans line-clamp-2 max-w-2xl mt-1">{gig.description}</p>
                         <div className="flex flex-wrap gap-2 items-center mt-2">
                           <Badge variant="outline" className="text-[8px] font-mono font-bold uppercase">{gig.category}</Badge>
                           <span className="text-[10px] font-mono font-bold text-ink/60">₹{gig.budget} ({gig.budgetType})</span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3 self-stretch md:self-auto justify-between md:justify-end">
-                        <Badge variant={gig.status === 'open' ? 'teal' : 'outline'} className="text-[9px] font-mono font-bold uppercase shadow-none">{gig.status}</Badge>
-                        <Link to={`/gigs/${gig._id}`}>
-                          <Button variant="coral" className="py-1 px-3 text-[10px] uppercase font-bold tracking-wider">
-                            View Details
-                          </Button>
-                        </Link>
-                      </div>
+                      <Link to={`/gigs/${gig._id}`} className="flex-shrink-0">
+                        <Button variant="outline" size="sm">
+                          View Gig
+                        </Button>
+                      </Link>
                     </div>
                   ))}
                 </div>
               )}
             </Card>
 
-            {/* Reviews section */}
-            <Card className="text-left">
-              <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Client Reviews</h3>
-              <ReviewList userId={freelancer._id} limit={20} />
+            {/* Reviews list */}
+            <Card className="text-left p-6">
+              <h3 className="text-xs font-display font-bold text-ink uppercase tracking-widest mb-4 pl-1">Client Reviews</h3>
+              <ReviewList userId={freelancer._id} />
             </Card>
           </div>
         </div>

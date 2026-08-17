@@ -3,10 +3,7 @@ import { Response } from 'express';
 import Company from '../models/Company';
 import CompanyMembership from '../models/CompanyMembership';
 import Gig from '../models/Gig';
-import Notification from '../models/Notification';
-import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
-import { sendNotification } from '../socket';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -27,7 +24,7 @@ const generateUniqueInviteKey = async (): Promise<string> => {
 // ─── POST /api/companies/register ─────────────────────────────────────────────
 
 /**
- * @desc    Register a new company application
+ * @desc    Register a new company (instant access)
  * @route   POST /api/companies/register
  * @access  Private — Client only
  */
@@ -61,7 +58,6 @@ export const registerCompany = async (req: AuthRequest, res: Response): Promise<
         country: registrationDetails.country.trim(),
         city: registrationDetails.city.trim(),
       },
-      status: 'pending',
       inviteKey,
       createdBy: user._id,
     });
@@ -96,11 +92,13 @@ export const getMyCompanies = async (req: AuthRequest, res: Response): Promise<a
       .populate('companyId')
       .sort({ joinedAt: -1 });
 
-    const companies = memberships.map((m) => ({
-      orgRole: m.orgRole,
-      joinedAt: m.joinedAt,
-      company: m.companyId,
-    }));
+    const companies = memberships
+      .filter((m) => m.companyId) // ensure company exists
+      .map((m) => ({
+        orgRole: m.orgRole,
+        joinedAt: m.joinedAt,
+        company: m.companyId,
+      }));
 
     return res.json({ success: true, companies });
   } catch (err: any) {
@@ -129,8 +127,7 @@ export const getCompanyDetails = async (req: AuthRequest, res: Response): Promis
     }
 
     const company = await Company.findById(req.params.id)
-      .populate('createdBy', 'name email')
-      .populate('reviewedBy', 'name email');
+      .populate('createdBy', 'name email');
 
     if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
 
@@ -173,7 +170,7 @@ export const getCompanyMembers = async (req: AuthRequest, res: Response): Promis
 // ─── POST /api/companies/:id/regenerate-key ───────────────────────────────────
 
 /**
- * @desc    Regenerate the invite key for a company (owner only, approved only)
+ * @desc    Regenerate the invite key for a company (owner only)
  * @route   POST /api/companies/:id/regenerate-key
  * @access  Private — Company owner only
  */
@@ -193,10 +190,6 @@ export const regenerateInviteKey = async (req: AuthRequest, res: Response): Prom
 
     const company = await Company.findById(req.params.id);
     if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
-
-    if (company.status !== 'approved') {
-      return res.status(400).json({ success: false, message: 'Company must be approved before managing invite keys' });
-    }
 
     const newKey = await generateUniqueInviteKey();
     company.inviteKey = newKey;
@@ -232,10 +225,6 @@ export const joinCompanyByInviteKey = async (req: AuthRequest, res: Response): P
       return res.status(404).json({ success: false, message: 'Invalid invite key — no company found' });
     }
 
-    if (company.status !== 'approved') {
-      return res.status(400).json({ success: false, message: 'This company is not yet active' });
-    }
-
     // Check for existing membership to prevent duplicates
     const existing = await CompanyMembership.findOne({
       userId: user._id,
@@ -257,7 +246,6 @@ export const joinCompanyByInviteKey = async (req: AuthRequest, res: Response): P
         _id: company._id,
         name: company.name,
         industry: company.industry,
-        status: company.status,
       },
     });
   } catch (err: any) {
@@ -300,59 +288,57 @@ export const getCompanyGigs = async (req: AuthRequest, res: Response): Promise<a
   }
 };
 
-// ─── PUT /api/companies/:id/resubmit ─────────────────────────────────────────
+// ─── DELETE /api/companies/:companyId/members/:userId ────────────────────────
 
 /**
- * @desc    Owner edits and resubmits a rejected company application
- * @route   PUT /api/companies/:id/resubmit
+ * @desc    Remove a member from a company (owner only)
+ * @route   DELETE /api/companies/:companyId/members/:userId
  * @access  Private — Company owner only
  */
-export const resubmitCompany = async (req: AuthRequest, res: Response): Promise<any> => {
+export const removeCompanyMember = async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const user = req.user;
     if (!user) return res.status(401).json({ success: false, message: 'Not authorised' });
 
-    const membership = await CompanyMembership.findOne({
+    const { companyId, userId } = req.params;
+
+    // Check that requester is the owner of this company
+    const requesterMembership = await CompanyMembership.findOne({
       userId: user._id,
-      companyId: req.params.id,
+      companyId,
       orgRole: 'owner',
     });
-    if (!membership) {
-      return res.status(403).json({ success: false, message: 'Only the company owner can resubmit the application' });
+    if (!requesterMembership) {
+      return res.status(403).json({ success: false, message: 'Only the company owner can remove members' });
     }
 
-    const company = await Company.findById(req.params.id);
-    if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
-
-    if (company.status !== 'rejected') {
-      return res.status(400).json({ success: false, message: 'Only rejected applications can be resubmitted' });
+    // Block owner self-removal
+    if (userId.toString() === user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Owners cannot remove themselves. Transfer ownership or contact support to dissolve the company.',
+      });
     }
 
-    const { name, industry, description, website, registrationDetails } = req.body;
-
-    if (name) company.name = name.trim();
-    if (industry) company.industry = industry.trim();
-    if (description !== undefined) company.description = description?.trim();
-    if (website !== undefined) company.website = website?.trim();
-    if (registrationDetails) {
-      company.registrationDetails = {
-        businessRegistrationNumber: registrationDetails.businessRegistrationNumber?.trim(),
-        taxId: registrationDetails.taxId?.trim(),
-        country: registrationDetails.country?.trim() || company.registrationDetails.country,
-        city: registrationDetails.city?.trim() || company.registrationDetails.city,
-      };
+    // Find the target membership
+    const targetMembership = await CompanyMembership.findOne({
+      userId,
+      companyId,
+    });
+    if (!targetMembership) {
+      return res.status(404).json({ success: false, message: 'Member not found in this company' });
     }
 
-    // Reset back to pending and clear rejection data
-    company.status = 'pending';
-    company.rejectionReason = undefined;
-    company.reviewedBy = undefined;
-    company.reviewedAt = undefined;
+    // Protect against removing another owner
+    if (targetMembership.orgRole === 'owner') {
+      return res.status(400).json({ success: false, message: 'Cannot remove another owner' });
+    }
 
-    await company.save();
+    await CompanyMembership.findByIdAndDelete(targetMembership._id);
 
-    return res.json({ success: true, company });
+    return res.json({ success: true, message: 'Member removed successfully' });
   } catch (err: any) {
-    return res.status(500).json({ success: false, message: err.message || 'Server error resubmitting company' });
+    console.error('removeCompanyMember error:', err);
+    return res.status(500).json({ success: false, message: err.message || 'Server error removing member' });
   }
 };

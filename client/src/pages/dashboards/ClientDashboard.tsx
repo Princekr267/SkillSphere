@@ -35,7 +35,7 @@ export const ClientDashboard: React.FC = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || '');
-  const [companyName, setCompanyName] = useState(user?.companyName || '');
+  const [businessName, setBusinessName] = useState(user?.businessName || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [city, setCity] = useState(user?.location.city || '');
   const [latitude, setLatitude] = useState<number | null>(user?.location.coordinates[1] || null);
@@ -64,6 +64,10 @@ export const ClientDashboard: React.FC = () => {
       setCompaniesLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadMyCompanies();
+  }, []);
 
   // Bookings / Appointments state
   const [bookings, setBookings] = useState<any[]>([]);
@@ -167,7 +171,7 @@ export const ClientDashboard: React.FC = () => {
     try {
       await updateProfile({
         name,
-        companyName,
+        businessName,
         bio,
         city,
         latitude,
@@ -375,7 +379,88 @@ export const ClientDashboard: React.FC = () => {
             </div>
           )}
         </Card>
+      ) : activeTab === 'companies' ? (
+        /* ── COMPANIES TAB ─────────────────────────────────────────────────── */
+        <div className="space-y-6 text-left">
+          {/* CTA cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link to="/register-company">
+              <Card className="p-5 h-full flex items-start gap-4 group hover:shadow-retro transition-shadow cursor-pointer">
+                <div className="h-10 w-10 flex-shrink-0 bg-accent-teal border-2 border-ink rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Building className="h-5 w-5 text-ink" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">Register a Company</h3>
+                  <p className="text-xs text-ink/60 font-sans mt-1 leading-relaxed">Create your instant organization. Invite team members to collaborate and post gigs.</p>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold font-display text-accent-teal uppercase tracking-widest mt-2">
+                    Register Company <ArrowRight className="h-3 w-3" />
+                  </span>
+                </div>
+              </Card>
+            </Link>
+
+            <Link to="/join-company">
+              <Card className="p-5 h-full flex items-start gap-4 group hover:shadow-retro transition-shadow cursor-pointer">
+                <div className="h-10 w-10 flex-shrink-0 bg-accent-amber border-2 border-ink rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <KeyRound className="h-5 w-5 text-ink" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">Join a Company</h3>
+                  <p className="text-xs text-ink/60 font-sans mt-1 leading-relaxed">Got an invite key from your company owner? Enter it here to join.</p>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold font-display text-accent-amber uppercase tracking-widest mt-2">
+                    Enter Invite Key <ArrowRight className="h-3 w-3" />
+                  </span>
+                </div>
+              </Card>
+            </Link>
+          </div>
+
+          {/* Existing companies list */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[10px] font-bold font-display text-ink/50 uppercase tracking-widest">Your Companies</h3>
+              <button onClick={loadMyCompanies} className="text-[10px] font-bold font-display text-ink/40 hover:text-ink uppercase tracking-widest flex items-center gap-1 cursor-pointer">
+                <Loader2 className={`h-3 w-3 ${companiesLoading ? 'animate-spin' : 'hidden'}`} />
+                Refresh
+              </button>
+            </div>
+
+            {companiesLoading ? (
+              <div className="py-6 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-ink/40" /></div>
+            ) : myCompanies.length === 0 ? (
+              <Card className="p-6 text-center">
+                <Building className="h-7 w-7 text-ink/20 mx-auto mb-2" />
+                <p className="text-xs text-ink/50 font-sans">You haven't registered or joined any companies yet.</p>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {myCompanies.map(({ company: c, orgRole }) => (
+                  <Link key={c._id} to={`/company/${c._id}`}>
+                    <Card className="p-4 flex items-center justify-between gap-4 group hover:shadow-retro transition-shadow cursor-pointer">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-10 w-10 flex-shrink-0 bg-accent-teal/20 border-2 border-ink rounded-lg flex items-center justify-center">
+                          <Building className="h-5 w-5 text-ink" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold font-display text-ink uppercase truncate">{c.name}</p>
+                          <p className="text-[10px] text-ink/50 font-sans truncate">{c.industry} · <span className="capitalize font-bold text-ink/70">{orgRole}</span></p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Badge variant={orgRole === 'owner' ? 'coral' : 'teal'} className="shadow-none font-mono text-[9px] capitalize">
+                          {orgRole}
+                        </Badge>
+                        <ArrowRight className="h-4 w-4 text-ink/30 group-hover:text-ink transition-colors" />
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       ) : (
+        /* ── PROFILE TAB ───────────────────────────────────────────────────── */
         <>
           {/* Messages */}
           {message && (
@@ -394,21 +479,38 @@ export const ClientDashboard: React.FC = () => {
             
             {/* Left Column: Client profile */}
             <div className="space-y-6 lg:col-span-1">
-              <Card className="flex flex-col items-center text-center">
+              <Card className="flex flex-col items-center text-center p-6">
                 <AvatarUpload />
 
                 <div className="mt-4 border-t-2 border-ink w-full pt-4">
                   <h3 className="text-lg font-black font-display text-ink uppercase tracking-tight">{user.name}</h3>
-                  <Badge variant="outline" className="mt-1 shadow-none">
+                  <Badge variant="outline" className="mt-1 shadow-none font-mono">
                     {user.role}
                   </Badge>
                 </div>
 
                 <div className="w-full border-t-2 border-ink mt-6 pt-4 space-y-3 text-left font-sans text-xs">
-                  <div className="flex items-center space-x-2 text-ink/70">
-                    <Building className="h-4 w-4 text-accent-teal flex-shrink-0" />
-                    <span className="font-bold text-ink">{user.companyName || 'Individual Client'}</span>
-                  </div>
+                  {(() => {
+                    const primaryCompany = myCompanies[0]?.company;
+                    const displayedCompanyName = primaryCompany?.name || user.businessName || user.currentCompanyName;
+
+                    return (
+                      <div className="flex items-start space-x-2 text-ink/70">
+                        <Building className="h-4 w-4 text-accent-teal flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold text-ink">{displayedCompanyName || 'Individual Client'}</span>
+                          {!displayedCompanyName && myCompanies.length === 0 && (
+                            <Link
+                              to="/register-company"
+                              className="block text-[10px] text-accent-teal hover:underline font-bold mt-0.5"
+                            >
+                              + Register your company
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <div className="flex items-center space-x-2 text-ink/70">
                     <MapPin className="h-4 w-4 text-accent-teal flex-shrink-0" />
                     <span className="font-bold text-ink">{user.location.city}</span>
@@ -425,7 +527,7 @@ export const ClientDashboard: React.FC = () => {
 
             {/* Right Column: Edit Settings */}
             <div className="lg:col-span-2 space-y-6 text-left">
-              <Card>
+              <Card className="p-6">
                 <div className="flex items-center justify-between border-b-2 border-ink pb-4 mb-6">
                   <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest flex items-center space-x-2">
                     <Building className="h-4 w-4 text-accent-teal" />
@@ -448,15 +550,38 @@ export const ClientDashboard: React.FC = () => {
                       <Input type="text" required value={name} onChange={e => setName(e.target.value)} />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Company / Organization Name</label>
-                      <Input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Acme Corp" />
-                    </div>
+                    {/* Business Name or Company Override */}
+                    {myCompanies.length > 0 ? (
+                      <div className="p-3.5 bg-accent-teal/10 border-2 border-ink rounded-lg space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4 text-accent-teal" />
+                          <span className="font-bold text-xs text-ink">{myCompanies[0]?.company?.name}</span>
+                        </div>
+                        <p className="text-[11px] text-ink/60 font-sans">
+                          Showing your company name. This is used instead of a business label while you're part of a company.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">
+                          Business Name <span className="text-ink/40 font-normal font-sans">(Optional)</span>
+                        </label>
+                        <Input
+                          type="text"
+                          value={businessName}
+                          onChange={e => setBusinessName(e.target.value)}
+                          placeholder="e.g. Acme Studio (optional)"
+                        />
+                        <p className="text-[10px] text-ink/50 font-sans pl-1">
+                          Cosmetic display label for solo clients. Real company memberships will override this.
+                        </p>
+                      </div>
+                    )}
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Company Bio / Description</label>
+                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Client Bio / Description</label>
                       <textarea rows={4} value={bio} onChange={e => setBio(e.target.value)}
-                        placeholder="Tell freelancers about your company or projects..."
+                        placeholder="Tell freelancers about your projects or requirements..."
                         className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm resize-none outline-none focus:bg-accent-amber/10 focus:border-accent-amber placeholder:text-ink/40" />
                     </div>
 
@@ -503,7 +628,7 @@ export const ClientDashboard: React.FC = () => {
                 ) : (
                   <div className="space-y-6 font-sans text-xs">
                     <div>
-                      <span className="text-[10px] font-bold font-display text-ink/60 uppercase tracking-widest block mb-1">Company Description</span>
+                      <span className="text-[10px] font-bold font-display text-ink/60 uppercase tracking-widest block mb-1">Company / Business Description</span>
                       <p className="text-sm font-sans text-ink leading-relaxed font-bold">
                         {user.bio || 'No company bio set. Click edit profile to add details.'}
                       </p>
@@ -512,11 +637,11 @@ export const ClientDashboard: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4 border-t-2 border-ink pt-4 font-mono">
                       <div>
                         <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Account Role</span>
-                        <Badge variant="amber" className="shadow-none text-xs">{user.role}</Badge>
+                        <Badge variant="amber" className="shadow-none text-xs font-mono">{user.role}</Badge>
                       </div>
                       <div>
                         <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Primary Location</span>
-                        <span className="font-bold text-ink text-xs">{user.location.city}</span>
+                        <span className="font-bold text-ink text-xs font-mono">{user.location.city}</span>
                       </div>
                     </div>
                   </div>
@@ -526,92 +651,6 @@ export const ClientDashboard: React.FC = () => {
 
           </div>
         </>
-      )}
-
-      {/* ── COMPANIES TAB ─────────────────────────────────────────────────── */}
-      {activeTab === 'companies' && (
-        <div className="space-y-6 max-w-3xl">
-
-          {/* CTA cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Link to="/register-company">
-              <Card className="p-5 h-full flex items-start gap-4 group hover:shadow-retro transition-shadow cursor-pointer">
-                <div className="h-10 w-10 flex-shrink-0 bg-accent-teal border-2 border-ink rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Building className="h-5 w-5 text-ink" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">Register a Company</h3>
-                  <p className="text-xs text-ink/60 font-sans mt-1 leading-relaxed">Submit your company for verification. Once approved, invite your team.</p>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold font-display text-accent-teal uppercase tracking-widest mt-2">
-                    Start Application <ArrowRight className="h-3 w-3" />
-                  </span>
-                </div>
-              </Card>
-            </Link>
-
-            <Link to="/join-company">
-              <Card className="p-5 h-full flex items-start gap-4 group hover:shadow-retro transition-shadow cursor-pointer">
-                <div className="h-10 w-10 flex-shrink-0 bg-accent-amber border-2 border-ink rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <KeyRound className="h-5 w-5 text-ink" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">Join a Company</h3>
-                  <p className="text-xs text-ink/60 font-sans mt-1 leading-relaxed">Got an invite key from your company owner? Enter it here to join.</p>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold font-display text-accent-amber uppercase tracking-widest mt-2">
-                    Enter Invite Key <ArrowRight className="h-3 w-3" />
-                  </span>
-                </div>
-              </Card>
-            </Link>
-          </div>
-
-          {/* Existing companies list */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[10px] font-bold font-display text-ink/50 uppercase tracking-widest">Your Companies</h3>
-              <button onClick={loadMyCompanies} className="text-[10px] font-bold font-display text-ink/40 hover:text-ink uppercase tracking-widest flex items-center gap-1 cursor-pointer">
-                <Loader2 className={`h-3 w-3 ${companiesLoading ? 'animate-spin' : 'hidden'}`} />
-                Refresh
-              </button>
-            </div>
-
-            {companiesLoading ? (
-              <div className="py-6 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-ink/40" /></div>
-            ) : myCompanies.length === 0 ? (
-              <Card className="p-6 text-center">
-                <Building className="h-7 w-7 text-ink/20 mx-auto mb-2" />
-                <p className="text-xs text-ink/50 font-sans">You haven't registered or joined any companies yet.</p>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {myCompanies.map(({ company: c, orgRole }) => (
-                  <Link key={c._id} to={`/company/${c._id}`}>
-                    <Card className="p-4 flex items-center justify-between gap-4 group hover:shadow-retro transition-shadow cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 flex-shrink-0 bg-accent-teal/20 border-2 border-ink rounded-lg flex items-center justify-center">
-                          <Building className="h-4.5 w-4.5 text-ink" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold font-display text-ink uppercase">{c.name}</p>
-                          <p className="text-[10px] text-ink/50 font-sans">{c.industry} · <span className="capitalize">{orgRole}</span></p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={c.status === 'approved' ? 'teal' : c.status === 'pending' ? 'amber' : 'coral'}
-                          className="shadow-none font-mono text-[9px]"
-                        >
-                          {c.status}
-                        </Badge>
-                        <ArrowRight className="h-4 w-4 text-ink/30 group-hover:text-ink transition-colors" />
-                      </div>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
       )}
 
     </div>

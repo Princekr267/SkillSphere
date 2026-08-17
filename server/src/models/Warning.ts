@@ -1,8 +1,8 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface IWarning extends Document {
-  type: 'gig' | 'message';
-  targetId: Types.ObjectId;
+  type: 'gig' | 'message' | 'manual';
+  targetId?: Types.ObjectId;
   offenderId: Types.ObjectId;
   content: string;
   reason: string;
@@ -13,12 +13,12 @@ const WarningSchema = new Schema<IWarning>(
   {
     type: {
       type: String,
-      enum: ['gig', 'message'],
+      enum: ['gig', 'message', 'manual'],
       required: true,
     },
     targetId: {
       type: Schema.Types.ObjectId,
-      required: true,
+      required: false,
     },
     offenderId: {
       type: Schema.Types.ObjectId,

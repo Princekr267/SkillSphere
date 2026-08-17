@@ -33,6 +33,14 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
         return res.status(401).json({ success: false, message: 'Not authorized, user not found' });
       }
 
+      // Check if user has been banned/suspended by super_admin
+      if (req.user.isActive === false) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your account has been suspended. Please contact support.',
+        });
+      }
+
       next();
     } catch (error) {
       console.error('JWT Token Verification Error:', error);

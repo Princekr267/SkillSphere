@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Building, Globe, FileText, MapPin, Hash, ArrowRight, Check, AlertTriangle, Loader2 } from 'lucide-react';
+import { Building, Globe, FileText, MapPin, Hash, ArrowRight, AlertTriangle, Loader2 } from 'lucide-react';
 import api from '../utils/api';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -39,8 +39,6 @@ export const RegisterCompany: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [createdCompanyId, setCreatedCompanyId] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,57 +65,15 @@ export const RegisterCompany: React.FC = () => {
       });
 
       if (res.data.success) {
-        setCreatedCompanyId(res.data.company._id);
-        setSubmitted(true);
+        // Instant access model: navigate straight to the new company's dashboard
+        navigate(`/company/${res.data.company._id}`);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to submit company application.');
+      setError(err.response?.data?.message || 'Failed to register company.');
     } finally {
       setLoading(false);
     }
   };
-
-  // ── Success / Pending state ───────────────────────────────────────────────
-  if (submitted && createdCompanyId) {
-    return (
-      <div className="flex-grow flex items-center justify-center px-4 py-16 bg-cream transition-colors duration-200">
-        <Card className="w-full max-w-md p-8 text-center space-y-6 animate-slide-up">
-          <div className="h-16 w-16 rounded-full bg-accent-amber/20 border-2 border-ink flex items-center justify-center mx-auto">
-            <Check className="h-8 w-8 text-ink" />
-          </div>
-          <div>
-            <h2 className="text-xl font-display font-black text-ink uppercase tracking-tight">Application Submitted</h2>
-            <p className="text-xs text-ink/60 font-sans mt-2 leading-relaxed">
-              Your company application has been submitted and is currently <strong>pending review</strong> by the SkillSphere team.
-              You'll receive a notification once it's been reviewed.
-            </p>
-          </div>
-          <div className="p-4 bg-accent-amber/10 border-2 border-ink rounded-lg text-xs font-sans text-ink/70 text-left space-y-1">
-            <p className="font-bold font-display uppercase text-[10px] text-ink/50 tracking-widest mb-2">What's next?</p>
-            <p>• Our team will review your application (typically within 24–48 hours)</p>
-            <p>• You'll get an in-app notification and email when approved</p>
-            <p>• Once approved, you'll get an invite key to add team members</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate(`/company/${createdCompanyId}`)}
-            >
-              View Company Status
-            </Button>
-            <Button
-              variant="coral"
-              className="w-full"
-              onClick={() => navigate('/client-dashboard')}
-            >
-              Back to Dashboard
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-grow flex items-center justify-center px-4 sm:px-12 py-16 bg-cream transition-colors duration-200">
@@ -130,12 +86,12 @@ export const RegisterCompany: React.FC = () => {
               <Building className="h-4.5 w-4.5 text-ink" />
             </div>
             <div>
-              <p className="text-[10px] font-mono text-ink/60 uppercase tracking-widest">New Application</p>
+              <p className="text-[10px] font-mono text-ink/60 uppercase tracking-widest">New Organization</p>
               <h1 className="text-xl font-display font-black text-ink uppercase tracking-tight">Register Company</h1>
             </div>
           </div>
           <p className="text-xs text-ink/60 font-sans leading-relaxed">
-            Submit your company for verification. Once approved, you'll be able to invite team members and view company-wide gigs.
+            Register your company to collaborate with team members, manage organization gigs, and share an invite key.
           </p>
         </div>
 
@@ -311,7 +267,7 @@ export const RegisterCompany: React.FC = () => {
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                <span>Submit Application</span>
+                <span>Register & Open Dashboard</span>
                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </>
             )}
