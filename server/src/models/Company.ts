@@ -77,9 +77,6 @@ const CompanySchema = new Schema<ICompany>(
 
 // ─── Indexes ─────────────────────────────────────────────────────────────────
 
-// Unique index on inviteKey for fast join-by-key lookups
-CompanySchema.index({ inviteKey: 1 }, { unique: true });
-
 // Index for looking up companies owned/created by a user
 CompanySchema.index({ createdBy: 1 });
 
