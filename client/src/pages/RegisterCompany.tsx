@@ -49,13 +49,17 @@ export const RegisterCompany: React.FC = () => {
       return;
     }
 
+    const normalizedWebsite = website.trim()
+      ? (/^https?:\/\//i.test(website.trim()) ? website.trim() : `https://${website.trim()}`)
+      : undefined;
+
     setLoading(true);
     try {
       const res = await api.post('/companies/register', {
         name: name.trim(),
         industry,
         description: description.trim(),
-        website: website.trim(),
+        website: normalizedWebsite,
         registrationDetails: {
           businessRegistrationNumber: businessRegNumber.trim(),
           taxId: taxId.trim(),

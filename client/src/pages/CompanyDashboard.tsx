@@ -245,7 +245,7 @@ export const CompanyDashboard: React.FC = () => {
         <div className="mt-4 flex flex-wrap gap-4 text-[10px] text-ink/50 font-mono">
           {company.website && (
             <a
-              href={company.website}
+              href={company.website.startsWith('http://') || company.website.startsWith('https://') ? company.website : `https://${company.website}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 hover:text-accent-teal transition-colors"
