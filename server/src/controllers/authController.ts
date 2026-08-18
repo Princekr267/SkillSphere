@@ -146,8 +146,8 @@ export const registerUser = async (req: Request, res: Response) => {
     console.error('Registration Error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error during registration. Please try again.',
-      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
+      message: (error as Error).message || 'Server error during registration. Please try again.',
+      error: (error as Error).message,
     });
   }
 };
