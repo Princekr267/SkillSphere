@@ -46,6 +46,11 @@ const CompanySchema = new Schema<ICompany>(
     website: {
       type: String,
       trim: true,
+      set: (val?: string) => {
+        if (!val || !val.trim()) return undefined;
+        const trimmed = val.trim();
+        return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+      },
     },
     registrationDetails: {
       businessRegistrationNumber: { type: String, trim: true },

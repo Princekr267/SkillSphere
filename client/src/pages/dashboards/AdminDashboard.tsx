@@ -709,7 +709,12 @@ export const AdminDashboard: React.FC = () => {
                         {c.website ? (
                           <div className="flex items-center gap-1 truncate">
                             <Globe className="h-3 w-3" />
-                            <a href={c.website} target="_blank" rel="noopener noreferrer" className="hover:text-accent-teal truncate">
+                            <a
+                              href={c.website.startsWith('http://') || c.website.startsWith('https://') ? c.website : `https://${c.website}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-accent-teal truncate"
+                            >
                               {c.website.replace(/^https?:\/\//, '')}
                             </a>
                           </div>

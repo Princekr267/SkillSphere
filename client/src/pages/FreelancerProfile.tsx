@@ -306,7 +306,7 @@ export const FreelancerProfile: React.FC = () => {
 
   if (freelancer.role === 'client') {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
+      <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
         {/* Back button */}
         <div className="text-left">
           <button

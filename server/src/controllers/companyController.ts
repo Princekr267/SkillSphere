@@ -4,6 +4,7 @@ import Company from '../models/Company';
 import CompanyMembership from '../models/CompanyMembership';
 import Gig from '../models/Gig';
 import { AuthRequest } from '../middleware/auth';
+import { enrichGigsWithCompanyName } from '../utils/companyHelper';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -47,11 +48,15 @@ export const registerCompany = async (req: AuthRequest, res: Response): Promise<
 
     const inviteKey = await generateUniqueInviteKey();
 
+    const normalizedWebsite = website?.trim()
+      ? (/^https?:\/\//i.test(website.trim()) ? website.trim() : `https://${website.trim()}`)
+      : undefined;
+
     const company = await Company.create({
       name: name.trim(),
       industry: industry.trim(),
       description: description?.trim(),
-      website: website?.trim(),
+      website: normalizedWebsite,
       registrationDetails: {
         businessRegistrationNumber: registrationDetails.businessRegistrationNumber?.trim(),
         taxId: registrationDetails.taxId?.trim(),
@@ -279,10 +284,12 @@ export const getCompanyGigs = async (req: AuthRequest, res: Response): Promise<a
     const memberUserIds = allMemberships.map((m) => m.userId);
 
     const gigs = await Gig.find({ clientId: { $in: memberUserIds } })
-      .populate('clientId', 'name email avatar companyName')
+      .populate('clientId', 'name email avatar businessName')
       .sort({ createdAt: -1 });
 
-    return res.json({ success: true, gigs });
+    const enrichedGigs = await enrichGigsWithCompanyName(gigs);
+
+    return res.json({ success: true, gigs: enrichedGigs });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message || 'Server error fetching company gigs' });
   }
