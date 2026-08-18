@@ -108,11 +108,10 @@ export const registerUser = async (req: Request, res: Response) => {
 
     const user = await User.create(userData);
 
-    try {
-      await sendVerificationEmail(user.email, verificationToken);
-    } catch (emailErr) {
-      console.error('Nodemailer verification email dispatch failed:', emailErr);
-    }
+    // Send verification email in background without blocking response
+    sendVerificationEmail(user.email, verificationToken).catch((emailErr) => {
+      console.error('Nodemailer verification email dispatch failed:', emailErr?.message || emailErr);
+    });
 
     // 6. Generate Token and send response
     const token = generateToken(user._id.toString());
@@ -355,11 +354,14 @@ export const resendVerificationEmail = async (req: AuthRequest, res: Response) =
     user.verificationTokenExpires = verificationTokenExpires;
     await user.save();
 
-    await sendVerificationEmail(user.email, verificationToken);
+    // Send verification email in background without blocking response
+    sendVerificationEmail(user.email, verificationToken).catch((emailErr) => {
+      console.error('Nodemailer verification email dispatch failed:', emailErr?.message || emailErr);
+    });
 
     res.status(200).json({
       success: true,
-      message: 'Verification email sent successfully! Please check your email inbox or server logs.',
+      message: 'Verification email sent successfully. Please check your inbox or spam folder.',
     });
   } catch (error: any) {
     res.status(500).json({
