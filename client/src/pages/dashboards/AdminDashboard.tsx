@@ -377,7 +377,7 @@ export const AdminDashboard: React.FC = () => {
 
           {/* ── USERS ─────────────────────────────────────────────────────────── */}
           {tab === 'users' && (
-            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
+            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-x-auto shadow-retro">
               <table className="w-full text-xs font-sans">
                 <thead className="bg-cream border-b-2 border-ink">
                   <tr>
@@ -462,7 +462,7 @@ export const AdminDashboard: React.FC = () => {
 
           {/* ── GIGS ──────────────────────────────────────────────────────────── */}
           {tab === 'gigs' && (
-            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
+            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-x-auto shadow-retro">
               <table className="w-full text-xs font-sans">
                 <thead className="bg-cream border-b-2 border-ink">
                   <tr>
@@ -625,7 +625,7 @@ export const AdminDashboard: React.FC = () => {
 
           {/* ── WARNINGS ──────────────────────────────────────────────────────── */}
           {tab === 'warnings' && (
-            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-hidden shadow-retro">
+            <div className="bg-cream border-2 border-ink rounded-xl p-0 overflow-x-auto shadow-retro">
               <table className="w-full text-xs font-sans">
                 <thead className="bg-cream border-b-2 border-ink">
                   <tr>

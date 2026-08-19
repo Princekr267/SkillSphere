@@ -100,7 +100,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
 
   return (
     <div className={`flex flex-col space-y-2 w-full ${className}`}>
-      <div className="flex items-center space-x-1.5 w-full">
+      <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 w-full">
         {/* Local part input field */}
         <Input
           type="text"
@@ -113,19 +113,21 @@ export const EmailInput: React.FC<EmailInputProps> = ({
           className={`flex-1 min-w-0 py-3 ${inputClassName}`}
         />
         
-        <span className="text-ink font-bold font-mono text-lg select-none">@</span>
-        
-        {/* Pre-populated common domains list */}
-        <select
-          value={domainPart}
-          onChange={handleDomainSelectChange}
-          className="px-2 py-3 bg-cream border-2 border-ink rounded-lg text-ink text-sm outline-none transition-colors focus:bg-accent-amber/10 focus:border-accent-amber font-mono font-bold select-none cursor-pointer w-[125px] sm:w-[140px] flex-shrink-0"
-        >
-          {COMMON_DOMAINS.map(dom => (
-            <option key={dom} value={dom}>{dom}</option>
-          ))}
-          <option value="other">Other...</option>
-        </select>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span className="text-ink font-bold font-mono text-lg select-none">@</span>
+          
+          {/* Pre-populated common domains list */}
+          <select
+            value={domainPart}
+            onChange={handleDomainSelectChange}
+            className="px-2 py-3 bg-cream border-2 border-ink rounded-lg text-ink text-sm outline-none transition-colors focus:bg-accent-amber/10 focus:border-accent-amber font-mono font-bold select-none cursor-pointer w-[125px] sm:w-[140px] flex-shrink-0"
+          >
+            {COMMON_DOMAINS.map(dom => (
+              <option key={dom} value={dom}>{dom}</option>
+            ))}
+            <option value="other">Other...</option>
+          </select>
+        </div>
       </div>
 
       {/* Editable input field for custom domains when "Other" is chosen */}
