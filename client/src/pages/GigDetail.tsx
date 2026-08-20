@@ -24,6 +24,7 @@ interface IGigDetail {
   escrowStatus: string;
   radiusKm: number;
   acceptedFreelancerId?: string;
+  finalAgreedAmount?: number;
   applicants: Array<{
     _id: string;
     freelancerId: { _id: string; name: string; rating: number; skills: any[] };
@@ -775,7 +776,7 @@ export const GigDetail: React.FC = () => {
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4">Budget</h3>
             <div className="flex items-baseline space-x-1 font-mono">
               <DollarSign className="h-5 w-5 text-accent-teal flex-shrink-0 mb-0.5 font-bold" />
-              <span className="text-3xl font-black text-ink">₹{gig.budget.toLocaleString()}</span>
+              <span className="text-3xl font-black text-ink">₹{(gig.finalAgreedAmount ?? gig.budget).toLocaleString()}</span>
               <span className="text-sm text-ink/60 font-bold">/{gig.budgetType === 'hourly' ? 'hr' : 'project'}</span>
             </div>
           </Card>

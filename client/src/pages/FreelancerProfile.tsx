@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { ReviewList } from '../components/ReviewList';
 import { StarRating } from '../components/StarRating';
 import { TwoFactorSetup } from '../components/TwoFactorSetup';
@@ -48,7 +48,23 @@ interface PublicUser {
 export const FreelancerProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+
+  const handleBack = () => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+      return;
+    }
+    const dashboardPath = user
+      ? user.role === 'super_admin'
+        ? '/admin'
+        : user.role === 'client'
+        ? '/client-dashboard'
+        : '/freelancer-dashboard'
+      : '/';
+    navigate(dashboardPath);
+  };
 
   const [freelancer, setFreelancer] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -204,7 +220,7 @@ export const FreelancerProfile: React.FC = () => {
       <div className="flex-grow bg-cream flex flex-col items-center justify-center py-16 space-y-3 min-h-[50vh]">
         <AlertCircle className="h-8 w-8 text-accent-coral" />
         <p className="text-sm text-ink">{error || 'Profile not found.'}</p>
-        <button onClick={() => navigate(-1)} className="text-xs text-accent-teal font-bold hover:underline cursor-pointer">
+        <button onClick={handleBack} className="text-xs text-accent-teal font-bold hover:underline cursor-pointer">
           ← Go Back
         </button>
       </div>
@@ -217,7 +233,7 @@ export const FreelancerProfile: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
         <div className="text-left mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors font-bold font-display uppercase tracking-wider cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -310,7 +326,7 @@ export const FreelancerProfile: React.FC = () => {
         {/* Back button */}
         <div className="text-left">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-8 font-bold font-display uppercase tracking-wider cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -426,7 +442,7 @@ export const FreelancerProfile: React.FC = () => {
       {/* Back button */}
       <div className="text-left">
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-8 font-bold font-display uppercase tracking-wider cursor-pointer"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

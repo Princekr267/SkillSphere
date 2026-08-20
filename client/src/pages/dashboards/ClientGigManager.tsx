@@ -10,7 +10,7 @@ import { Badge } from '../../components/ui/Badge';
 import {
   Plus, Tag, DollarSign, MapPin, Users, ChevronDown,
   ChevronRight, CheckCircle2, XCircle, Loader2, Trash2, X,
-  Banknote, MessageSquare
+  Banknote, MessageSquare, User
 } from 'lucide-react';
 
 const GIG_CATEGORIES = [
@@ -42,6 +42,7 @@ interface GigData {
   title: string;
   category: string;
   budget: number;
+  finalAgreedAmount?: number;
   budgetType: 'fixed' | 'hourly';
   status: string;
   escrowStatus: string;
@@ -502,7 +503,7 @@ export const ClientGigManager: React.FC = () => {
                     <div className="flex items-center space-x-3 mt-1">
                       <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
                         <DollarSign className="h-3 w-3 text-accent-teal" />
-                        <span>₹{gig.budget.toLocaleString()}/{gig.budgetType === 'hourly' ? 'hr' : 'project'}</span>
+                        <span>₹{(gig.finalAgreedAmount ?? gig.budget).toLocaleString()}/{gig.budgetType === 'hourly' ? 'hr' : 'project'}</span>
                       </span>
                       <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
                         <MapPin className="h-3 w-3 text-accent-teal" />
@@ -579,14 +580,28 @@ export const ClientGigManager: React.FC = () => {
                         <Card key={prop._id} className="p-4 shadow-retro-sm">
                           <div className="flex items-start justify-between gap-4 mb-3">
                             <div className="text-left">
-                              <h5 className="text-sm font-display uppercase tracking-tight">
-                                <Link
-                                  to={`/profile/${prop.freelancerId?._id}`}
-                                  className="font-bold text-ink hover:text-accent-teal hover:underline transition-colors"
-                                >
-                                  {prop.freelancerId?.name || 'Freelancer'}
-                                </Link>
-                              </h5>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h5 className="text-sm font-display uppercase tracking-tight">
+                                  <Link
+                                    to={`/profile/${prop.freelancerId?._id}`}
+                                    className="font-bold text-ink hover:text-accent-teal hover:underline transition-colors"
+                                  >
+                                    {prop.freelancerId?.name || 'Freelancer'}
+                                  </Link>
+                                </h5>
+                                {prop.freelancerId?._id && (
+                                  <Link to={`/profile/${prop.freelancerId._id}`} onClick={e => e.stopPropagation()}>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="py-0.5 px-2 text-[9px] font-mono font-bold uppercase tracking-wider h-auto border-ink/30 shadow-none bg-cream hover:bg-accent-amber/20"
+                                    >
+                                      <User className="h-2.5 w-2.5 mr-1 text-accent-teal" />
+                                      <span>View Profile</span>
+                                    </Button>
+                                  </Link>
+                                )}
+                              </div>
 
                               <div className="flex items-center space-x-3 mt-1 text-[10px] font-mono text-ink/60">
                                 <span>Bid: ₹{prop.bidAmount}</span>

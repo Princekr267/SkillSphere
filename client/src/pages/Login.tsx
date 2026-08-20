@@ -46,7 +46,9 @@ export const Login: React.FC = () => {
         });
         const btnContainer = document.getElementById('google-signin-btn');
         if (btnContainer) {
-          const width = window.innerWidth < 450 ? Math.min(window.innerWidth - 64, 320) : 380;
+          btnContainer.innerHTML = '';
+          const parentWidth = btnContainer.parentElement?.clientWidth || (window.innerWidth - 64);
+          const width = Math.max(200, Math.min(parentWidth, 380));
           (window as any).google.accounts.id.renderButton(
             btnContainer,
             { theme: 'outline', size: 'large', type: 'standard', width }
@@ -93,7 +95,7 @@ export const Login: React.FC = () => {
   return (
     <div className="max-w-lg mx-auto px-4 py-12 flex-grow bg-cream font-sans transition-colors duration-200">
 
-      <Card className="p-8 text-left">
+      <Card className="p-5 sm:p-8 text-left">
         <div className="text-left mb-8">
           <div className="h-10 w-10 bg-accent-amber flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg mb-4 shadow-retro-sm">
             <Globe className="h-5 w-5" />
@@ -176,8 +178,8 @@ export const Login: React.FC = () => {
         </div>
 
         {/* Google Sign In Container */}
-        <div className="flex justify-center">
-          <div id="google-signin-btn" className="w-full flex justify-center"></div>
+        <div className="flex justify-center w-full overflow-hidden">
+          <div id="google-signin-btn" className="w-full max-w-full flex justify-center overflow-hidden"></div>
         </div>
 
         <div className="text-center mt-8 pt-6 border-t-2 border-ink font-sans text-xs">

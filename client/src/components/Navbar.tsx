@@ -11,7 +11,7 @@ import { Badge } from './ui/Badge';
 // Navigation header styled in Retro-pop visual style with dark mode switch
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
-  const socket = useSocket();
+  const { socket } = useSocket();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -93,7 +93,7 @@ export const Navbar: React.FC = () => {
           {/* Logo & Brand */}
           <div className="flex items-center space-x-3">
             <Link 
-              to={dashboardPath} 
+              to="/" 
               className="flex items-center space-x-2 group"
               onClick={() => setMobileOpen(false)}
             >
@@ -208,7 +208,7 @@ export const Navbar: React.FC = () => {
                 <Link
                   to={user?.role === 'client' ? '/client-dashboard?tab=gigs' : '/freelancer-dashboard?tab=applications'}
                   className="relative p-2 text-ink hover:bg-accent-amber/15 rounded-lg border-2 border-transparent transition-all"
-                  title="Unread Messages"
+                  title="View gigs with unread messages"
                 >
                   <MessageSquare className="h-5 w-5 text-ink" />
                   {unreadMessages > 0 && (

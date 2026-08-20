@@ -11,6 +11,7 @@ export interface GigCardData {
   description: string;
   category: string;
   budget: number;
+  finalAgreedAmount?: number;
   budgetType: 'fixed' | 'hourly';
   skillsRequired: string[];
   location: {
@@ -114,7 +115,7 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
         <div className="flex items-center space-x-3">
           <span className="flex items-center space-x-0.5 font-mono text-xs font-bold text-ink">
             <DollarSign className="h-3.5 w-3.5 text-accent-teal" />
-            <span>₹{gig.budget.toLocaleString()}{gig.budgetType === 'hourly' ? '/hr' : ''}</span>
+            <span>₹{(gig.finalAgreedAmount ?? gig.budget).toLocaleString()}{gig.budgetType === 'hourly' ? '/hr' : ''}</span>
           </span>
           <span className="flex items-center space-x-1 text-[10px] font-mono text-ink/60">
             <MapPin className="h-3 w-3" />

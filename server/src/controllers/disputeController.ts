@@ -128,7 +128,7 @@ export const getDisputes = async (req: AuthRequest, res: Response) => {
     }
 
     const disputes = await Dispute.find(query)
-      .populate('gigId', 'title status escrowStatus')
+      .populate('gigId', 'title status escrowStatus budget budgetType')
       .populate('raisedById', 'name email role')
       .populate('againstId', 'name email role')
       .sort({ createdAt: -1 });

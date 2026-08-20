@@ -49,6 +49,7 @@ export interface IGig extends Document {
   // Simulated escrow fields
   escrowStatus: 'none' | 'funds_deposited' | 'released' | 'refunded';
   acceptedFreelancerId?: Types.ObjectId;
+  finalAgreedAmount?: number;
   isFlagged?: boolean;
   flagReason?: string;
   milestones: IMilestone[];

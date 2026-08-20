@@ -27,7 +27,7 @@ export const GigChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const socket = useSocket();
+  const { socket, connectionError } = useSocket();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -176,7 +176,7 @@ export const GigChat: React.FC = () => {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !socket) return;
+    if (!input.trim() || !socket || connectionError) return;
     
     // Stop typing immediately
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -215,6 +215,7 @@ export const GigChat: React.FC = () => {
   };
 
   const isMine = (msg: Message) => msg.senderId?._id === user?._id;
+  const isOtherUserOnline = otherUserId ? onlineUsers.includes(otherUserId) : false;
 
   const isImage = (filename?: string) => {
     if (!filename) return false;
@@ -228,105 +229,96 @@ export const GigChat: React.FC = () => {
       {/* Header */}
       <div className="bg-cream border-b-2 border-ink px-4 py-3 flex items-center space-x-3 flex-shrink-0 text-left">
         <button onClick={() => navigate(`/gigs/${id}`)} className="text-ink/60 hover:text-ink cursor-pointer">
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex-grow flex items-center justify-between">
-          <div>
-            <h1 className="text-sm font-black font-display text-ink uppercase tracking-tight line-clamp-1">
-              {gigTitle}
-            </h1>
-            <span className="text-[10px] font-mono text-accent-teal uppercase tracking-widest font-bold">
-              Live Chat · End-to-end via Socket.io
-            </span>
-          </div>
-          {otherUserId && (
-            <Badge variant="outline" className="flex items-center space-x-1.5 bg-cream">
-              <span className={`h-2.5 w-2.5 rounded-full border border-ink ${
-                onlineUsers.includes(otherUserId) ? 'bg-accent-teal animate-pulse' : 'bg-ink/20'
-              }`} />
-              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-ink">
-                {onlineUsers.includes(otherUserId) ? 'Online' : 'Offline'}
+        <div className="flex-grow">
+          <div className="flex items-center space-x-2">
+            <h2 className="font-bold text-sm text-ink truncate">{gigTitle}</h2>
+            {isOtherUserOnline ? (
+              <span className="flex items-center space-x-1 text-[10px] text-accent-teal font-bold font-mono">
+                <span className="w-2 h-2 rounded-full bg-accent-teal animate-pulse"></span>
+                <span>ONLINE</span>
               </span>
-            </Badge>
-          )}
+            ) : (
+              <span className="text-[10px] text-ink/40 font-mono">OFFLINE</span>
+            )}
+          </div>
+          <p className="text-[10px] text-ink/60 font-mono">End-to-end encrypted direct socket channel</p>
         </div>
       </div>
 
       {/* Messages area */}
-      <div className="flex-grow overflow-y-auto px-4 py-4 space-y-3 bg-cream">
+      <div className="flex-grow overflow-y-auto p-4 space-y-3">
         {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <Loader2 className="h-6 w-6 text-accent-teal animate-spin" />
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-accent-teal" />
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center h-32 space-x-2 text-accent-coral text-sm">
-            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <div className="flex items-center space-x-2 text-accent-coral text-xs justify-center py-8">
+            <AlertCircle className="h-4 w-4" />
             <span>{error}</span>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 text-center">
-            <p className="text-xs text-ink/60 font-sans italic">No messages yet. Say hello!</p>
+          <div className="text-center py-16 text-ink/40 text-xs font-mono">
+            No messages yet. Send a message to start negotiating details!
           </div>
         ) : (
-          messages.map(msg => {
+          messages.map((msg, index) => {
             const mine = isMine(msg);
             return (
-              <div key={msg._id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[70%] border-2 border-ink rounded-xl px-4 py-2.5 text-left relative shadow-retro-sm ${
-                  mine
-                    ? 'bg-accent-teal text-ink'
-                    : 'bg-cream text-ink'
-                }`}>
-                  {!mine && (
-                    <p className="text-[10px] font-bold font-display uppercase tracking-wider mb-0.5 text-ink/60">
-                      {msg.senderId?.name}
-                    </p>
-                  )}
-                  
-                  {/* File preview block */}
+              <div
+                key={msg._id || index}
+                className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}
+              >
+                {!mine && (
+                  <span className="text-[9px] font-bold text-ink/60 mb-0.5 px-1 uppercase font-display">
+                    {msg.senderId?.name || 'User'}
+                  </span>
+                )}
+                <div
+                  className={`max-w-[75%] sm:max-w-md px-3.5 py-2.5 rounded-xl border-2 border-ink text-xs shadow-retro-sm text-left ${
+                    mine
+                      ? 'bg-accent-amber text-ink rounded-br-none'
+                      : 'bg-cream text-ink rounded-bl-none'
+                  }`}
+                >
+                  {/* File attachment handling */}
                   {msg.fileUrl && (
                     <div className="mb-2">
                       {isImage(msg.fileName) ? (
-                        <img 
-                          src={`${BACKEND_URL}${msg.fileUrl}`} 
-                          alt={msg.fileName} 
-                          className="max-w-full rounded-lg border-2 border-ink p-0.5 max-h-48 object-contain bg-white"
-                        />
+                        <a href={msg.fileUrl.startsWith('http') ? msg.fileUrl : `${BACKEND_URL}${msg.fileUrl}`} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={msg.fileUrl.startsWith('http') ? msg.fileUrl : `${BACKEND_URL}${msg.fileUrl}`}
+                            alt={msg.fileName || 'Attachment'}
+                            className="max-h-48 rounded border border-ink/20 object-cover hover:opacity-90 transition-opacity"
+                          />
+                        </a>
                       ) : (
-                        <a 
-                          href={`${BACKEND_URL}${msg.fileUrl}`}
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className={`p-2 border-2 border-ink rounded-lg flex items-center space-x-2 text-xs font-bold ${
-                            mine ? 'bg-cream/20 text-ink' : 'bg-cream/40 text-ink'
-                          }`}
+                        <a
+                          href={msg.fileUrl.startsWith('http') ? msg.fileUrl : `${BACKEND_URL}${msg.fileUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-1.5 p-2 bg-ink/5 border border-ink/10 rounded hover:bg-ink/10 transition-colors"
                         >
                           <FileIcon className="h-4 w-4 flex-shrink-0" />
-                          <span className="truncate max-w-[150px]">{msg.fileName}</span>
-                          {msg.fileSize && (
-                            <span className="opacity-70 text-[9px] font-mono">
-                              ({(msg.fileSize / 1024).toFixed(1)} KB)
-                            </span>
-                          )}
+                          <span className="font-mono text-[10px] truncate max-w-[180px]">
+                            {msg.fileName || 'Download File'}
+                          </span>
                         </a>
                       )}
                     </div>
                   )}
 
-                  <p className="text-sm font-sans leading-relaxed">{msg.body}</p>
-                  
-                  <div className={`text-[9px] font-mono mt-1 text-right flex items-center justify-end space-x-1 ${mine ? 'text-ink/60' : 'text-ink/60'}`}>
-                    <span>
-                      {new Date(msg.sentAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                  <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.body}</p>
+
+                  <div className="flex items-center justify-end space-x-1 mt-1 text-[8px] font-mono text-ink/60">
+                    <span>{new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     {mine && (
-                      <span>
-                        {msg.read ? (
-                          <CheckCheck className="h-3 w-3 text-ink" />
-                        ) : (
-                          <Check className="h-3 w-3 text-ink/70" />
-                        )}
-                      </span>
+                      msg.read ? (
+                        <CheckCheck className="h-3 w-3 text-ink" />
+                      ) : (
+                        <Check className="h-3 w-3 text-ink/40" />
+                      )
                     )}
                   </div>
                 </div>
@@ -335,7 +327,7 @@ export const GigChat: React.FC = () => {
           })
         )}
 
-        {/* Other User Typing Display */}
+        {/* Typing indicator */}
         {otherUserTyping && (
           <div className="flex justify-start animate-pulse">
             <Badge variant="outline" className="flex items-center space-x-1.5 text-xs text-ink/60 bg-cream">
@@ -349,6 +341,16 @@ export const GigChat: React.FC = () => {
 
         <div ref={bottomRef} />
       </div>
+
+      {/* Connection error banner */}
+      {connectionError && (
+        <div className="bg-accent-coral/20 border-t-2 border-ink px-4 py-2 flex items-center justify-between text-xs text-ink font-mono">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="h-4 w-4 text-accent-coral flex-shrink-0" />
+            <span>{connectionError}</span>
+          </div>
+        </div>
+      )}
 
       {/* Input bar */}
       <div className="flex-shrink-0 bg-cream border-t-2 border-ink px-4 py-3">
@@ -364,7 +366,7 @@ export const GigChat: React.FC = () => {
 
           <Button
             type="button"
-            disabled={loadingFile}
+            disabled={loadingFile || !!connectionError || !socket}
             onClick={() => chatFileRef.current?.click()}
             variant="outline"
             className="p-2.5 flex items-center justify-center flex-shrink-0"
@@ -379,12 +381,13 @@ export const GigChat: React.FC = () => {
           <Input
             value={input}
             onChange={handleInputChange}
-            placeholder="Type a message…"
+            placeholder={connectionError ? "Connecting to chat..." : "Type a message…"}
+            disabled={!!connectionError || !socket}
             className="flex-grow py-2.5"
           />
           <Button
             type="submit"
-            disabled={!input.trim()}
+            disabled={!input.trim() || !!connectionError || !socket}
             variant="primary"
             className="p-2.5 flex items-center justify-center flex-shrink-0"
           >

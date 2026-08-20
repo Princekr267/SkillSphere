@@ -11,6 +11,7 @@ interface MyApplication {
   title: string;
   category: string;
   budget: number;
+  finalAgreedAmount?: number;
   budgetType: 'fixed' | 'hourly';
   location: { city: string };
   status: string;
@@ -121,7 +122,7 @@ export const FreelancerApplications: React.FC = () => {
                 </span>
                 <span className="flex items-center space-x-1">
                   <DollarSign className="h-3 w-3 text-accent-teal" />
-                  <span className="font-bold text-ink">₹{app.budget.toLocaleString()}{app.budgetType === 'hourly' ? '/hr' : ''}</span>
+                  <span className="font-bold text-ink">₹{(app.finalAgreedAmount ?? app.budget).toLocaleString()}{app.budgetType === 'hourly' ? '/hr' : ''}</span>
                 </span>
                 <span className="flex items-center space-x-1">
                   <MapPin className="h-3 w-3" />

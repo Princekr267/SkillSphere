@@ -501,7 +501,7 @@ export const FreelancerDashboard: React.FC = () => {
                         {b.gigId?.budget && (
                           <div className="flex items-center space-x-2 mt-1">
                             <Badge variant="amber" className="text-[8px] shadow-none">
-                              ₹{b.gigId.budget}
+                              ₹{b.gigId.finalAgreedAmount ?? b.gigId.budget}
                             </Badge>
                             {b.gigId.category && (
                               <span className="text-[9px] font-mono text-ink/60 uppercase font-bold">

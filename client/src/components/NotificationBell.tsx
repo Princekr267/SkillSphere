@@ -19,7 +19,7 @@ interface Notification {
 
 export const NotificationBell: React.FC = () => {
   const { user, token } = useAuth();
-  const socket = useSocket();
+  const { socket } = useSocket();
   const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
