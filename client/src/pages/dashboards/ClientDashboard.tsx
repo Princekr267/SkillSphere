@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Building, MapPin, Edit, FileText, Check, AlertCircle, Compass, Search, Calendar, Clock, User as UserIcon, Star, ExternalLink, Loader2, Mail, KeyRound, ArrowRight } from 'lucide-react';
+import { Building, MapPin, Edit, FileText, Check, AlertCircle, Compass, Search, Calendar, Clock, User as UserIcon, Star, ExternalLink, Loader2, Mail, KeyRound, ArrowRight, Shield } from 'lucide-react';
 import axios from 'axios';
 import api from '../../utils/api';
 import { ClientGigManager } from './ClientGigManager';
@@ -479,17 +479,19 @@ export const ClientDashboard: React.FC = () => {
             
             {/* Left Column: Client profile */}
             <div className="space-y-6 lg:col-span-1">
-              <Card className="flex flex-col items-center text-center p-6">
-                <AvatarUpload />
+              <Card variant="teal" className="space-y-4">
+                <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex flex-col items-center text-center">
+                  <AvatarUpload />
 
-                <div className="mt-4 border-t-2 border-ink w-full pt-4">
-                  <h3 className="text-lg font-black font-display text-ink uppercase tracking-tight">{user.name}</h3>
-                  <Badge variant="outline" className="mt-1 shadow-none font-mono">
-                    {user.role}
-                  </Badge>
+                  <div className="mt-3 border-t-2 border-ink w-full pt-3">
+                    <h3 className="text-base font-black font-display text-ink uppercase tracking-tight">{user.name}</h3>
+                    <Badge variant="teal" className="mt-1 shadow-none font-mono text-[9px] uppercase font-bold">
+                      Verified Client
+                    </Badge>
+                  </div>
                 </div>
 
-                <div className="w-full border-t-2 border-ink mt-6 pt-4 space-y-3 text-left font-sans text-xs">
+                <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3 text-left font-sans text-xs">
                   {(() => {
                     const primaryCompany = myCompanies[0]?.company;
                     const displayedCompanyName = primaryCompany?.name || user.businessName || user.currentCompanyName;
@@ -517,8 +519,19 @@ export const ClientDashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-2 text-ink/70">
                     <Mail className="h-4 w-4 text-accent-teal flex-shrink-0" />
-                    <span className="font-bold text-ink truncate max-w-[190px]" title={user.email}>{user.email}</span>
+                    <span className="font-bold text-ink truncate max-w-[170px]" title={user.email}>{user.email}</span>
                   </div>
+                </div>
+
+                {/* Escrow Guarantee Box */}
+                <div className="bg-cream border-2 border-ink rounded-xl p-3.5 shadow-retro-sm space-y-1.5 text-left">
+                  <div className="flex items-center space-x-2 text-xs font-bold font-display uppercase tracking-wider text-ink">
+                    <Shield className="h-4 w-4 text-accent-teal" />
+                    <span>Escrow Guarded</span>
+                  </div>
+                  <p className="text-[11px] font-sans text-ink/75 leading-relaxed font-bold">
+                    Zero upfront risk. Milestone funds release only upon your deliverable sign-off.
+                  </p>
                 </div>
               </Card>
 
@@ -527,8 +540,8 @@ export const ClientDashboard: React.FC = () => {
 
             {/* Right Column: Edit Settings */}
             <div className="lg:col-span-2 space-y-6 text-left">
-              <Card className="p-6">
-                <div className="flex items-center justify-between border-b-2 border-ink pb-4 mb-6">
+              <Card variant="amber" className="space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-ink pb-4">
                   <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest flex items-center space-x-2">
                     <Building className="h-4 w-4 text-accent-teal" />
                     <span>Client Profile Details</span>
@@ -537,115 +550,118 @@ export const ClientDashboard: React.FC = () => {
                     onClick={() => setIsEditing(!isEditing)}
                     variant={isEditing ? 'coral' : 'outline'}
                     size="sm"
+                    className="font-display font-bold uppercase text-xs"
                   >
                     <Edit className="h-3.5 w-3.5 mr-1" />
                     <span>{isEditing ? 'Cancel Edit' : 'Edit Profile'}</span>
                   </Button>
                 </div>
 
-                {isEditing ? (
-                  <form onSubmit={handleSave} className="space-y-5 font-sans">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Full Name</label>
-                      <Input type="text" required value={name} onChange={e => setName(e.target.value)} />
-                    </div>
-
-                    {/* Business Name or Company Override */}
-                    {myCompanies.length > 0 ? (
-                      <div className="p-3.5 bg-accent-teal/10 border-2 border-ink rounded-lg space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 text-accent-teal" />
-                          <span className="font-bold text-xs text-ink">{myCompanies[0]?.company?.name}</span>
-                        </div>
-                        <p className="text-[11px] text-ink/60 font-sans">
-                          Showing your company name. This is used instead of a business label while you're part of a company.
-                        </p>
-                      </div>
-                    ) : (
+                <div className="bg-cream border-2 border-ink rounded-xl p-5 shadow-retro-sm">
+                  {isEditing ? (
+                    <form onSubmit={handleSave} className="space-y-5 font-sans">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">
-                          Business Name <span className="text-ink/40 font-normal font-sans">(Optional)</span>
-                        </label>
-                        <Input
-                          type="text"
-                          value={businessName}
-                          onChange={e => setBusinessName(e.target.value)}
-                          placeholder="e.g. Acme Studio (optional)"
-                        />
-                        <p className="text-[10px] text-ink/50 font-sans pl-1">
-                          Cosmetic display label for solo clients. Real company memberships will override this.
-                        </p>
+                        <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Full Name</label>
+                        <Input type="text" required value={name} onChange={e => setName(e.target.value)} />
                       </div>
-                    )}
 
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Client Bio / Description</label>
-                      <textarea rows={4} value={bio} onChange={e => setBio(e.target.value)}
-                        placeholder="Tell freelancers about your projects or requirements..."
-                        className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm resize-none outline-none focus:bg-accent-amber/10 focus:border-accent-amber placeholder:text-ink/40" />
-                    </div>
-
-                    <div className="border-t-2 border-ink pt-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest pl-1">Change Location</span>
-                        <button type="button" onClick={handleDetectLocation} disabled={fetchingGeo}
-                          className="text-xs text-accent-teal hover:underline flex items-center space-x-1 font-bold cursor-pointer">
-                          <Compass className="h-3.5 w-3.5" />
-                          <span>{fetchingGeo ? 'GPS Locating...' : 'Use GPS Location'}</span>
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
-                        <Input type="text" value={citySearch} onChange={handleCitySearchChange}
-                          placeholder="Search for new city..." className="pl-10" />
-                        {searchingCity && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <div className="w-4 h-4 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
+                      {/* Business Name or Company Override */}
+                      {myCompanies.length > 0 ? (
+                        <div className="p-3.5 bg-accent-teal/10 border-2 border-ink rounded-lg space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 text-accent-teal" />
+                            <span className="font-bold text-xs text-ink">{myCompanies[0]?.company?.name}</span>
                           </div>
-                        )}
-                        {suggestions.length > 0 && (
-                          <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-cream border-2 border-ink rounded-lg shadow-retro max-h-40 overflow-y-auto">
-                            {suggestions.map((sug, i) => (
-                              <button key={i} type="button" onClick={() => handleSelectCity(sug)}
-                                className="w-full text-left px-4 py-2 text-xs text-ink hover:bg-accent-amber/10 border-b border-ink/10 last:border-b-0 cursor-pointer">
-                                {sug.display_name}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      {latitude !== null && longitude !== null && (
-                        <div className="text-xs font-mono text-ink/70 bg-cream border-2 border-ink rounded-lg p-2.5">
-                          Coordinates Locked: {latitude.toFixed(4)}, {longitude.toFixed(4)} ({city})
+                          <p className="text-[11px] text-ink/60 font-sans">
+                            Showing your company name. This is used instead of a business label while you're part of a company.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">
+                            Business Name <span className="text-ink/40 font-normal font-sans">(Optional)</span>
+                          </label>
+                          <Input
+                            type="text"
+                            value={businessName}
+                            onChange={e => setBusinessName(e.target.value)}
+                            placeholder="e.g. Acme Studio (optional)"
+                          />
+                          <p className="text-[10px] text-ink/50 font-sans pl-1">
+                            Cosmetic display label for solo clients. Real company memberships will override this.
+                          </p>
                         </div>
                       )}
-                    </div>
 
-                    <Button type="submit" disabled={saving} variant="secondary" className="w-full mt-4">
-                      {saving ? 'Saving...' : 'Save Profile Changes'}
-                    </Button>
-                  </form>
-                ) : (
-                  <div className="space-y-6 font-sans text-xs">
-                    <div>
-                      <span className="text-[10px] font-bold font-display text-ink/60 uppercase tracking-widest block mb-1">Company / Business Description</span>
-                      <p className="text-sm font-sans text-ink leading-relaxed font-bold">
-                        {user.bio || 'No company bio set. Click edit profile to add details.'}
-                      </p>
-                    </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Client Bio / Description</label>
+                        <textarea rows={4} value={bio} onChange={e => setBio(e.target.value)}
+                          placeholder="Tell freelancers about your projects or requirements..."
+                          className="w-full px-4 py-2.5 bg-cream border-2 border-ink rounded-lg text-ink text-sm resize-none outline-none focus:bg-accent-amber/10 focus:border-accent-amber placeholder:text-ink/40" />
+                      </div>
 
-                    <div className="grid grid-cols-2 gap-4 border-t-2 border-ink pt-4 font-mono">
-                      <div>
-                        <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Account Role</span>
-                        <Badge variant="amber" className="shadow-none text-xs font-mono">{user.role}</Badge>
+                      <div className="border-t-2 border-ink pt-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest pl-1">Change Location</span>
+                          <button type="button" onClick={handleDetectLocation} disabled={fetchingGeo}
+                            className="text-xs text-accent-teal hover:underline flex items-center space-x-1 font-bold cursor-pointer">
+                            <Compass className="h-3.5 w-3.5" />
+                            <span>{fetchingGeo ? 'GPS Locating...' : 'Use GPS Location'}</span>
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
+                          <Input type="text" value={citySearch} onChange={handleCitySearchChange}
+                            placeholder="Search for new city..." className="pl-10" />
+                          {searchingCity && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <div className="w-4 h-4 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
+                            </div>
+                          )}
+                          {suggestions.length > 0 && (
+                            <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-cream border-2 border-ink rounded-lg shadow-retro max-h-40 overflow-y-auto">
+                              {suggestions.map((sug, i) => (
+                                <button key={i} type="button" onClick={() => handleSelectCity(sug)}
+                                  className="w-full text-left px-4 py-2 text-xs text-ink hover:bg-accent-amber/10 border-b border-ink/10 last:border-b-0 cursor-pointer">
+                                  {sug.display_name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {latitude !== null && longitude !== null && (
+                          <div className="text-xs font-mono text-ink/70 bg-cream border-2 border-ink rounded-lg p-2.5">
+                            Coordinates Locked: {latitude.toFixed(4)}, {longitude.toFixed(4)} ({city})
+                          </div>
+                        )}
                       </div>
+
+                      <Button type="submit" disabled={saving} variant="secondary" className="w-full mt-4">
+                        {saving ? 'Saving...' : 'Save Profile Changes'}
+                      </Button>
+                    </form>
+                  ) : (
+                    <div className="space-y-6 font-sans text-xs">
                       <div>
-                        <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Primary Location</span>
-                        <span className="font-bold text-ink text-xs font-mono">{user.location.city}</span>
+                        <span className="text-[10px] font-bold font-display text-ink/60 uppercase tracking-widest block mb-1">Company / Business Description</span>
+                        <p className="text-sm font-sans text-ink leading-relaxed font-bold">
+                          {user.bio || 'No company bio set. Click edit profile to add details.'}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 border-t-2 border-ink pt-4 font-mono">
+                        <div>
+                          <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Account Role</span>
+                          <Badge variant="amber" className="shadow-none text-xs font-mono">{user.role}</Badge>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-ink/60 uppercase tracking-widest block mb-1">Primary Location</span>
+                          <span className="font-bold text-ink text-xs font-mono">{user.location.city}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </Card>
             </div>
 

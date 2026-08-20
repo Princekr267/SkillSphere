@@ -386,9 +386,9 @@ export const Home: React.FC = () => {
               <div className="relative">
                 <div className="absolute inset-0 bg-accent-teal border-2 border-ink rounded-2xl transform translate-x-3 translate-y-3"></div>
 
-                <Card className="relative p-6 bg-cream border-2 border-ink rounded-2xl space-y-5 text-left shadow-retro hover:rotate-1 transition-transform">
+                <Card className="relative p-6 bg-accent-amber/10 border-2 border-ink rounded-2xl space-y-5 text-left shadow-retro hover:rotate-1 transition-transform">
                   
-                  <div className="flex items-center justify-between border-b-2 border-ink pb-4">
+                  <div className="flex items-center justify-between border-b-2 border-ink pb-4 bg-cream p-3 rounded-xl border border-ink/20 shadow-retro-sm">
                     <div className="flex items-center space-x-2.5">
                       <div className="h-9 w-9 bg-accent-amber border-2 border-ink rounded-lg flex items-center justify-center font-bold text-ink shadow-retro-sm">
                         <Zap className="h-5 w-5" />
@@ -404,7 +404,7 @@ export const Home: React.FC = () => {
                   </div>
 
                   {/* Mock active gig */}
-                  <div className="p-3.5 bg-ink/5 border-2 border-ink rounded-xl space-y-2">
+                  <div className="p-3.5 bg-cream border-2 border-ink rounded-xl space-y-2 shadow-retro-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-mono uppercase font-bold text-ink/60">Fullstack React & Node App</span>
                       <span className="text-xs font-mono font-black text-ink">₹18,500</span>
@@ -420,7 +420,7 @@ export const Home: React.FC = () => {
                   </div>
 
                   {/* Mock live proposal match */}
-                  <div className="p-3 bg-accent-amber/15 border-2 border-ink rounded-xl space-y-2">
+                  <div className="p-3 bg-cream border-2 border-ink rounded-xl space-y-2 shadow-retro-sm">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="h-7 w-7 rounded-full bg-accent-pink border border-ink flex items-center justify-center text-xs font-black font-display text-ink">
@@ -441,12 +441,12 @@ export const Home: React.FC = () => {
                   </div>
 
                   {/* Escrow badge */}
-                  <div className="flex items-center justify-between p-2.5 bg-accent-teal/20 border-2 border-ink rounded-lg text-xs font-mono font-bold text-ink">
+                  <div className="flex items-center justify-between p-2.5 bg-cream border-2 border-ink rounded-lg text-xs font-mono font-bold text-ink shadow-retro-sm">
                     <span className="flex items-center space-x-1.5">
                       <Shield className="h-4 w-4 text-accent-teal" />
                       <span>Funds Protected in Escrow</span>
                     </span>
-                    <span className="text-[9px] uppercase bg-cream px-2 py-0.5 border border-ink rounded font-mono">Verified</span>
+                    <span className="text-[9px] uppercase bg-accent-teal text-ink px-2 py-0.5 border border-ink rounded font-mono font-bold">Verified</span>
                   </div>
 
                 </Card>
@@ -503,7 +503,7 @@ export const Home: React.FC = () => {
           {(() => {
             const currentStage = ESCROW_STAGES.find(s => s.stage === escrowStage) || ESCROW_STAGES[0];
             return (
-              <Card className="p-6 sm:p-8 border-2 border-ink shadow-retro bg-cream text-left grid grid-cols-1 lg:grid-cols-12 gap-8 items-center animate-fade-in">
+              <Card className="p-6 sm:p-8 border-2 border-ink shadow-retro bg-accent-teal/10 text-left grid grid-cols-1 lg:grid-cols-12 gap-8 items-center animate-fade-in">
                 
                 {/* Stage Info */}
                 <div className="lg:col-span-7 space-y-4">
@@ -523,11 +523,11 @@ export const Home: React.FC = () => {
                   </p>
 
                   <div className="grid grid-cols-2 gap-4 pt-2 font-mono text-xs">
-                    <div className="p-3 bg-ink/5 border-2 border-ink rounded-lg">
+                    <div className="p-3 bg-cream border-2 border-ink rounded-lg shadow-retro-sm">
                       <span className="text-[9px] uppercase font-bold text-ink/50 block">Vault Balance</span>
                       <span className="text-base font-black text-ink">{currentStage.vaultBalance}</span>
                     </div>
-                    <div className="p-3 bg-ink/5 border-2 border-ink rounded-lg">
+                    <div className="p-3 bg-cream border-2 border-ink rounded-lg shadow-retro-sm">
                       <span className="text-[9px] uppercase font-bold text-ink/50 block">Payout Status</span>
                       <span className="text-base font-black text-accent-teal">{currentStage.payoutStatus}</span>
                     </div>
@@ -536,10 +536,10 @@ export const Home: React.FC = () => {
 
                 {/* Simulated Vault UI Card */}
                 <div className="lg:col-span-5">
-                  <div className="p-6 bg-ink/5 border-2 border-ink rounded-2xl space-y-4 shadow-retro-sm">
+                  <div className="p-6 bg-cream border-2 border-ink rounded-2xl space-y-4 shadow-retro">
                     <div className="flex items-center justify-between pb-3 border-b-2 border-ink">
                       <div className="flex items-center space-x-2">
-                        <div className="h-8 w-8 bg-cream border-2 border-ink rounded-lg flex items-center justify-center">
+                        <div className="h-8 w-8 bg-accent-amber border-2 border-ink rounded-lg flex items-center justify-center">
                           {currentStage.icon}
                         </div>
                         <span className="text-xs font-mono font-bold uppercase">SkillSphere Escrow Guard</span>
@@ -600,7 +600,7 @@ export const Home: React.FC = () => {
             
             {/* Left Controls */}
             <div className="lg:col-span-6 space-y-6">
-              <Card className="p-6 border-2 border-ink shadow-retro space-y-6">
+              <Card className="p-6 border-2 border-ink shadow-retro bg-accent-pink/10 space-y-6">
                 
                 {/* Rate Slider */}
                 <div className="space-y-3">
@@ -757,11 +757,11 @@ export const Home: React.FC = () => {
           </div>
 
           {/* Active Candidate Match Preview Card */}
-          <Card className="p-6 sm:p-8 border-2 border-ink shadow-retro bg-cream text-left grid grid-cols-1 md:grid-cols-12 gap-6 items-center animate-fade-in">
+          <Card className="p-6 sm:p-8 border-2 border-ink shadow-retro bg-accent-amber/10 text-left grid grid-cols-1 md:grid-cols-12 gap-6 items-center animate-fade-in">
             
             <div className="md:col-span-8 space-y-4">
               <div className="flex items-center space-x-3">
-                <div className="h-14 w-14 bg-accent-amber border-2 border-ink rounded-xl flex items-center justify-center font-display text-2xl font-black text-ink shadow-retro-sm">
+                <div className="h-14 w-14 bg-cream border-2 border-ink rounded-xl flex items-center justify-center font-display text-2xl font-black text-ink shadow-retro-sm">
                   {currentSkillData.matchedCandidate.charAt(0)}
                 </div>
                 <div>
@@ -777,7 +777,7 @@ export const Home: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-4 text-xs font-mono text-ink/70">
+              <div className="flex flex-wrap gap-4 text-xs font-mono text-ink/70 bg-cream p-2.5 rounded-lg border border-ink/20 shadow-retro-sm">
                 <span className="flex items-center space-x-1">
                   <Star className="h-3.5 w-3.5 text-accent-amber fill-accent-amber" />
                   <strong className="text-ink">{currentSkillData.rating}</strong>
@@ -794,7 +794,7 @@ export const Home: React.FC = () => {
 
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {currentSkillData.skills.map((s, idx) => (
-                  <Badge key={idx} variant="outline" className="text-[9px] font-mono bg-cream border-ink/40">
+                  <Badge key={idx} variant="outline" className="text-[9px] font-mono bg-cream border-ink">
                     {s}
                   </Badge>
                 ))}
@@ -802,7 +802,7 @@ export const Home: React.FC = () => {
             </div>
 
             <div className="md:col-span-4 flex flex-col justify-center space-y-3 border-t md:border-t-0 md:border-l-2 border-ink/10 pt-4 md:pt-0 md:pl-6">
-              <div className="p-3 bg-accent-teal/15 border-2 border-ink rounded-xl text-center font-mono text-xs">
+              <div className="p-3 bg-cream border-2 border-ink rounded-xl text-center font-mono text-xs shadow-retro-sm">
                 <span className="text-[9px] uppercase text-ink/60 block font-bold">Proximity Match</span>
                 <span className="font-black text-accent-teal text-sm">Ready for Same-Day Booking</span>
               </div>
@@ -838,7 +838,7 @@ export const Home: React.FC = () => {
             
             {/* Slider Control Panel */}
             <div className="lg:col-span-6 space-y-6">
-              <Card className="p-6 border-2 border-ink shadow-retro space-y-6">
+              <Card className="p-6 border-2 border-ink shadow-retro bg-accent-teal/10 space-y-6">
                 
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold font-display uppercase tracking-widest text-ink">
@@ -880,7 +880,7 @@ export const Home: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-3 bg-accent-teal/10 border-2 border-ink rounded-lg text-xs font-sans font-bold flex items-center space-x-2">
+                <div className="p-3 bg-cream border-2 border-ink rounded-lg text-xs font-sans font-bold flex items-center space-x-2 shadow-retro-sm">
                   <Sliders className="h-4 w-4 text-accent-teal flex-shrink-0" />
                   <span>Coverage Scope: <strong className="text-ink uppercase font-mono">{radiusInfo.label}</strong></span>
                 </div>
@@ -890,7 +890,7 @@ export const Home: React.FC = () => {
 
             {/* Visual Live Representation */}
             <div className="lg:col-span-6 space-y-4">
-              <div className="p-6 bg-ink/5 border-2 border-ink rounded-2xl shadow-retro space-y-4 text-left">
+              <div className="p-6 bg-accent-coral/10 border-2 border-ink rounded-2xl shadow-retro space-y-4 text-left">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold font-display uppercase tracking-widest text-ink flex items-center space-x-2">
                     <MapPin className="h-4 w-4 text-accent-coral" />
@@ -914,11 +914,11 @@ export const Home: React.FC = () => {
                 </p>
 
                 <div className="space-y-2 pt-2">
-                  <div className="p-2.5 bg-cream border border-ink/30 rounded-lg flex items-center justify-between text-xs font-mono">
+                  <div className="p-2.5 bg-cream border-2 border-ink rounded-lg flex items-center justify-between text-xs font-mono shadow-retro-sm">
                     <span className="font-bold">⚡ Instant Distance Calculation</span>
                     <span className="text-accent-teal font-bold">Auto-calculated</span>
                   </div>
-                  <div className="p-2.5 bg-cream border border-ink/30 rounded-lg flex items-center justify-between text-xs font-mono">
+                  <div className="p-2.5 bg-cream border-2 border-ink rounded-lg flex items-center justify-between text-xs font-mono shadow-retro-sm">
                     <span className="font-bold">🔒 Escrow Lock Upon Hire</span>
                     <span className="text-accent-amber font-bold">100% Protected</span>
                   </div>
@@ -973,31 +973,34 @@ export const Home: React.FC = () => {
 
           {/* Stepper Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {(activeRoleTab === 'client' ? clientSteps : freelancerSteps).map((st, idx) => (
-              <Card key={idx} className="p-6 border-2 border-ink shadow-retro text-left flex flex-col justify-between space-y-4 hover:translate-y-[-3px] transition-transform">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="h-9 w-9 bg-accent-amber/20 border-2 border-ink rounded-lg flex items-center justify-center font-mono font-black text-sm text-ink shadow-retro-sm">
-                      {st.step}
-                    </span>
-                    <Badge variant="outline" className="text-[8px] font-mono uppercase bg-cream">
-                      {st.badge}
-                    </Badge>
+            {(activeRoleTab === 'client' ? clientSteps : freelancerSteps).map((st, idx) => {
+              const cardBgColors = ['bg-accent-teal/10', 'bg-accent-amber/10', 'bg-accent-pink/10', 'bg-accent-coral/10'];
+              return (
+                <Card key={idx} className={`p-6 border-2 border-ink shadow-retro text-left flex flex-col justify-between space-y-4 hover:translate-y-[-3px] transition-transform ${cardBgColors[idx % cardBgColors.length]}`}>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="h-9 w-9 bg-cream border-2 border-ink rounded-lg flex items-center justify-center font-mono font-black text-sm text-ink shadow-retro-sm">
+                        {st.step}
+                      </span>
+                      <Badge variant="outline" className="text-[8px] font-mono uppercase bg-cream border-ink">
+                        {st.badge}
+                      </Badge>
+                    </div>
+                    <h3 className="text-base font-black font-display uppercase tracking-tight text-ink">
+                      {st.title}
+                    </h3>
+                    <p className="text-xs text-ink/75 font-sans leading-relaxed font-bold">
+                      {st.description}
+                    </p>
                   </div>
-                  <h3 className="text-base font-black font-display uppercase tracking-tight text-ink">
-                    {st.title}
-                  </h3>
-                  <p className="text-xs text-ink/75 font-sans leading-relaxed font-bold">
-                    {st.description}
-                  </p>
-                </div>
 
-                <div className="pt-3 border-t border-ink/10 flex items-center space-x-2 text-xs font-mono text-ink/60 font-bold">
-                  {st.icon}
-                  <span>Step {idx + 1} of 4</span>
-                </div>
-              </Card>
-            ))}
+                  <div className="pt-3 border-t border-ink/10 flex items-center space-x-2 text-xs font-mono text-ink/60 font-bold">
+                    {st.icon}
+                    <span>Step {idx + 1} of 4</span>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
 
         </div>
@@ -1022,9 +1025,9 @@ export const Home: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
             
             {/* Benefit 1 */}
-            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform">
-              <div className="h-10 w-10 bg-accent-teal border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
-                <Shield className="h-5 w-5" />
+            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform bg-accent-teal/10">
+              <div className="h-10 w-10 bg-cream border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
+                <Shield className="h-5 w-5 text-accent-teal" />
               </div>
               <h3 className="text-base font-black font-display uppercase tracking-tight text-ink">
                 Simulated Escrow Protection
@@ -1035,9 +1038,9 @@ export const Home: React.FC = () => {
             </Card>
 
             {/* Benefit 2 */}
-            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform">
-              <div className="h-10 w-10 bg-accent-amber border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
-                <MapPin className="h-5 w-5" />
+            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform bg-accent-amber/10">
+              <div className="h-10 w-10 bg-cream border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
+                <MapPin className="h-5 w-5 text-accent-amber" />
               </div>
               <h3 className="text-base font-black font-display uppercase tracking-tight text-ink">
                 Hyperlocal Proximity Filters
@@ -1048,9 +1051,9 @@ export const Home: React.FC = () => {
             </Card>
 
             {/* Benefit 3 */}
-            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform">
-              <div className="h-10 w-10 bg-accent-pink border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
-                <MessageSquare className="h-5 w-5" />
+            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform bg-accent-pink/10">
+              <div className="h-10 w-10 bg-cream border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
+                <MessageSquare className="h-5 w-5 text-accent-pink" />
               </div>
               <h3 className="text-base font-black font-display uppercase tracking-tight text-ink">
                 Real-Time Socket Live Chat
@@ -1061,9 +1064,9 @@ export const Home: React.FC = () => {
             </Card>
 
             {/* Benefit 4 */}
-            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform">
-              <div className="h-10 w-10 bg-accent-coral border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
-                <Calendar className="h-5 w-5" />
+            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform bg-accent-coral/10">
+              <div className="h-10 w-10 bg-cream border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
+                <Calendar className="h-5 w-5 text-accent-coral" />
               </div>
               <h3 className="text-base font-black font-display uppercase tracking-tight text-ink">
                 Availability Calendar & Slots
@@ -1074,9 +1077,9 @@ export const Home: React.FC = () => {
             </Card>
 
             {/* Benefit 5 */}
-            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform">
-              <div className="h-10 w-10 bg-accent-teal border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
-                <Building className="h-5 w-5" />
+            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform bg-accent-teal/10">
+              <div className="h-10 w-10 bg-cream border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
+                <Building className="h-5 w-5 text-accent-teal" />
               </div>
               <h3 className="text-base font-black font-display uppercase tracking-tight text-ink">
                 Company & Multi-Member Teams
@@ -1087,9 +1090,9 @@ export const Home: React.FC = () => {
             </Card>
 
             {/* Benefit 6 */}
-            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform">
-              <div className="h-10 w-10 bg-accent-amber border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
-                <Clock className="h-5 w-5" />
+            <Card className="p-6 border-2 border-ink shadow-retro space-y-3 hover:translate-y-[-3px] transition-transform bg-accent-amber/10">
+              <div className="h-10 w-10 bg-cream border-2 border-ink rounded-lg flex items-center justify-center text-ink shadow-retro-sm">
+                <Clock className="h-5 w-5 text-accent-amber" />
               </div>
               <h3 className="text-base font-black font-display uppercase tracking-tight text-ink">
                 Milestone & 24h Deadline Alerts
@@ -1118,7 +1121,7 @@ export const Home: React.FC = () => {
               </h2>
             </div>
             <Link to="/gigs">
-              <Button variant="outline" size="sm" className="font-display uppercase tracking-wider font-bold">
+              <Button variant="outline" size="sm" className="font-display uppercase tracking-wider font-bold bg-cream">
                 <span>View All Gigs</span>
                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </Button>
@@ -1172,20 +1175,20 @@ export const Home: React.FC = () => {
               return (
                 <Card
                   key={index}
-                  className="p-5 border-2 border-ink shadow-retro-sm hover:shadow-retro cursor-pointer transition-all"
+                  className="p-5 border-2 border-ink shadow-retro-sm hover:shadow-retro cursor-pointer transition-all bg-accent-amber/10"
                   onClick={() => setOpenFaq(isOpen ? null : index)}
                 >
                   <div className="flex items-center justify-between gap-4">
                     <h4 className="font-black font-display text-sm text-ink uppercase tracking-tight">
                       {faq.q}
                     </h4>
-                    <div className="h-7 w-7 rounded-lg bg-cream border-2 border-ink flex items-center justify-center flex-shrink-0">
+                    <div className="h-7 w-7 rounded-lg bg-cream border-2 border-ink flex items-center justify-center flex-shrink-0 shadow-retro-sm">
                       {isOpen ? <ChevronUp className="h-4 w-4 text-ink" /> : <ChevronDown className="h-4 w-4 text-ink" />}
                     </div>
                   </div>
 
                   {isOpen && (
-                    <div className="mt-3 pt-3 border-t border-ink/10 text-xs font-sans text-ink/80 leading-relaxed font-bold animate-fade-in">
+                    <div className="mt-3 pt-3 border-t border-ink/20 text-xs font-sans text-ink/85 leading-relaxed font-bold animate-fade-in bg-cream p-3 rounded-lg border-2 border-ink shadow-retro-sm">
                       {faq.a}
                     </div>
                   )}

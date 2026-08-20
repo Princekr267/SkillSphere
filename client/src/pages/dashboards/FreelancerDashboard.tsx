@@ -20,7 +20,8 @@ import {
   Calendar,
   Clock,
   Building,
-  Mail
+  Mail,
+  Shield
 } from 'lucide-react';
 import axios from 'axios';
 import api from '../../utils/api';
@@ -725,20 +726,27 @@ export const FreelancerDashboard: React.FC = () => {
         <div className="space-y-8 lg:col-span-1">
           
           {/* Card 1: Avatar and main stats */}
-          <Card className="flex flex-col items-start text-left">
-            <div className="h-16 w-16 bg-cream border-2 border-ink flex items-center justify-center text-ink text-2xl font-black font-display uppercase mb-4 rounded-lg overflow-hidden flex-shrink-0 shadow-retro-sm">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
-              ) : (
-                user.name.charAt(0)
-              )}
-            </div>
-            <h2 className="text-lg font-bold text-ink uppercase font-display tracking-tight">{user.name}</h2>
-            <Badge variant="outline" className="mt-1 shadow-none">
-              Freelancer Account
-            </Badge>
+          <Card variant="teal" className="space-y-4">
             
-            <div className="w-full border-t-2 border-ink my-6 pt-6 space-y-4 font-mono text-xs text-ink/70">
+            {/* Identity Inner Card */}
+            <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex items-center space-x-4">
+              <div className="h-16 w-16 bg-cream border-2 border-ink flex items-center justify-center text-ink text-2xl font-black font-display uppercase rounded-lg overflow-hidden flex-shrink-0 shadow-retro-sm">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                ) : (
+                  user.name.charAt(0)
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base font-black text-ink uppercase font-display tracking-tight truncate">{user.name}</h2>
+                <Badge variant="teal" className="mt-1 shadow-none text-[9px] font-mono uppercase font-bold">
+                  Verified Freelancer
+                </Badge>
+              </div>
+            </div>
+            
+            {/* Stats Inner Card */}
+            <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3 font-mono text-xs text-ink/70">
               <div className="flex items-center justify-between">
                 <span className="flex items-center space-x-2">
                   <DollarSign className="h-4 w-4 text-accent-teal" />
@@ -751,7 +759,7 @@ export const FreelancerDashboard: React.FC = () => {
                   <Mail className="h-4 w-4 text-accent-teal" />
                   <span>EMAIL:</span>
                 </span>
-                <span className="font-bold text-ink truncate max-w-[170px]" title={user.email}>{user.email}</span>
+                <span className="font-bold text-ink truncate max-w-[150px]" title={user.email}>{user.email}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center space-x-2">
@@ -769,27 +777,35 @@ export const FreelancerDashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* Trust & Guarantee Inner Card */}
+            <div className="bg-cream border-2 border-ink rounded-xl p-3.5 shadow-retro-sm space-y-2 text-left">
+              <div className="flex items-center space-x-2 text-xs font-bold font-display uppercase tracking-wider text-ink">
+                <Shield className="h-4 w-4 text-accent-teal" />
+                <span>Escrow Trust Guard</span>
+              </div>
+              <p className="text-[11px] font-sans text-ink/75 leading-relaxed font-bold">
+                100% Payout Guaranteed on milestone deliverables through SkillSphere Escrow.
+              </p>
+            </div>
+
             {!isEditing && (
-              <>
+              <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-4">
                 <Button
                   onClick={() => setIsEditing(true)}
                   variant="outline"
-                  className="w-full mt-4"
+                  className="w-full font-display font-bold uppercase tracking-wider text-xs"
                 >
-                  <Edit className="h-4 w-4 mr-1" />
+                  <Edit className="h-4 w-4 mr-1.5" />
                   <span>Modify Settings</span>
                 </Button>
                 
-                <div className="w-full mt-4 border-t-2 border-ink pt-4 space-y-4">
+                <div className="border-t-2 border-ink pt-4 space-y-4">
                   <AvatarUpload />
                   <ResumeUpload />
                 </div>
-              </>
+              </div>
             )}
           </Card>
-
-
-
 
           <TwoFactorSetup />
 
@@ -903,7 +919,7 @@ export const FreelancerDashboard: React.FC = () => {
           ) : null}
 
           {/* Card 3: Skills Manager */}
-          <Card>
+          <Card variant="teal">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-wider mb-4 pl-1">Skills Management</h3>
             
             {skills.length > 0 ? (
@@ -911,7 +927,7 @@ export const FreelancerDashboard: React.FC = () => {
                 {skills.map((s, i) => (
                   <span 
                     key={i} 
-                    className="inline-flex items-center space-x-2 px-3 py-1.5 border-2 border-ink bg-cream text-xs text-ink rounded-lg shadow-retro-sm"
+                    className="inline-flex items-center space-x-2 px-3 py-1.5 border-2 border-ink bg-cream text-xs text-ink rounded-lg shadow-retro-sm font-bold"
                   >
                     <span>{s.name}</span>
                     <Badge variant={s.level === 'Expert' ? 'teal' : s.level === 'Intermediate' ? 'amber' : 'outline'} className="shadow-none">
@@ -930,7 +946,7 @@ export const FreelancerDashboard: React.FC = () => {
               <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No skills listed in your profile. Add skills to matching algorithms.</p>
             )}
 
-            <form onSubmit={handleAddSkill} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <form onSubmit={handleAddSkill} className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-1.5">
                 <Input
                   type="text"
@@ -963,13 +979,13 @@ export const FreelancerDashboard: React.FC = () => {
           </Card>
 
           {/* Card 4: Portfolio */}
-          <Card>
+          <Card variant="amber">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-wider mb-4 pl-1">Portfolio Registry</h3>
 
             {portfolio.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {portfolio.map((item, i) => (
-                  <Card key={i} className="p-4 shadow-retro-sm">
+                  <Card key={i} className="p-4 shadow-retro-sm bg-cream">
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <h4 className="font-bold text-ink text-xs uppercase tracking-tight truncate">{item.title}</h4>
@@ -1000,7 +1016,7 @@ export const FreelancerDashboard: React.FC = () => {
               <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No portfolio items logged.</p>
             )}
 
-            <form onSubmit={handleAddPortfolio} className="space-y-3.5 border-t-2 border-ink pt-4 font-sans text-left">
+            <form onSubmit={handleAddPortfolio} className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3.5 font-sans text-left">
               <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Add Portfolio Project</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
@@ -1027,7 +1043,7 @@ export const FreelancerDashboard: React.FC = () => {
               />
               <Button
                 type="submit"
-                variant="secondary"
+                variant="coral"
                 className="w-full py-2.5 flex items-center justify-center space-x-1.5"
               >
                 <Plus className="h-4 w-4" />
@@ -1037,13 +1053,13 @@ export const FreelancerDashboard: React.FC = () => {
           </Card>
 
           {/* Card 5: Certifications */}
-          <Card>
+          <Card variant="pink">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-wider mb-4 pl-1">Certifications & Credentials</h3>
 
             {certifications.length > 0 ? (
               <div className="space-y-2 mb-6 font-sans">
                 {certifications.map((cert, i) => (
-                  <div key={i} className="p-3 bg-cream border-2 border-ink text-xs flex items-center justify-between text-ink font-mono rounded-lg">
+                  <div key={i} className="p-3 bg-cream border-2 border-ink text-xs flex items-center justify-between text-ink font-mono rounded-lg shadow-retro-sm">
                     <span className="flex items-center space-x-2">
                       <Award className="h-4 w-4 text-accent-amber flex-shrink-0" />
                       <span>{cert}</span>
@@ -1062,7 +1078,7 @@ export const FreelancerDashboard: React.FC = () => {
               <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No certifications listed.</p>
             )}
 
-            <form onSubmit={handleAddCert} className="flex gap-2">
+            <form onSubmit={handleAddCert} className="bg-cream border-2 border-ink rounded-xl p-3 shadow-retro-sm flex gap-2">
               <Input
                 type="text"
                 required
@@ -1082,13 +1098,13 @@ export const FreelancerDashboard: React.FC = () => {
           </Card>
 
           {/* Card 6: Work Experience Timeline */}
-          <Card>
+          <Card variant="coral">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-wider mb-4 pl-1">Work Experience Timeline</h3>
 
             {experience.length > 0 ? (
               <div className="space-y-4 mb-6 font-sans">
                 {experience.map((exp, i) => (
-                  <div key={i} className="p-3 bg-cream border-2 border-ink text-xs text-ink rounded-lg relative text-left">
+                  <div key={i} className="p-3.5 bg-cream border-2 border-ink text-xs text-ink rounded-lg relative text-left shadow-retro-sm">
                     <button
                       type="button"
                       onClick={() => handleDeleteExperience(i)}
@@ -1117,7 +1133,7 @@ export const FreelancerDashboard: React.FC = () => {
               <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No work experience timeline listed.</p>
             )}
 
-            <form onSubmit={handleAddExperience} className="space-y-3.5 border-t-2 border-ink pt-4 font-sans text-left">
+            <form onSubmit={handleAddExperience} className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3.5 font-sans text-left">
               <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Add Job Entry</span>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

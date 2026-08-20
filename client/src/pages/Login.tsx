@@ -95,25 +95,27 @@ export const Login: React.FC = () => {
   return (
     <div className="max-w-lg mx-auto px-4 py-12 flex-grow bg-cream font-sans transition-colors duration-200">
 
-      <Card className="p-5 sm:p-8 text-left">
-        <div className="text-left mb-8">
-          <div className="h-10 w-10 bg-accent-amber flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg mb-4 shadow-retro-sm">
+      <Card variant="amber" className="p-6 sm:p-8 text-left space-y-5">
+        <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex items-start space-x-3 text-left">
+          <div className="h-10 w-10 bg-accent-amber flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg shadow-retro-sm flex-shrink-0">
             <Globe className="h-5 w-5" />
           </div>
-          <h2 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Welcome Back</h2>
-          <p className="text-xs font-sans text-ink/60 mt-1.5 leading-relaxed">
-            Log into your SkillSphere marketplace to manage gigs &amp; active contracts.
-          </p>
+          <div>
+            <h2 className="text-xl font-display font-black text-ink uppercase tracking-tight">Welcome Back</h2>
+            <p className="text-xs font-sans text-ink/65 mt-0.5 leading-relaxed">
+              Log into your SkillSphere marketplace to manage gigs &amp; contracts.
+            </p>
+          </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-cream border-2 border-ink border-l-4 border-l-accent-coral flex items-start space-x-3 text-ink text-xs font-sans rounded-lg">
+          <div className="p-4 bg-cream border-2 border-ink border-l-4 border-l-accent-coral flex items-start space-x-3 text-ink text-xs font-sans rounded-lg">
             <AlertTriangle className="h-4 w-4 text-accent-coral flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 font-sans">
+        <form onSubmit={handleSubmit} className="bg-cream border-2 border-ink rounded-xl p-5 shadow-retro-sm space-y-4 font-sans">
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">
               Email Address
@@ -158,7 +160,7 @@ export const Login: React.FC = () => {
             type="submit"
             disabled={loading || authLoading}
             variant="primary"
-            className="w-full mt-2"
+            className="w-full mt-2 font-display uppercase font-bold text-xs"
           >
             {loading ? (
               <span className="w-4 h-4 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></span>
@@ -171,22 +173,24 @@ export const Login: React.FC = () => {
           </Button>
         </form>
 
-        <div className="my-6 flex items-center justify-center space-x-2">
-          <div className="flex-grow h-[2px] bg-ink/10" />
-          <span className="text-[10px] font-mono text-ink/60 uppercase font-bold px-2">OR</span>
-          <div className="flex-grow h-[2px] bg-ink/10" />
-        </div>
+        <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-4">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="flex-grow h-[2px] bg-ink/10" />
+            <span className="text-[10px] font-mono text-ink/60 uppercase font-bold px-2">OR CONTINUE WITH</span>
+            <div className="flex-grow h-[2px] bg-ink/10" />
+          </div>
 
-        {/* Google Sign In Container */}
-        <div className="flex justify-center w-full overflow-hidden">
-          <div id="google-signin-btn" className="w-full max-w-full flex justify-center overflow-hidden"></div>
-        </div>
+          {/* Google Sign In Container */}
+          <div className="flex justify-center w-full overflow-hidden">
+            <div id="google-signin-btn" className="w-full max-w-full flex justify-center overflow-hidden"></div>
+          </div>
 
-        <div className="text-center mt-8 pt-6 border-t-2 border-ink font-sans text-xs">
-          <span className="text-ink/60 font-bold">Don't have an account yet? </span>
-          <Link to="/register" className="font-bold text-accent-teal hover:underline uppercase font-display text-xs">
-            Register Here →
-          </Link>
+          <div className="text-center pt-2 border-t border-ink/10 font-sans text-xs">
+            <span className="text-ink/60 font-bold">Don't have an account yet? </span>
+            <Link to="/register" className="font-bold text-accent-teal hover:underline uppercase font-display text-xs">
+              Register Here →
+            </Link>
+          </div>
         </div>
       </Card>
     </div>
