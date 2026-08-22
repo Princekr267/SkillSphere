@@ -66,7 +66,9 @@ export const Register: React.FC = () => {
           });
           const btnContainer = document.getElementById('google-register-btn');
           if (btnContainer) {
-            const width = window.innerWidth < 450 ? Math.min(window.innerWidth - 64, 320) : 380;
+            btnContainer.innerHTML = '';
+            const parentWidth = btnContainer.parentElement?.clientWidth || (window.innerWidth - 64);
+            const width = Math.max(200, Math.min(parentWidth, 380));
             (window as any).google.accounts.id.renderButton(
               btnContainer,
               { theme: 'outline', size: 'large', type: 'standard', width }
@@ -358,8 +360,8 @@ export const Register: React.FC = () => {
               <span className="relative px-3 bg-cream text-[10px] font-bold text-ink/60 uppercase tracking-widest">or register using</span>
             </div>
 
-            <div className="flex justify-center">
-              <div id="google-register-btn" className="border-2 border-ink rounded-lg overflow-hidden shadow-retro-sm"></div>
+            <div className="flex justify-center w-full overflow-hidden">
+              <div id="google-register-btn" className="border-2 border-ink rounded-lg overflow-hidden shadow-retro-sm max-w-full"></div>
             </div>
           </div>
         )}

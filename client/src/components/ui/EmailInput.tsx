@@ -120,7 +120,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
           <select
             value={domainPart}
             onChange={handleDomainSelectChange}
-            className="px-2 py-3 bg-cream border-2 border-ink rounded-lg text-ink text-sm outline-none transition-colors focus:bg-accent-amber/10 focus:border-accent-amber font-mono font-bold select-none cursor-pointer w-[125px] sm:w-[140px] flex-shrink-0"
+            className="px-2 py-3 bg-cream border-2 border-ink rounded-lg text-ink text-sm outline-none transition-colors focus:bg-accent-amber/10 focus:border-accent-amber font-mono font-bold select-none cursor-pointer w-[110px] sm:w-[140px] flex-shrink-0"
           >
             {COMMON_DOMAINS.map(dom => (
               <option key={dom} value={dom}>{dom}</option>

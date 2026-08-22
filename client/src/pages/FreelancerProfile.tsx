@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { ReviewList } from '../components/ReviewList';
 import { StarRating } from '../components/StarRating';
 import { TwoFactorSetup } from '../components/TwoFactorSetup';
@@ -48,7 +48,23 @@ interface PublicUser {
 export const FreelancerProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+
+  const handleBack = () => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+      return;
+    }
+    const dashboardPath = user
+      ? user.role === 'super_admin'
+        ? '/admin'
+        : user.role === 'client'
+        ? '/client-dashboard'
+        : '/freelancer-dashboard'
+      : '/';
+    navigate(dashboardPath);
+  };
 
   const [freelancer, setFreelancer] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -204,7 +220,7 @@ export const FreelancerProfile: React.FC = () => {
       <div className="flex-grow bg-cream flex flex-col items-center justify-center py-16 space-y-3 min-h-[50vh]">
         <AlertCircle className="h-8 w-8 text-accent-coral" />
         <p className="text-sm text-ink">{error || 'Profile not found.'}</p>
-        <button onClick={() => navigate(-1)} className="text-xs text-accent-teal font-bold hover:underline cursor-pointer">
+        <button onClick={handleBack} className="text-xs text-accent-teal font-bold hover:underline cursor-pointer">
           ← Go Back
         </button>
       </div>
@@ -217,7 +233,7 @@ export const FreelancerProfile: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
         <div className="text-left mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors font-bold font-display uppercase tracking-wider cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -310,7 +326,7 @@ export const FreelancerProfile: React.FC = () => {
         {/* Back button */}
         <div className="text-left">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-8 font-bold font-display uppercase tracking-wider cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -426,7 +442,7 @@ export const FreelancerProfile: React.FC = () => {
       {/* Back button */}
       <div className="text-left">
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-8 font-bold font-display uppercase tracking-wider cursor-pointer"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -438,43 +454,48 @@ export const FreelancerProfile: React.FC = () => {
         
         {/* Left Column: Summary and Availability Scheduler */}
         <div className="space-y-6 lg:col-span-1">
-          <Card className="flex flex-col items-center text-center">
-            <div className="h-24 w-24 bg-cream border-2 border-ink overflow-hidden flex items-center justify-center font-display text-3xl font-black text-ink uppercase mb-4 rounded-lg shadow-retro">
-              {freelancer.avatar ? (
-                <img src={freelancer.avatar} alt={freelancer.name} className="h-full w-full object-cover" />
-              ) : (
-                freelancer.name.charAt(0)
-              )}
+          <Card variant="teal" className="space-y-4">
+            
+            {/* Identity Inner Card */}
+            <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex flex-col items-center text-center">
+              <div className="h-20 w-20 bg-cream border-2 border-ink overflow-hidden flex items-center justify-center font-display text-2xl font-black text-ink uppercase mb-3 rounded-lg shadow-retro">
+                {freelancer.avatar ? (
+                  <img src={freelancer.avatar} alt={freelancer.name} className="h-full w-full object-cover" />
+                ) : (
+                  freelancer.name.charAt(0)
+                )}
+              </div>
+
+              <h1 className="text-lg font-black font-display text-ink uppercase tracking-tight">
+                {freelancer.name}
+              </h1>
+
+              <Badge variant="teal" className="mt-1 shadow-none text-[9px] font-mono uppercase font-bold">
+                {freelancer.role}
+              </Badge>
             </div>
 
-            <h1 className="text-xl font-black font-display text-ink uppercase tracking-tight">
-              {freelancer.name}
-            </h1>
-
-            <Badge variant="outline" className="mt-1.5 shadow-none">
-              {freelancer.role}
-            </Badge>
-
-            <div className="w-full border-t-2 border-ink mt-6 pt-6 space-y-4 text-left font-mono text-xs">
-              <div className="flex items-center space-x-3 text-ink/60">
+            {/* Stats Inner Card */}
+            <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3.5 text-left font-mono text-xs">
+              <div className="flex items-center space-x-3 text-ink/70">
                 <MapPin className="h-4 w-4 text-accent-teal flex-shrink-0" />
                 <span className="font-bold text-ink uppercase">{freelancer.location.city}</span>
               </div>
 
               {freelancer.hourlyRate !== undefined && (
-                <div className="flex items-center space-x-3 text-ink/60">
+                <div className="flex items-center space-x-3 text-ink/70">
                   <DollarSign className="h-4 w-4 text-accent-teal flex-shrink-0" />
                   <span className="font-bold text-ink">₹{freelancer.hourlyRate} / hr</span>
                 </div>
               )}
 
-              <div className="flex items-center space-x-3 text-ink/60">
+              <div className="flex items-center space-x-3 text-ink/70">
                 <Calendar className="h-4 w-4 text-accent-teal flex-shrink-0" />
                 <span className="font-bold text-ink">Joined {new Date(freelancer.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</span>
               </div>
 
               {/* Overall score */}
-              <div className="border-t-2 border-ink pt-4 flex flex-col items-start space-y-1">
+              <div className="border-t-2 border-ink pt-3 flex flex-col items-start space-y-1">
                 <span className="text-[9px] font-mono text-ink/60 uppercase tracking-widest font-bold">Reputation Score</span>
                 <div className="flex items-center space-x-2">
                   <StarRating value={freelancer.rating} size="sm" />
@@ -484,21 +505,21 @@ export const FreelancerProfile: React.FC = () => {
 
               {/* Resume / CV Download Section */}
               {freelancer.resume?.url && (
-                <div className="border-t-2 border-ink pt-4 font-sans text-xs w-full">
+                <div className="border-t-2 border-ink pt-3 font-sans text-xs w-full">
                   <a
                     href={freelancer.resume.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 bg-accent-teal/10 hover:bg-accent-teal/20 border-2 border-ink rounded-lg shadow-retro-sm transition-all text-ink font-bold group"
+                    className="flex items-center justify-between p-2.5 bg-accent-teal/10 hover:bg-accent-teal/20 border-2 border-ink rounded-lg shadow-retro-sm transition-all text-ink font-bold group"
                   >
-                    <div className="flex items-center space-x-2.5 min-w-0 pr-2">
-                      <FileText className="h-5 w-5 text-accent-teal flex-shrink-0 group-hover:scale-110 transition-transform" />
+                    <div className="flex items-center space-x-2 min-w-0 pr-2">
+                      <FileText className="h-4 w-4 text-accent-teal flex-shrink-0 group-hover:scale-110 transition-transform" />
                       <div className="truncate text-left">
-                        <span className="block text-[11px] font-display uppercase tracking-wider">Freelancer Resume</span>
-                        <span className="block text-[9px] font-mono text-ink/70 truncate">{freelancer.resume.originalName || 'View Document'}</span>
+                        <span className="block text-[10px] font-display uppercase tracking-wider">Freelancer Resume</span>
+                        <span className="block text-[8px] font-mono text-ink/70 truncate">{freelancer.resume.originalName || 'View Document'}</span>
                       </div>
                     </div>
-                    <Badge variant="teal" className="text-[9px] font-mono shadow-none flex-shrink-0 uppercase">
+                    <Badge variant="teal" className="text-[8px] font-mono shadow-none flex-shrink-0 uppercase">
                       View CV →
                     </Badge>
                   </a>
@@ -506,130 +527,142 @@ export const FreelancerProfile: React.FC = () => {
               )}
 
             </div>
+
+            {/* Trust & Guarantee Inner Card */}
+            <div className="bg-cream border-2 border-ink rounded-xl p-3.5 shadow-retro-sm space-y-1.5 text-left">
+              <div className="flex items-center space-x-2 text-xs font-bold font-display uppercase tracking-wider text-ink">
+                <Shield className="h-4 w-4 text-accent-teal" />
+                <span>Escrow Verified</span>
+              </div>
+              <p className="text-[11px] font-sans text-ink/75 leading-relaxed font-bold">
+                100% Payout Guaranteed on milestone deliverables through SkillSphere Escrow.
+              </p>
+            </div>
           </Card>
 
           {/* Availability / Booking Section */}
-          <Card className="text-left">
+          <Card variant="amber" className="text-left">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1 flex items-center space-x-1.5">
               <Calendar className="h-4 w-4 text-accent-teal" />
               <span>Availability Calendar</span>
             </h3>
 
-            {/* Self availability edit */}
-            {user?._id === freelancer._id ? (
-              editingAvailability ? (
-                <div className="space-y-4 font-sans text-xs">
-                  <div className="space-y-3">
-                    {tempAvailability.map((slot, idx) => (
-                      <div key={idx} className="flex items-center space-x-2 bg-cream border-2 border-ink p-2 rounded-lg shadow-retro-sm">
-                        <select
-                          value={slot.dayOfWeek}
-                          onChange={e => handleUpdateTempSlot(idx, 'dayOfWeek', Number(e.target.value))}
-                          className="bg-cream border border-ink text-[10px] text-ink font-mono p-1 focus:outline-none rounded cursor-pointer"
-                        >
-                          {DAYS_OF_WEEK.map((d, i) => (
-                            <option key={i} value={i} className="bg-cream text-ink">{d}</option>
-                          ))}
-                        </select>
-                        <Input
-                          type="text"
-                          value={slot.startTime}
-                          onChange={e => handleUpdateTempSlot(idx, 'startTime', e.target.value)}
-                          className="text-[10px] font-mono w-14 text-center py-1"
-                          placeholder="09:00"
-                        />
-                        <span className="font-mono text-[9px] text-ink/60">to</span>
-                        <Input
-                          type="text"
-                          value={slot.endTime}
-                          onChange={e => handleUpdateTempSlot(idx, 'endTime', e.target.value)}
-                          className="text-[10px] font-mono w-14 text-center py-1"
-                          placeholder="17:00"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTempSlot(idx)}
-                          className="text-accent-coral hover:text-accent-coral/80 cursor-pointer"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+            <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm">
+              {/* Self availability edit */}
+              {user?._id === freelancer._id ? (
+                editingAvailability ? (
+                  <div className="space-y-4 font-sans text-xs">
+                    <div className="space-y-3">
+                      {tempAvailability.map((slot, idx) => (
+                        <div key={idx} className="flex items-center space-x-2 bg-cream border-2 border-ink p-2 rounded-lg shadow-retro-sm">
+                          <select
+                            value={slot.dayOfWeek}
+                            onChange={e => handleUpdateTempSlot(idx, 'dayOfWeek', Number(e.target.value))}
+                            className="bg-cream border border-ink text-[10px] text-ink font-mono p-1 focus:outline-none rounded cursor-pointer"
+                          >
+                            {DAYS_OF_WEEK.map((d, i) => (
+                              <option key={i} value={i} className="bg-cream text-ink">{d}</option>
+                            ))}
+                          </select>
+                          <Input
+                            type="text"
+                            value={slot.startTime}
+                            onChange={e => handleUpdateTempSlot(idx, 'startTime', e.target.value)}
+                            className="text-[10px] font-mono w-14 text-center py-1 bg-cream"
+                            placeholder="09:00"
+                          />
+                          <span className="font-mono text-[9px] text-ink/60 font-bold">to</span>
+                          <Input
+                            type="text"
+                            value={slot.endTime}
+                            onChange={e => handleUpdateTempSlot(idx, 'endTime', e.target.value)}
+                            className="text-[10px] font-mono w-14 text-center py-1 bg-cream"
+                            placeholder="17:00"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTempSlot(idx)}
+                            className="text-accent-coral hover:text-accent-coral/80 cursor-pointer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={handleAddTempSlot}
+                        className="w-full py-2 border-2 border-dashed border-ink text-[10px] font-mono font-bold hover:bg-accent-amber/10 rounded-lg uppercase cursor-pointer"
+                      >
+                        + Add Time Slot
+                      </button>
+                    </div>
+                    <div className="flex items-center space-x-2 pt-2">
+                      <Button
+                        onClick={handleSaveAvailability}
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1 py-1.5 font-bold"
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        onClick={() => setEditingAvailability(false)}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 py-1.5 font-bold"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4 font-mono text-xs">
+                    {(!freelancer.availability || freelancer.availability.length === 0) ? (
+                      <p className="text-[10px] text-ink/60 italic pl-1">No availability slots set. Edit to define your calendar schedule.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {freelancer.availability.map((slot, idx) => (
+                          <div key={idx} className="flex justify-between border-b border-ink/10 pb-1.5 text-[10px] text-ink font-bold font-mono">
+                            <span>{DAYS_OF_WEEK[slot.dayOfWeek]}</span>
+                            <span>{slot.startTime} - {slot.endTime}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={handleAddTempSlot}
-                      className="w-full py-2 border-2 border-dashed border-ink text-[10px] font-mono font-bold hover:bg-accent-amber/10 rounded-lg uppercase cursor-pointer"
-                    >
-                      + Add Time Slot
-                    </button>
-                  </div>
-                  <div className="flex items-center space-x-2 pt-2">
+                    )}
                     <Button
-                      onClick={handleSaveAvailability}
-                      variant="secondary"
-                      size="sm"
-                      className="flex-1 py-1.5"
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      onClick={() => setEditingAvailability(false)}
+                      onClick={() => {
+                        setTempAvailability(freelancer.availability || []);
+                        setEditingAvailability(true);
+                      }}
                       variant="outline"
-                      size="sm"
-                      className="flex-1 py-1.5"
+                      className="w-full py-1.5 text-[10px] font-display uppercase font-bold"
                     >
-                      Cancel
+                      Edit Availability
                     </Button>
                   </div>
-                </div>
+                )
               ) : (
-                <div className="space-y-4 font-mono text-xs">
-                  {(!freelancer.availability || freelancer.availability.length === 0) ? (
-                    <p className="text-[10px] text-ink/60 italic pl-1">No availability slots set. Edit to define your calendar schedule.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {freelancer.availability.map((slot, idx) => (
-                        <div key={idx} className="flex justify-between border-b border-ink/10 pb-1.5 text-[10px] text-ink font-bold font-mono">
+                /* Public / Client view */
+                <div className="space-y-4">
+                  {/* List Slots */}
+                  <div className="font-mono text-xs space-y-2">
+                    <span className="text-[9px] font-bold text-ink/60 uppercase tracking-wider block mb-1">Weekly Slots</span>
+                    {(!freelancer.availability || freelancer.availability.length === 0) ? (
+                      <p className="text-[10px] text-ink/60 italic pl-1">No slots configured.</p>
+                    ) : (
+                      freelancer.availability.map((slot, idx) => (
+                        <div key={idx} className="flex justify-between border-b border-ink/10 pb-1 text-[10px] text-ink font-bold font-mono">
                           <span>{DAYS_OF_WEEK[slot.dayOfWeek]}</span>
                           <span>{slot.startTime} - {slot.endTime}</span>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                  <Button
-                    onClick={() => {
-                      setTempAvailability(freelancer.availability || []);
-                      setEditingAvailability(true);
-                    }}
-                    variant="outline"
-                    className="w-full py-1.5 text-[10px]"
-                  >
-                    Edit Availability
-                  </Button>
-                </div>
-              )
-            ) : (
-              /* Public / Client view */
-              <div className="space-y-4">
-                {/* List Slots */}
-                <div className="font-mono text-xs space-y-2">
-                  <span className="text-[9px] font-bold text-ink/60 uppercase tracking-wider block mb-1">Weekly Slots</span>
-                  {(!freelancer.availability || freelancer.availability.length === 0) ? (
-                    <p className="text-[10px] text-ink/60 italic pl-1">No slots configured.</p>
-                  ) : (
-                    freelancer.availability.map((slot, idx) => (
-                      <div key={idx} className="flex justify-between border-b border-ink/10 pb-1 text-[10px] text-ink font-bold font-mono">
-                        <span>{DAYS_OF_WEEK[slot.dayOfWeek]}</span>
-                        <span>{slot.startTime} - {slot.endTime}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+                      ))
+                    )}
+                  </div>
 
-                {/* Booking Form */}
-                {user?.role === 'client' && (
-                  <form onSubmit={handleBookSlot} className="border-t border-ink/10 pt-4 space-y-3 font-sans text-left">
-                    <span className="text-[9px] font-mono font-bold text-ink/60 uppercase tracking-wider block">Book a slot</span>
+                  {/* Booking Form */}
+                  {user?.role === 'client' && (
+                    <form onSubmit={handleBookSlot} className="border-t border-ink/10 pt-4 space-y-3 font-sans text-left">
+                      <span className="text-[9px] font-mono font-bold text-ink/60 uppercase tracking-wider block">Book a slot</span>
                     
                     {bookingSuccess && <p className="text-[10px] font-bold text-accent-teal">{bookingSuccess}</p>}
                     {bookingError && <p className="text-[10px] font-bold text-accent-coral">{bookingError}</p>}
@@ -697,6 +730,7 @@ export const FreelancerProfile: React.FC = () => {
                 )}
               </div>
             )}
+            </div>
           </Card>
         </div>
 
@@ -704,7 +738,7 @@ export const FreelancerProfile: React.FC = () => {
         <div className="lg:col-span-2 space-y-8 text-left">
           
           {/* Bio */}
-          <Card className="text-left">
+          <Card className="text-left bg-accent-amber/10 border-2 border-ink">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-3 pl-1">Bio / Description</h3>
             <p className="text-sm text-ink leading-relaxed font-sans font-bold">
               {freelancer.bio || 'No bio configured yet.'}
@@ -714,7 +748,7 @@ export const FreelancerProfile: React.FC = () => {
           {/* Skills / Certs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Skills */}
-            <Card className="text-left">
+            <Card className="text-left bg-accent-teal/10 border-2 border-ink">
               <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Skills Matrix</h3>
               {freelancer.skills.length === 0 ? (
                 <p className="text-xs text-ink/60 font-sans pl-1 italic">No skills listed.</p>
@@ -733,14 +767,14 @@ export const FreelancerProfile: React.FC = () => {
             </Card>
 
             {/* Certs */}
-            <Card className="text-left">
+            <Card className="text-left bg-accent-pink/10 border-2 border-ink">
               <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Credentials</h3>
               {freelancer.certifications.length === 0 ? (
                 <p className="text-xs text-ink/60 font-sans pl-1 italic">No credentials listed.</p>
               ) : (
                 <ul className="space-y-2 font-mono">
                   {freelancer.certifications.map((c, i) => (
-                    <li key={i} className="flex items-start space-x-2 text-xs text-ink font-sans">
+                    <li key={i} className="flex items-start space-x-2 text-xs text-ink font-sans bg-cream border-2 border-ink p-2.5 rounded-lg shadow-retro-sm">
                       <Award className="h-4 w-4 text-accent-teal flex-shrink-0 mt-0.5" />
                       <span className="font-bold">{c}</span>
                     </li>
@@ -751,14 +785,14 @@ export const FreelancerProfile: React.FC = () => {
           </div>
 
           {/* Portfolio */}
-          <Card className="text-left">
-            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Portfolio</h3>
+          <Card className="text-left bg-accent-amber/10 border-2 border-ink">
+            <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Portfolio Registry</h3>
             {freelancer.portfolio.length === 0 ? (
               <p className="text-xs text-ink/60 font-sans pl-1 italic">No portfolio items added.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {freelancer.portfolio.map((p, i) => (
-                  <Card key={i} className="p-4 shadow-retro-sm">
+                  <Card key={i} className="p-4 shadow-retro-sm bg-cream">
                     <h4 className="font-bold text-ink text-sm font-display uppercase tracking-tight">{p.title}</h4>
                     <p className="text-xs text-ink/60 mt-1.5 leading-relaxed font-sans">{p.description}</p>
                     {p.link && (
@@ -773,16 +807,16 @@ export const FreelancerProfile: React.FC = () => {
           </Card>
 
           {/* Work Experience Timeline */}
-          <Card className="text-left">
+          <Card className="text-left bg-accent-coral/10 border-2 border-ink">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Work Experience Timeline</h3>
             {(!freelancer.experience || freelancer.experience.length === 0) ? (
               <p className="text-xs text-ink/60 font-sans pl-1 italic">No work experience timeline listed.</p>
             ) : (
               <div className="relative border-l-2 border-ink ml-3 pl-6 space-y-6 my-2">
                 {freelancer.experience.map((exp, i) => (
-                  <div key={i} className="relative">
+                  <div key={i} className="relative bg-cream border-2 border-ink p-3.5 rounded-lg shadow-retro-sm">
                     {/* Bullet marker */}
-                    <div className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 bg-accent-teal border-2 border-ink rounded-full" />
+                    <div className="absolute -left-[33px] top-4 h-3.5 w-3.5 bg-accent-coral border-2 border-ink rounded-full" />
                     <div>
                       <h4 className="font-bold text-ink text-sm font-display uppercase tracking-tight">
                         {exp.title}
@@ -806,7 +840,7 @@ export const FreelancerProfile: React.FC = () => {
           </Card>
 
           {/* Reviews section */}
-          <Card className="text-left">
+          <Card className="text-left bg-accent-teal/10 border-2 border-ink">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-4 pl-1">Community Feedback</h3>
             <ReviewList userId={freelancer._id} limit={20} />
           </Card>

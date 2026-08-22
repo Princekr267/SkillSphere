@@ -23,6 +23,7 @@ import disputeRoutes from './routes/disputeRoutes';
 import aiRoutes from './routes/aiRoutes';
 import bookingRoutes from './routes/bookingRoutes';
 import companyRoutes from './routes/companyRoutes';
+import messageRoutes from './routes/messageRoutes';
 import { initSocket } from './socket';
 
 
@@ -89,6 +90,7 @@ app.use('/api/disputes', disputeRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/companies', companyRoutes);
+app.use('/api/messages', messageRoutes);
 
 
 // Root route for server verification

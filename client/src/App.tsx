@@ -24,6 +24,7 @@ import { NotFound } from './pages/NotFound';
 import { RegisterCompany } from './pages/RegisterCompany';
 import { JoinCompany } from './pages/JoinCompany';
 import { CompanyDashboard } from './pages/CompanyDashboard';
+import { Home } from './pages/Home';
 import './App.css';
 
 // Root level redirect based on user authentication and role
@@ -174,8 +175,8 @@ const AppContent: React.FC = () => {
             }
           />
 
-          {/* Fallback Home Route */}
-          <Route path="/" element={<HomeRedirect />} />
+          {/* Home Route */}
+          <Route path="/" element={<Home />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
 

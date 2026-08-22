@@ -1,12 +1,49 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Globe, MapPin, Mail } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const Footer: React.FC = () => {
+  const { user } = useAuth();
   const year = new Date().getFullYear();
 
+  const getPlatformLinks = () => {
+    if (!user) {
+      return [
+        { label: 'Browse Gigs', to: '/gigs' },
+        { label: 'Find Freelancers', to: '/gigs' },
+        { label: 'Register Now', to: '/register' },
+        { label: 'Sign In', to: '/login' },
+      ];
+    }
+    if (user.role === 'client') {
+      return [
+        { label: 'Browse Gigs', to: '/gigs' },
+        { label: 'Post a Gig', to: '/client-dashboard' },
+        { label: 'My Dashboard', to: '/client-dashboard' },
+      ];
+    }
+    if (user.role === 'freelancer') {
+      return [
+        { label: 'Browse Gigs', to: '/gigs' },
+        { label: 'My Dashboard', to: '/freelancer-dashboard' },
+        { label: 'My Applications', to: '/freelancer-dashboard?tab=applications' },
+      ];
+    }
+    if (user.role === 'super_admin') {
+      return [
+        { label: 'Admin Dashboard', to: '/admin' },
+      ];
+    }
+    return [
+      { label: 'Browse Gigs', to: '/gigs' },
+    ];
+  };
+
+  const platformLinks = getPlatformLinks();
+
   return (
-    <footer className="bg-ink dark:bg-cream text-cream dark:text-ink border-t-4 border-ink dark:border-cream relative transition-colors duration-200">
+    <footer className="bg-ink dark:bg-cream text-cream dark:text-ink border-t-4 border-ink dark:border-cream relative transition-colors duration-200 mt-auto w-full">
       
       {/* Top: styling divider bar */}
       <div className="relative h-[4px] bg-ink/20 dark:bg-cream/15 border-b border-ink dark:border-cream" />
@@ -44,12 +81,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-3 text-left">
             <h4 className="text-[10px] font-display font-extrabold uppercase tracking-widest text-accent-amber">Platform</h4>
             <ul className="space-y-2">
-              {[
-                { label: 'Browse Gigs', to: '/gigs' },
-                { label: 'Post a Gig', to: '/client-dashboard' },
-                { label: 'Find Freelancers', to: '/gigs' },
-                { label: 'Register Now', to: '/register' },
-              ].map(({ label, to }) => (
+              {platformLinks.map(({ label, to }) => (
                 <li key={label}>
                   <Link to={to} className="text-xs font-sans text-cream/60 dark:text-ink/65 hover:text-cream dark:hover:text-ink hover:underline transition-colors font-bold">
                     {label}
@@ -72,7 +104,12 @@ export const Footer: React.FC = () => {
                 'Marketing & Sales',
               ].map(cat => (
                 <li key={cat}>
-                  <span className="text-xs font-sans text-cream/60 dark:text-ink/65 font-bold">{cat}</span>
+                  <Link
+                    to={`/gigs?category=${encodeURIComponent(cat)}`}
+                    className="text-xs font-sans text-cream/60 dark:text-ink/65 hover:text-cream dark:hover:text-ink hover:underline transition-colors font-bold block"
+                  >
+                    {cat}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -88,7 +125,9 @@ export const Footer: React.FC = () => {
               </li>
               <li className="flex items-start space-x-2 text-xs text-cream/60 dark:text-ink/65 font-sans font-bold">
                 <Mail className="h-3.5 w-3.5 text-accent-teal flex-shrink-0 mt-0.5" />
-                <span>hello@skillsphere.in</span>
+                <a href="mailto:hello@skillsphere.in" className="hover:underline hover:text-cream dark:hover:text-ink transition-colors">
+                  hello@skillsphere.in
+                </a>
               </li>
             </ul>
 
@@ -105,15 +144,8 @@ export const Footer: React.FC = () => {
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-cream/15 dark:border-ink/15 flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
           <p className="text-[10px] font-mono text-cream/40 dark:text-ink/40 uppercase tracking-wider font-bold">
-            © {year} SkillSphere · Built in India
+            © {year} SkillSphere · Hyperlocal Freelance Marketplace · Built in India
           </p>
-          <div className="flex items-center space-x-4">
-            {['Privacy', 'Terms', 'Careers'].map(item => (
-              <Link key={item} to="/register" className="text-[10px] font-mono text-cream/40 dark:text-ink/40 hover:text-cream/80 dark:hover:text-ink/80 uppercase tracking-wider transition-colors font-bold">
-                {item}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </footer>

@@ -8,9 +8,9 @@ import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 
 import {
-  Plus, Tag, DollarSign, MapPin, Users, ChevronDown,
+  Plus, Tag, DollarSign, MapPin, Users,
   ChevronRight, CheckCircle2, XCircle, Loader2, Trash2, X,
-  Banknote, MessageSquare
+  Banknote, MessageSquare, User, ExternalLink
 } from 'lucide-react';
 
 const GIG_CATEGORIES = [
@@ -42,6 +42,7 @@ interface GigData {
   title: string;
   category: string;
   budget: number;
+  finalAgreedAmount?: number;
   budgetType: 'fixed' | 'hourly';
   status: string;
   escrowStatus: string;
@@ -343,9 +344,9 @@ export const ClientGigManager: React.FC = () => {
 
       {/* Post New Gig Form */}
       {showPostForm && (
-        <Card className="animate-fade-in">
-          <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest mb-6 pl-1">Post a New Gig</h3>
-          <form onSubmit={handlePostGig} className="space-y-5">
+        <Card variant="amber" className="animate-fade-in space-y-4">
+          <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest pl-1">Post a New Gig</h3>
+          <form onSubmit={handlePostGig} className="bg-cream border-2 border-ink rounded-xl p-5 shadow-retro-sm space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-[10px] font-bold font-display uppercase tracking-widest text-ink pl-1">Gig Title *</label>
@@ -480,183 +481,224 @@ export const ClientGigManager: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {gigs.map((gig) => (
-            <div 
-              key={gig._id} 
-              className="bg-cream border-2 border-ink rounded-xl overflow-hidden shadow-retro"
-            >
-              {/* Gig header row */}
-              <div
-                className="p-5 flex items-center justify-between cursor-pointer hover:bg-accent-amber/10 transition-colors"
-                onClick={() => handleToggleExpand(gig._id)}
+          {gigs.map((gig, gIdx) => {
+            const cardVariants: Array<'teal' | 'amber' | 'pink' | 'coral'> = ['teal', 'amber', 'pink', 'coral'];
+            const currentVariant = cardVariants[gIdx % cardVariants.length];
+            return (
+              <Card
+                key={gig._id} 
+                variant={currentVariant}
+                className="p-0 overflow-hidden shadow-retro"
               >
-                <div className="flex items-center space-x-4 min-w-0">
-                  <div>
-                    {expandedGig === gig._id
-                      ? <ChevronDown className="h-4 w-4 text-ink" />
-                      : <ChevronRight className="h-4 w-4 text-ink" />
-                    }
-                  </div>
-                  <div className="min-w-0 text-left">
-                    <h3 className="font-bold font-display text-ink text-sm uppercase tracking-tight truncate">{gig.title}</h3>
-                    <div className="flex items-center space-x-3 mt-1">
-                      <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
-                        <DollarSign className="h-3 w-3 text-accent-teal" />
-                        <span>₹{gig.budget.toLocaleString()}/{gig.budgetType === 'hourly' ? 'hr' : 'project'}</span>
-                      </span>
-                      <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
-                        <MapPin className="h-3 w-3 text-accent-teal" />
-                        <span>{gig.location.city}</span>
-                      </span>
-                      <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
-                        <Users className="h-3 w-3 text-accent-teal" />
-                        <span>{gigProposals[gig._id]?.length || gig.applicants?.length || 0} applied</span>
-                      </span>
+                {/* Gig header row */}
+                <div
+                  className="p-5 flex items-center justify-between cursor-pointer bg-cream border-b-2 border-ink hover:bg-accent-amber/10 transition-colors"
+                  onClick={() => handleToggleExpand(gig._id)}
+                >
+                  <div className="flex items-center space-x-4 min-w-0">
+                    <div>
+                      <ChevronRight
+                        className={`h-4 w-4 text-ink transition-transform duration-300 ${
+                          expandedGig === gig._id ? 'rotate-90' : 'rotate-0'
+                        }`}
+                      />
+                    </div>
+                    <div className="min-w-0 text-left">
+                      <h3 className="font-bold font-display text-ink text-sm uppercase tracking-tight truncate">{gig.title}</h3>
+                      <div className="flex items-center space-x-3 mt-1">
+                        <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
+                          <DollarSign className="h-3 w-3 text-accent-teal" />
+                          <span>₹{(gig.finalAgreedAmount ?? gig.budget).toLocaleString()}/{gig.budgetType === 'hourly' ? 'hr' : 'project'}</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
+                          <MapPin className="h-3 w-3 text-accent-teal" />
+                          <span>{gig.location.city}</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
+                          <Users className="h-3 w-3 text-accent-teal" />
+                          <span>{gigProposals[gig._id]?.length || gig.applicants?.length || 0} applied</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center space-x-3 flex-shrink-0">
-                  <Badge variant="outline" className={`${STATUS_COLORS[gig.status] || STATUS_COLORS.open} shadow-none`}>
-                    {gig.status.replace('_', ' ')}
-                  </Badge>
-                  {gig.escrowStatus !== 'none' && (
-                    <Badge variant="amber" className="hidden sm:inline-flex shadow-none">
-                      {ESCROW_LABELS[gig.escrowStatus]}
+                  <div className="flex items-center space-x-3 flex-shrink-0">
+                    <Badge variant="outline" className={`${STATUS_COLORS[gig.status] || STATUS_COLORS.open} shadow-none`}>
+                      {gig.status.replace('_', ' ')}
                     </Badge>
-                  )}
-                  {gig.status === 'in_progress' && gig.escrowStatus === 'funds_deposited' && (
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={e => { e.stopPropagation(); handleReleaseEscrow(gig._id); }}
-                        disabled={!!actionLoading}
-                        variant="secondary"
-                        size="sm"
-                        className="shadow-none py-1.5"
+                    {gig.escrowStatus !== 'none' && (
+                      <Badge variant="amber" className="hidden sm:inline-flex shadow-none">
+                        {ESCROW_LABELS[gig.escrowStatus]}
+                      </Badge>
+                    )}
+                    {gig.status === 'in_progress' && (
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                        <span className="text-[9px] font-mono text-ink/60 hidden xl:inline">
+                          Review progress before releasing funds:
+                        </span>
+                        <Link
+                          to={`/gigs/${gig._id}`}
+                          onClick={e => e.stopPropagation()}
+                          className="inline-flex"
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shadow-none py-1.5 bg-cream hover:bg-accent-teal/15 font-display font-bold text-xs"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5 mr-1 text-accent-teal" />
+                            <span>Progress & Milestones</span>
+                          </Button>
+                        </Link>
+                        {gig.escrowStatus === 'funds_deposited' && (
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={e => { e.stopPropagation(); handleReleaseEscrow(gig._id); }}
+                              disabled={!!actionLoading}
+                              variant="secondary"
+                              size="sm"
+                              className="shadow-none py-1.5 font-display font-bold text-xs"
+                            >
+                              <Banknote className="h-3.5 w-3.5 mr-1" />
+                              <span>Release Funds</span>
+                            </Button>
+                            <Button
+                              onClick={e => { e.stopPropagation(); handleRefundEscrow(gig._id); }}
+                              disabled={!!actionLoading}
+                              variant="coral"
+                              size="sm"
+                              className="shadow-none py-1.5 font-display font-bold text-xs"
+                            >
+                              <XCircle className="h-3.5 w-3.5 mr-1" />
+                              <span>Refund</span>
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {gig.status === 'open' && (
+                      <button
+                        onClick={e => { e.stopPropagation(); handleDeleteGig(gig._id); }}
+                        disabled={actionLoading === `delete-${gig._id}`}
+                        className="text-ink/60 hover:text-accent-coral transition-colors p-1 cursor-pointer"
                       >
-                        <Banknote className="h-3.5 w-3.5 mr-1" />
-                        <span>Release Funds</span>
-                      </Button>
-                      <Button
-                        onClick={e => { e.stopPropagation(); handleRefundEscrow(gig._id); }}
-                        disabled={!!actionLoading}
-                        variant="coral"
-                        size="sm"
-                        className="shadow-none py-1.5"
-                      >
-                        <XCircle className="h-3.5 w-3.5 mr-1" />
-                        <span>Refund</span>
-                      </Button>
-                    </div>
-                  )}
-                  {gig.status === 'open' && (
-                    <button
-                      onClick={e => { e.stopPropagation(); handleDeleteGig(gig._id); }}
-                      disabled={actionLoading === `delete-${gig._id}`}
-                      className="text-ink/60 hover:text-accent-coral transition-colors p-1 cursor-pointer"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Expanded: Proposals */}
-              {expandedGig === gig._id && (
-                <div className="border-t-2 border-ink px-5 py-4 bg-cream/40">
-                  <h4 className="text-[10px] font-bold font-display uppercase tracking-widest text-ink mb-4 text-left">
-                    Proposals Received ({gigProposals[gig._id]?.length || 0})
-                  </h4>
-                  {!gigProposals[gig._id] ? (
-                    <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-accent-teal" /></div>
-                  ) : gigProposals[gig._id].length === 0 ? (
-                    <p className="text-xs text-ink/60 font-sans italic text-left">
-                      No proposals yet. Your gig is visible to freelancers {(gig.radiusKm ?? 25) >= 3000 ? 'across all of India (Full Country India)' : `within ${gig.radiusKm ?? 25}km`}.
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {gigProposals[gig._id].map((prop) => (
-                        <Card key={prop._id} className="p-4 shadow-retro-sm">
-                          <div className="flex items-start justify-between gap-4 mb-3">
-                            <div className="text-left">
-                              <h5 className="text-sm font-display uppercase tracking-tight">
-                                <Link
-                                  to={`/profile/${prop.freelancerId?._id}`}
-                                  className="font-bold text-ink hover:text-accent-teal hover:underline transition-colors"
-                                >
-                                  {prop.freelancerId?.name || 'Freelancer'}
-                                </Link>
-                              </h5>
+                {/* Expanded: Proposals */}
+                <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${expandedGig === gig._id ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                  <div className="overflow-hidden">
+                    <div className="p-5 space-y-4 bg-cream/40 border-t-2 border-ink">
+                      <h4 className="text-[10px] font-bold font-display uppercase tracking-widest text-ink mb-4 text-left">
+                        Proposals Received ({gigProposals[gig._id]?.length || 0})
+                      </h4>
+                    {!gigProposals[gig._id] ? (
+                      <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-accent-teal" /></div>
+                    ) : gigProposals[gig._id].length === 0 ? (
+                      <p className="text-xs text-ink/60 font-sans italic text-left">
+                        No proposals yet. Your gig is visible to freelancers {(gig.radiusKm ?? 25) >= 3000 ? 'across all of India (Full Country India)' : `within ${gig.radiusKm ?? 25}km`}.
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {gigProposals[gig._id].map((prop) => (
+                          <Card key={prop._id} className="p-4 shadow-retro-sm bg-cream">
+                            <div className="flex items-start justify-between gap-4 mb-3">
+                              <div className="text-left">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h5 className="text-sm font-display uppercase tracking-tight">
+                                    <Link
+                                      to={`/profile/${prop.freelancerId?._id}`}
+                                      className="font-bold text-ink hover:text-accent-teal hover:underline transition-colors"
+                                    >
+                                      {prop.freelancerId?.name || 'Freelancer'}
+                                    </Link>
+                                  </h5>
+                                  {prop.freelancerId?._id && (
+                                    <Link to={`/profile/${prop.freelancerId._id}`} onClick={e => e.stopPropagation()}>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="py-0.5 px-2 text-[9px] font-mono font-bold uppercase tracking-wider h-auto border-ink/30 shadow-none bg-cream hover:bg-accent-amber/20"
+                                      >
+                                        <User className="h-2.5 w-2.5 mr-1 text-accent-teal" />
+                                        <span>View Profile</span>
+                                      </Button>
+                                    </Link>
+                                  )}
+                                </div>
 
-                              <div className="flex items-center space-x-3 mt-1 text-[10px] font-mono text-ink/60">
-                                <span>Bid: ₹{prop.bidAmount}</span>
-                                <span>Time: {prop.completionTime} days</span>
-                                {prop.freelancerId?.rating && (
-                                  <span>{prop.freelancerId.rating.toFixed(1)} ★</span>
-                                )}
-                                {prop.freelancerId?.location?.city && (
-                                  <span className="flex items-center space-x-0.5">
-                                    <MapPin className="h-2.5 w-2.5" />
-                                    <span>{prop.freelancerId.location.city}</span>
-                                  </span>
-                                )}
+                                <div className="flex items-center space-x-3 mt-1 text-[10px] font-mono text-ink/60">
+                                  <span>Bid: ₹{prop.bidAmount}</span>
+                                  <span>Time: {prop.completionTime} days</span>
+                                  {prop.freelancerId?.rating && (
+                                    <span>{prop.freelancerId.rating.toFixed(1)} ★</span>
+                                  )}
+                                  {prop.freelancerId?.location?.city && (
+                                    <span className="flex items-center space-x-0.5">
+                                      <MapPin className="h-2.5 w-2.5" />
+                                      <span>{prop.freelancerId.location.city}</span>
+                                    </span>
+                                  )}
+                                </div>
                               </div>
+                              <Badge variant="outline" className={prop.status === 'accepted' ? 'bg-accent-teal' : prop.status === 'rejected' ? 'bg-accent-coral' : 'bg-accent-amber'}>
+                                {prop.status}
+                              </Badge>
                             </div>
-                            <Badge variant="outline" className={prop.status === 'accepted' ? 'bg-accent-teal' : prop.status === 'rejected' ? 'bg-accent-coral' : 'bg-accent-amber'}>
-                              {prop.status}
-                            </Badge>
-                          </div>
 
-                          <p className="text-xs text-ink font-sans leading-relaxed bg-cream border-2 border-ink rounded-lg p-3 mb-3 text-left">
-                            {prop.coverLetter}
-                          </p>
-
-                          <div className="flex items-center justify-between mb-3 border-b border-ink/10 pb-3">
-                            <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider">Direct Candidate</span>
-                            <Link to={`/gigs/${prop._id}/chat`} onClick={e => e.stopPropagation()}>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="bg-accent-teal/10 hover:bg-accent-teal/25 py-1 px-3 border border-ink shadow-none h-auto font-display text-[10px] uppercase tracking-wider font-bold cursor-pointer flex items-center"
-                              >
-                                <MessageSquare className="h-3 w-3 mr-1 text-ink" />
-                                <span>Message Candidate</span>
-                              </Button>
-                            </Link>
-                          </div>
-
-                          {/* Negotiation context */}
-                          {prop.status === 'negotiating' && (
-                            <p className="text-[10px] font-mono text-accent-teal font-bold mb-3 text-left">
-                              Last proposed by {prop.lastProposedBy === 'client' ? 'you' : 'freelancer'}: ₹{prop.bidAmount}
+                            <p className="text-xs text-ink font-sans leading-relaxed bg-cream border-2 border-ink rounded-lg p-3 mb-3 text-left">
+                              {prop.coverLetter}
                             </p>
-                          )}
 
-                          {/* Action controls */}
-                          {gig.status === 'open' && (prop.status === 'pending' || prop.status === 'negotiating') && (
-                            <div className="flex flex-col space-y-2 mt-3 pt-3 border-t border-ink/20">
-                              <div className="flex space-x-2">
-                                {(prop.status === 'pending' || (prop.status === 'negotiating' && prop.lastProposedBy === 'freelancer')) && (
-                                  <Button
-                                    onClick={() => handleProposalAction(prop._id, gig._id, 'accepted')}
-                                    disabled={!!actionLoading}
-                                    variant="secondary"
-                                    size="sm"
-                                  >
-                                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                                    <span>Accept Bid</span>
-                                  </Button>
-                                )}
+                            <div className="flex items-center justify-between mb-3 border-b border-ink/10 pb-3">
+                              <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider">Direct Candidate</span>
+                              <Link to={`/gigs/${prop._id}/chat`} state={{ from: '/client-dashboard?tab=gigs' }} onClick={e => e.stopPropagation()}>
                                 <Button
-                                  onClick={() => handleProposalAction(prop._id, gig._id, 'rejected')}
-                                  disabled={!!actionLoading}
                                   variant="outline"
                                   size="sm"
+                                  className="bg-accent-teal/10 hover:bg-accent-teal/25 py-1 px-3 border border-ink shadow-none h-auto font-display text-[10px] uppercase tracking-wider font-bold cursor-pointer flex items-center"
                                 >
-                                  <XCircle className="h-3.5 w-3.5 mr-1" />
-                                  <span>Reject</span>
+                                  <MessageSquare className="h-3 w-3 mr-1 text-ink" />
+                                  <span>Message Candidate</span>
                                 </Button>
-                              </div>
+                              </Link>
+                            </div>
+
+                            {/* Negotiation context */}
+                            {prop.status === 'negotiating' && (
+                              <p className="text-[10px] font-mono text-accent-teal font-bold mb-3 text-left">
+                                Last proposed by {prop.lastProposedBy === 'client' ? 'you' : 'freelancer'}: ₹{prop.bidAmount}
+                              </p>
+                            )}
+
+                            {/* Action controls */}
+                            {gig.status === 'open' && (prop.status === 'pending' || prop.status === 'negotiating') && (
+                              <div className="flex flex-col space-y-2 mt-3 pt-3 border-t border-ink/20">
+                                <div className="flex space-x-2">
+                                  {(prop.status === 'pending' || (prop.status === 'negotiating' && prop.lastProposedBy === 'freelancer')) && (
+                                    <Button
+                                      onClick={() => handleProposalAction(prop._id, gig._id, 'accepted')}
+                                      disabled={!!actionLoading}
+                                      variant="secondary"
+                                      size="sm"
+                                    >
+                                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                      <span>Accept Bid</span>
+                                    </Button>
+                                  )}
+                                  <Button
+                                    onClick={() => handleProposalAction(prop._id, gig._id, 'rejected')}
+                                    disabled={!!actionLoading}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    <XCircle className="h-3.5 w-3.5 mr-1" />
+                                    <span>Reject</span>
+                                  </Button>
+                                </div>
 
                               {/* Counter Offer Input */}
                               <div className="flex items-center space-x-2 pt-2">
@@ -761,9 +803,11 @@ export const ClientGigManager: React.FC = () => {
                     </div>
                   )}
                 </div>
-              )}
+              </div>
             </div>
-          ))}
+          </Card>
+          );
+        })}
         </div>
       )}
     </div>

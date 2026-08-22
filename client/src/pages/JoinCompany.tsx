@@ -66,33 +66,33 @@ export const JoinCompany: React.FC = () => {
 
   return (
     <div className="flex-grow flex items-center justify-center px-4 py-16 bg-cream transition-colors duration-200">
-      <Card className="w-full max-w-md p-8 animate-slide-up">
+      <Card variant="amber" className="w-full max-w-md p-6 sm:p-8 animate-slide-up space-y-5">
 
         {/* Header */}
-        <div className="mb-8 text-left">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="h-9 w-9 bg-accent-amber border-2 border-ink flex items-center justify-center rounded-lg shadow-retro-sm">
+        <div className="bg-cream border-2 border-ink rounded-xl p-5 shadow-retro-sm text-left">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="h-9 w-9 bg-accent-amber border-2 border-ink flex items-center justify-center rounded-lg shadow-retro-sm flex-shrink-0">
               <KeyRound className="h-4.5 w-4.5 text-ink" />
             </div>
             <div>
-              <p className="text-[10px] font-mono text-ink/60 uppercase tracking-widest">Company Access</p>
+              <p className="text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">Company Access</p>
               <h1 className="text-xl font-display font-black text-ink uppercase tracking-tight">Join a Company</h1>
             </div>
           </div>
-          <p className="text-xs text-ink/60 font-sans leading-relaxed">
+          <p className="text-xs text-ink/65 font-sans leading-relaxed font-medium">
             Enter the invite key shared by your company owner to join their organisation on SkillSphere.
           </p>
         </div>
 
         {/* Error banner */}
         {error && (
-          <div className="mb-6 p-4 bg-cream border-2 border-ink border-l-4 border-l-accent-coral flex items-start space-x-3 text-ink text-xs font-sans rounded-lg">
+          <div className="p-4 bg-cream border-2 border-ink border-l-4 border-l-accent-coral flex items-start space-x-3 text-ink text-xs font-sans rounded-lg">
             <AlertTriangle className="h-4 w-4 text-accent-coral flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="bg-cream border-2 border-ink rounded-xl p-5 shadow-retro-sm space-y-5">
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">
               Invite Key <span className="text-accent-coral">*</span>

@@ -11,6 +11,7 @@ interface MyApplication {
   title: string;
   category: string;
   budget: number;
+  finalAgreedAmount?: number;
   budgetType: 'fixed' | 'hourly';
   location: { city: string };
   status: string;
@@ -96,83 +97,91 @@ export const FreelancerApplications: React.FC = () => {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {applications.map((app) => (
-            <Card key={app._id}>
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="text-left">
-                  <h3 className="font-bold font-display text-ink uppercase tracking-tight text-sm leading-tight mb-1">
-                    {app.title}
-                  </h3>
-                  <p className="text-[11px] text-ink/60 font-sans font-bold">
-                    {app.clientId?.currentCompanyName || app.clientId?.name || 'Client'}
-                  </p>
-                </div>
-                <Badge variant="outline" className={`${APP_STATUS_STYLES[app.myApplication?.status] || APP_STATUS_STYLES.pending} shadow-none flex-shrink-0`}>
-                  {app.myApplication?.status}
-                </Badge>
-              </div>
+        <div className="space-y-5">
+          {applications.map((app, aIdx) => {
+            const variants: Array<'teal' | 'amber' | 'pink' | 'coral'> = ['teal', 'amber', 'pink', 'coral'];
+            const variant = variants[aIdx % variants.length];
 
-              {/* Gig meta */}
-              <div className="flex flex-wrap items-center gap-4 font-mono text-[10px] text-ink/60 mb-4">
-                <span className="flex items-center space-x-1">
-                  <Tag className="h-3 w-3" />
-                  <span>{app.category}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <DollarSign className="h-3 w-3 text-accent-teal" />
-                  <span className="font-bold text-ink">₹{app.budget.toLocaleString()}{app.budgetType === 'hourly' ? '/hr' : ''}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <MapPin className="h-3 w-3" />
-                  <span>{app.location.city}</span>
-                </span>
-                <span className={`uppercase font-bold ${GIG_STATUS_STYLES[app.status] || ''}`}>
-                  GIG: {app.status.replace('_', ' ')}
-                </span>
-                {app.escrowStatus !== 'none' && (
-                  <span className="text-accent-amber uppercase font-bold">
-                    ESCROW: {app.escrowStatus.replace('_', ' ')}
-                  </span>
+            return (
+              <Card key={app._id} variant={variant} className="space-y-3">
+                {/* Main Gig Details Box */}
+                <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="text-left">
+                      <h3 className="font-bold font-display text-ink uppercase tracking-tight text-sm leading-tight mb-1">
+                        {app.title}
+                      </h3>
+                      <p className="text-[11px] text-ink/60 font-sans font-bold">
+                        {app.clientId?.currentCompanyName || app.clientId?.name || 'Client'}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className={`${APP_STATUS_STYLES[app.myApplication?.status] || APP_STATUS_STYLES.pending} shadow-none flex-shrink-0`}>
+                      {app.myApplication?.status}
+                    </Badge>
+                  </div>
+
+                  {/* Gig meta */}
+                  <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] text-ink/70 pt-2 border-t border-ink/10">
+                    <span className="flex items-center space-x-1">
+                      <Tag className="h-3 w-3 text-accent-teal" />
+                      <span>{app.category}</span>
+                    </span>
+                    <span className="flex items-center space-x-1">
+                      <DollarSign className="h-3 w-3 text-accent-teal" />
+                      <span className="font-bold text-ink">₹{(app.finalAgreedAmount ?? app.budget).toLocaleString()}{app.budgetType === 'hourly' ? '/hr' : ''}</span>
+                    </span>
+                    <span className="flex items-center space-x-1">
+                      <MapPin className="h-3 w-3 text-accent-teal" />
+                      <span>{app.location.city}</span>
+                    </span>
+                    <span className={`uppercase font-bold ${GIG_STATUS_STYLES[app.status] || ''}`}>
+                      GIG: {app.status.replace('_', ' ')}
+                    </span>
+                    {app.escrowStatus !== 'none' && (
+                      <span className="text-accent-amber uppercase font-bold">
+                        ESCROW: {app.escrowStatus.replace('_', ' ')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* My cover message */}
+                {app.myApplication?.message && (
+                  <div className="bg-cream border-2 border-ink rounded-xl p-3.5 shadow-retro-sm text-left">
+                    <p className="text-[10px] font-mono text-ink/60 uppercase font-bold tracking-wider mb-1">Your Cover Message</p>
+                    <p className="text-xs text-ink font-sans leading-relaxed line-clamp-3 font-medium">
+                      {app.myApplication.message}
+                    </p>
+                  </div>
                 )}
-              </div>
 
-              {/* My cover message */}
-              {app.myApplication?.message && (
-                <div className="bg-cream border-2 border-ink p-3 rounded-lg mb-4 text-left">
-                  <p className="text-[10px] font-mono text-ink/50 uppercase tracking-wider mb-1">Your Cover Message</p>
-                  <p className="text-xs text-ink font-sans leading-relaxed line-clamp-3">
-                    {app.myApplication.message}
-                  </p>
-                </div>
-              )}
-
-              {/* Applied at + view link */}
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono text-ink/60">
-                  APPLIED: {new Date(app.myApplication?.appliedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </span>
-                <div className="flex items-center space-x-3">
-                  {app.myApplication?._id && (
+                {/* Applied at + view link */}
+                <div className="bg-cream border-2 border-ink rounded-xl p-3 shadow-retro-sm flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-ink/70 font-bold">
+                    APPLIED: {new Date(app.myApplication?.appliedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </span>
+                  <div className="flex items-center space-x-3">
+                    {app.myApplication?._id && (
+                      <button
+                        onClick={() => navigate(`/gigs/${app.myApplication._id}/chat`, { state: { from: '/freelancer-dashboard?tab=applications' } })}
+                        className="flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold font-display uppercase tracking-wider cursor-pointer"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        <span>Chat</span>
+                      </button>
+                    )}
                     <button
-                      onClick={() => navigate(`/gigs/${app.myApplication._id}/chat`)}
+                      onClick={() => navigate(`/gigs/${app._id}`)}
                       className="flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold font-display uppercase tracking-wider cursor-pointer"
                     >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      <span>Chat</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>View Gig</span>
                     </button>
-                  )}
-                  <button
-                    onClick={() => navigate(`/gigs/${app._id}`)}
-                    className="flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold font-display uppercase tracking-wider cursor-pointer"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span>View Gig</span>
-                  </button>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

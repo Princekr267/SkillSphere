@@ -9,7 +9,33 @@ import { moderateText } from '../services/moderationService';
 import Warning from '../models/Warning';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
+import Proposal from '../models/Proposal';
 import { enrichGigsWithCompanyName, getApprovedCompanyNamesForUsers } from '../utils/companyHelper';
+
+export const enrichGigsWithAcceptedProposal = async (gigs: any[]): Promise<any[]> => {
+  if (!gigs || gigs.length === 0) return gigs;
+  const gigIds = gigs.map(g => (g._id || g.id)?.toString()).filter(Boolean);
+  if (gigIds.length === 0) return gigs;
+
+  const acceptedProposals = await Proposal.find({
+    gigId: { $in: gigIds },
+    status: 'accepted',
+  }).select('gigId bidAmount');
+
+  const map = new Map<string, number>();
+  for (const p of acceptedProposals) {
+    map.set(p.gigId.toString(), p.bidAmount);
+  }
+
+  return gigs.map(gig => {
+    const gigObj = typeof gig.toObject === 'function' ? gig.toObject() : gig;
+    const gigIdStr = (gigObj._id || gigObj.id)?.toString();
+    if (gigIdStr && map.has(gigIdStr)) {
+      gigObj.finalAgreedAmount = map.get(gigIdStr);
+    }
+    return gigObj;
+  });
+};
 
 const isCloudinaryConfigured = (): boolean => {
   const cloud = process.env.CLOUDINARY_CLOUD_NAME;
@@ -180,8 +206,9 @@ export const getGigs = async (req: Request, res: Response) => {
     ]);
 
     const enrichedGigs = await enrichGigsWithCompanyName(gigs);
+    const finalGigs = await enrichGigsWithAcceptedProposal(enrichedGigs);
 
-    res.status(200).json({ success: true, total, page: pageNum, gigs: enrichedGigs });
+    res.status(200).json({ success: true, total, page: pageNum, gigs: finalGigs });
   } catch (error) {
     console.error('getGigs error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching gigs' });
@@ -246,10 +273,10 @@ export const getNearbyGigs = async (req: Request, res: Response) => {
       .populate('clientId', 'name businessName companyName location rating avatar')
       .limit(100);
 
-
     const enrichedGigs = await enrichGigsWithCompanyName(gigs);
+    const finalGigs = await enrichGigsWithAcceptedProposal(enrichedGigs);
 
-    res.status(200).json({ success: true, count: enrichedGigs.length, gigs: enrichedGigs });
+    res.status(200).json({ success: true, count: finalGigs.length, gigs: finalGigs });
   } catch (error) {
     console.error('getNearbyGigs error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching nearby gigs' });
@@ -269,7 +296,6 @@ export const getGigById = async (req: Request, res: Response) => {
       .populate('applicants.freelancerId', 'name skills hourlyRate rating location avatar');
 
     if (!gig) {
-      const Proposal = require('../models/Proposal').default;
       const proposal = await Proposal.findById(req.params.id).populate('freelancerId', 'name skills hourlyRate rating location avatar');
       if (proposal) {
         const baseGig = await Gig.findById(proposal.gigId)
@@ -278,6 +304,7 @@ export const getGigById = async (req: Request, res: Response) => {
         if (baseGig) {
           const gigObj = baseGig.toObject();
           gigObj.acceptedFreelancerId = proposal.freelancerId;
+          gigObj.finalAgreedAmount = proposal.bidAmount;
           const [enriched] = await enrichGigsWithCompanyName([gigObj]);
           return res.status(200).json({ success: true, gig: enriched });
         }
@@ -286,6 +313,7 @@ export const getGigById = async (req: Request, res: Response) => {
     }
 
     const [enrichedGig] = await enrichGigsWithCompanyName([gig]);
+    const [finalGig] = await enrichGigsWithAcceptedProposal([enrichedGig]);
 
     // Automated 24-hour deadline reminder checks
     if (gig.status === 'in_progress' && gig.acceptedFreelancerId && gig.milestones.length > 0) {
@@ -308,7 +336,7 @@ export const getGigById = async (req: Request, res: Response) => {
                 type: 'gig_flagged',
                 title: 'Milestone Deadline Nearing',
                 body: `Reminder: The milestone "${m.title}" is due soon (in ${Math.round(hoursDiff)} hours)!`,
-                link: `/gig/${gig._id}`,
+                link: `/gigs/${gig._id}`,
               });
               sendNotification(gig.acceptedFreelancerId.toString(), notif);
             }
@@ -317,7 +345,7 @@ export const getGigById = async (req: Request, res: Response) => {
       }
     }
 
-    res.status(200).json({ success: true, gig: enrichedGig });
+    res.status(200).json({ success: true, gig: finalGig });
   } catch (error) {
     console.error('getGigById error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching gig' });
@@ -337,9 +365,12 @@ export const getMyGigs = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ success: false, message: 'Only clients can access this route' });
     }
 
-    const gigs = await Gig.find({ clientId: user._id })
+    const rawGigs = await Gig.find({ clientId: user._id })
       .populate('applicants.freelancerId', 'name skills hourlyRate rating location avatar')
       .sort({ createdAt: -1 });
+
+    const gigsWithCompany = await enrichGigsWithCompanyName(rawGigs);
+    const gigs = await enrichGigsWithAcceptedProposal(gigsWithCompany);
 
     res.status(200).json({ success: true, gigs });
   } catch (error) {
@@ -367,9 +398,9 @@ export const getMyApplications = async (req: AuthRequest, res: Response) => {
       .populate('clientId', 'name businessName companyName location rating avatar')
       .sort({ updatedAt: -1 });
 
-    const gigs = await enrichGigsWithCompanyName(rawGigs);
+    const gigsWithCompany = await enrichGigsWithCompanyName(rawGigs);
+    const gigs = await enrichGigsWithAcceptedProposal(gigsWithCompany);
 
-    const Proposal = require('../models/Proposal').default;
     const proposals = await Proposal.find({ freelancerId: user._id });
 
     // Enrich each gig response with the freelancer's own application status
@@ -382,6 +413,7 @@ export const getMyApplications = async (req: AuthRequest, res: Response) => {
         title: gig.title,
         category: gig.category,
         budget: gig.budget,
+        finalAgreedAmount: gig.finalAgreedAmount,
         budgetType: gig.budgetType,
         location: gig.location,
         status: gig.status,
@@ -687,7 +719,7 @@ export const addMilestones = async (req: AuthRequest, res: Response): Promise<an
         type: 'new_application',
         title: 'Project Milestones Setup',
         body: `${req.user?.name} has added progress milestones tracking to "${gig.title.substring(0, 30)}"`,
-        link: `/gig/${gig._id}`,
+        link: `/gigs/${gig._id}`,
       });
       sendNotification(otherUserId.toString(), notif);
     }
@@ -757,7 +789,7 @@ export const updateMilestone = async (req: AuthRequest, res: Response): Promise<
       type: 'gig_flagged',
       title: 'Milestone Completed!',
       body: `${req.user?.name} completed "${milestone.title}". Deliverables are attached.`,
-      link: `/gig/${gig._id}`,
+      link: `/gigs/${gig._id}`,
     });
     sendNotification(gig.clientId.toString(), notif);
 
@@ -769,7 +801,7 @@ export const updateMilestone = async (req: AuthRequest, res: Response): Promise<
         type: 'gig_flagged',
         title: 'Release Escrow Funds',
         body: `All milestones completed for "${gig.title}". Review deliverables and release payment escrow.`,
-        link: `/gig/${gig._id}`,
+        link: `/gigs/${gig._id}`,
       });
       sendNotification(gig.clientId.toString(), releaseNotif);
     }

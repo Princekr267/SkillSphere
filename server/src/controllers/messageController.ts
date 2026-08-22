@@ -134,3 +134,127 @@ export const getUnreadCount = async (req: Request, res: Response): Promise<any> 
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// ─── GET /api/messages/unread/conversations ─────────────────────────────────
+export const getUnreadConversations = async (req: Request, res: Response): Promise<any> => {
+  const user = (req as any).user;
+  try {
+    const Proposal = require('../models/Proposal').default;
+
+    // 1. Gigs where user is client or accepted freelancer
+    const gigs = await Gig.find({
+      $or: [{ clientId: user._id }, { acceptedFreelancerId: user._id }]
+    })
+      .select('_id title clientId acceptedFreelancerId')
+      .populate('clientId', 'name avatar')
+      .populate('acceptedFreelancerId', 'name avatar');
+
+    const conversations: any[] = [];
+
+    // Check unread messages in primary gig threads
+    for (const gig of gigs) {
+      const unreadCount = await Message.countDocuments({
+        gigId: gig._id,
+        senderId: { $ne: user._id },
+        read: false
+      });
+
+      if (unreadCount > 0) {
+        const latestMsg = await Message.findOne({
+          gigId: gig._id,
+          senderId: { $ne: user._id },
+          read: false
+        }).sort({ sentAt: -1 });
+
+        const isClient = (gig.clientId as any)?._id?.toString() === user._id.toString();
+        const otherParty = isClient ? gig.acceptedFreelancerId : gig.clientId;
+
+        conversations.push({
+          gigId: gig._id.toString(),
+          gigTitle: gig.title,
+          otherParty: {
+            name: (otherParty as any)?.name || 'User',
+            avatar: (otherParty as any)?.avatar || '',
+          },
+          unreadCount,
+          lastMessage: {
+            body: latestMsg ? (latestMsg.body.length > 60 ? latestMsg.body.slice(0, 60) + '...' : latestMsg.body) : '',
+            createdAt: latestMsg?.sentAt || new Date(),
+          },
+        });
+      }
+    }
+
+    // 2. Also check candidate proposal threads where user is participant
+    const proposals = await Proposal.find(
+      user.role === 'client'
+        ? { gigId: { $in: gigs.map(g => g._id) } }
+        : { freelancerId: user._id }
+    )
+      .populate('freelancerId', 'name avatar')
+      .populate({ path: 'gigId', select: 'title clientId', populate: { path: 'clientId', select: 'name avatar' } });
+
+    for (const prop of proposals) {
+      // Don't duplicate if already listed under gigId
+      if (conversations.some(c => c.gigId === prop._id.toString())) continue;
+
+      const unreadCount = await Message.countDocuments({
+        gigId: prop._id,
+        senderId: { $ne: user._id },
+        read: false
+      });
+
+      if (unreadCount > 0) {
+        const latestMsg = await Message.findOne({
+          gigId: prop._id,
+          senderId: { $ne: user._id },
+          read: false
+        }).sort({ sentAt: -1 });
+
+        const isClient = user.role === 'client';
+        const otherParty = isClient ? prop.freelancerId : (prop.gigId as any)?.clientId;
+
+        conversations.push({
+          gigId: prop._id.toString(),
+          gigTitle: (prop.gigId as any)?.title || 'Candidate Negotiation',
+          otherParty: {
+            name: (otherParty as any)?.name || 'Candidate',
+            avatar: (otherParty as any)?.avatar || '',
+          },
+          unreadCount,
+          lastMessage: {
+            body: latestMsg ? (latestMsg.body.length > 60 ? latestMsg.body.slice(0, 60) + '...' : latestMsg.body) : '',
+            createdAt: latestMsg?.sentAt || new Date(),
+          },
+        });
+      }
+    }
+
+    // Sort by most recent unread message first
+    conversations.sort((a, b) => new Date(b.lastMessage.createdAt).getTime() - new Date(a.lastMessage.createdAt).getTime());
+
+    return res.json({
+      success: true,
+      conversations: conversations.slice(0, 10),
+    });
+  } catch (err: any) {
+    console.error('getUnreadConversations error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── PUT /api/messages/gig/:gigId/read ──────────────────────────────────────
+export const markGigMessagesAsRead = async (req: Request, res: Response): Promise<any> => {
+  const user = (req as any).user;
+  const { gigId } = req.params;
+  try {
+    await Message.updateMany(
+      { gigId, senderId: { $ne: user._id }, read: false },
+      { read: true }
+    );
+    return res.json({ success: true, message: 'Messages marked as read' });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+

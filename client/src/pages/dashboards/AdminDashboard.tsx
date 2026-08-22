@@ -533,7 +533,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-mono text-ink/70 bg-ink/5 p-3 rounded-lg">
                     <div><span className="text-ink/40">Raised By:</span> <span className="font-bold">{d.raisedById?.name}</span> ({d.raisedById?.role})</div>
                     <div><span className="text-ink/40">Against:</span> <span className="font-bold">{d.againstId?.name}</span> ({d.againstId?.role})</div>
-                    <div><span className="text-ink/40">Gig Budget:</span> <span className="font-bold">₹{d.gigId?.budget?.toLocaleString()}</span></div>
+                    <div><span className="text-ink/40">Gig Budget:</span> <span className="font-bold">₹{d.gigId?.budget !== undefined ? d.gigId.budget.toLocaleString() : '—'}{d.gigId?.budgetType === 'hourly' ? '/hr' : ''}</span></div>
                   </div>
 
                   <div>
