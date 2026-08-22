@@ -101,23 +101,26 @@ export const ResumeUpload: React.FC = () => {
 
       {user?.resume?.url ? (
         <div className="w-full space-y-3 pt-1">
-          <div className="flex items-center justify-between bg-cream border border-ink/20 p-2.5 rounded-lg text-xs font-mono">
+          <a
+            href={user.resume.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between bg-cream border border-ink/20 p-2.5 rounded-lg text-xs font-mono hover:bg-cream/70 hover:border-ink/40 transition-colors group cursor-pointer"
+            title="View Resume in new tab"
+          >
             <div className="flex items-center space-x-2 truncate min-w-0 pr-2">
               <FileText className="h-4 w-4 text-accent-teal flex-shrink-0" />
               <span className="font-bold text-ink truncate text-[11px]" title={user.resume.originalName || 'My_Resume.pdf'}>
                 {user.resume.originalName || 'My_Resume.pdf'}
               </span>
             </div>
-            <a
-              href={user.resume.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center space-x-1 px-2.5 py-1 bg-accent-teal text-ink font-bold text-[10px] uppercase border border-ink rounded hover:bg-accent-teal/80 transition-colors flex-shrink-0"
+            <div
+              className="inline-flex items-center space-x-1 px-2.5 py-1 bg-accent-teal text-ink font-bold text-[10px] uppercase border border-ink rounded group-hover:bg-accent-teal/80 transition-colors flex-shrink-0"
             >
               <span>View</span>
               <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
+            </div>
+          </a>
 
           <div className="flex items-center justify-between text-xs pt-1">
             <label className="flex items-center space-x-1 text-[10px] font-mono text-accent-teal hover:underline cursor-pointer font-bold">
