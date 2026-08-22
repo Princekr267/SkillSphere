@@ -10,7 +10,7 @@ import { Badge } from '../../components/ui/Badge';
 import {
   Plus, Tag, DollarSign, MapPin, Users, ChevronDown,
   ChevronRight, CheckCircle2, XCircle, Loader2, Trash2, X,
-  Banknote, MessageSquare, User
+  Banknote, MessageSquare, User, ExternalLink
 } from 'lucide-react';
 
 const GIG_CATEGORIES = [
@@ -530,28 +530,49 @@ export const ClientGigManager: React.FC = () => {
                         {ESCROW_LABELS[gig.escrowStatus]}
                       </Badge>
                     )}
-                    {gig.status === 'in_progress' && gig.escrowStatus === 'funds_deposited' && (
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={e => { e.stopPropagation(); handleReleaseEscrow(gig._id); }}
-                          disabled={!!actionLoading}
-                          variant="secondary"
-                          size="sm"
-                          className="shadow-none py-1.5"
+                    {gig.status === 'in_progress' && (
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                        <span className="text-[9px] font-mono text-ink/60 hidden xl:inline">
+                          Review progress before releasing funds:
+                        </span>
+                        <Link
+                          to={`/gigs/${gig._id}`}
+                          onClick={e => e.stopPropagation()}
+                          className="inline-flex"
                         >
-                          <Banknote className="h-3.5 w-3.5 mr-1" />
-                          <span>Release Funds</span>
-                        </Button>
-                        <Button
-                          onClick={e => { e.stopPropagation(); handleRefundEscrow(gig._id); }}
-                          disabled={!!actionLoading}
-                          variant="coral"
-                          size="sm"
-                          className="shadow-none py-1.5"
-                        >
-                          <XCircle className="h-3.5 w-3.5 mr-1" />
-                          <span>Refund</span>
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shadow-none py-1.5 bg-cream hover:bg-accent-teal/15 font-display font-bold text-xs"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5 mr-1 text-accent-teal" />
+                            <span>Progress & Milestones</span>
+                          </Button>
+                        </Link>
+                        {gig.escrowStatus === 'funds_deposited' && (
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={e => { e.stopPropagation(); handleReleaseEscrow(gig._id); }}
+                              disabled={!!actionLoading}
+                              variant="secondary"
+                              size="sm"
+                              className="shadow-none py-1.5 font-display font-bold text-xs"
+                            >
+                              <Banknote className="h-3.5 w-3.5 mr-1" />
+                              <span>Release Funds</span>
+                            </Button>
+                            <Button
+                              onClick={e => { e.stopPropagation(); handleRefundEscrow(gig._id); }}
+                              disabled={!!actionLoading}
+                              variant="coral"
+                              size="sm"
+                              className="shadow-none py-1.5 font-display font-bold text-xs"
+                            >
+                              <XCircle className="h-3.5 w-3.5 mr-1" />
+                              <span>Refund</span>
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                     {gig.status === 'open' && (

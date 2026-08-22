@@ -17,7 +17,7 @@ import {
   addProgressLog,
   uploadMessageAttachment,
 } from '../controllers/gigController';
-import { getMessages, postMessage, getUnreadCount } from '../controllers/messageController';
+import { getMessages, postMessage, getUnreadCount, getUnreadConversations, markGigMessagesAsRead } from '../controllers/messageController';
 import { upload } from '../middleware/upload';
 
 
@@ -31,6 +31,8 @@ router.get('/nearby', getNearbyGigs);
 router.get('/my', protect, getMyGigs);
 router.get('/applications', protect, getMyApplications);
 router.get('/messages/unread', protect, getUnreadCount);
+router.get('/messages/unread/conversations', protect, getUnreadConversations);
+router.put('/messages/gig/:gigId/read', protect, markGigMessagesAsRead);
 router.post('/messages/upload', protect, upload.single('attachment'), uploadMessageAttachment);
 
 // ─── Protected — single gig by ID ────────────────────────────────────────────

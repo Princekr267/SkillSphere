@@ -1,9 +1,46 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Globe, MapPin, Mail } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const Footer: React.FC = () => {
+  const { user } = useAuth();
   const year = new Date().getFullYear();
+
+  const getPlatformLinks = () => {
+    if (!user) {
+      return [
+        { label: 'Browse Gigs', to: '/gigs' },
+        { label: 'Find Freelancers', to: '/gigs' },
+        { label: 'Register Now', to: '/register' },
+        { label: 'Sign In', to: '/login' },
+      ];
+    }
+    if (user.role === 'client') {
+      return [
+        { label: 'Browse Gigs', to: '/gigs' },
+        { label: 'Post a Gig', to: '/client-dashboard' },
+        { label: 'My Dashboard', to: '/client-dashboard' },
+      ];
+    }
+    if (user.role === 'freelancer') {
+      return [
+        { label: 'Browse Gigs', to: '/gigs' },
+        { label: 'My Dashboard', to: '/freelancer-dashboard' },
+        { label: 'My Applications', to: '/freelancer-dashboard?tab=applications' },
+      ];
+    }
+    if (user.role === 'super_admin') {
+      return [
+        { label: 'Admin Dashboard', to: '/admin' },
+      ];
+    }
+    return [
+      { label: 'Browse Gigs', to: '/gigs' },
+    ];
+  };
+
+  const platformLinks = getPlatformLinks();
 
   return (
     <footer className="bg-ink dark:bg-cream text-cream dark:text-ink border-t-4 border-ink dark:border-cream relative transition-colors duration-200 mt-auto w-full">
@@ -44,12 +81,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-3 text-left">
             <h4 className="text-[10px] font-display font-extrabold uppercase tracking-widest text-accent-amber">Platform</h4>
             <ul className="space-y-2">
-              {[
-                { label: 'Browse Gigs', to: '/gigs' },
-                { label: 'Post a Gig', to: '/client-dashboard' },
-                { label: 'Register Account', to: '/register' },
-                { label: 'Sign In', to: '/login' },
-              ].map(({ label, to }) => (
+              {platformLinks.map(({ label, to }) => (
                 <li key={label}>
                   <Link to={to} className="text-xs font-sans text-cream/60 dark:text-ink/65 hover:text-cream dark:hover:text-ink hover:underline transition-colors font-bold">
                     {label}

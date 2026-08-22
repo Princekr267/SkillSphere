@@ -90,10 +90,15 @@ export const GigDetail: React.FC = () => {
       if (res.data.success) {
         setGig(res.data.gig);
         if (user?.role === 'freelancer') {
-          const propRes = await api.get(`/proposals/gig/${id}`);
-          if (propRes.data.success && propRes.data.proposals.length > 0) {
-            setProposal(propRes.data.proposals[0]);
-          } else {
+          try {
+            const propRes = await api.get(`/proposals/gig/${id}`);
+            if (propRes.data.success && propRes.data.proposals.length > 0) {
+              setProposal(propRes.data.proposals[0]);
+            } else {
+              setProposal(null);
+            }
+          } catch (propErr) {
+            console.error('Failed to load freelancer proposal for gig:', propErr);
             setProposal(null);
           }
         }

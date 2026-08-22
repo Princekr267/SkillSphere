@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { Globe, LogOut, Menu, X, MessageSquare, Sun, Moon } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
+import { MessageDropdown } from './MessageDropdown';
 import api from '../utils/api';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -204,19 +205,11 @@ export const Navbar: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Unread Messages Mail Badge */}
-                <Link
-                  to={user?.role === 'client' ? '/client-dashboard?tab=gigs' : '/freelancer-dashboard?tab=applications'}
-                  className="relative p-2 text-ink hover:bg-accent-amber/15 rounded-lg border-2 border-transparent transition-all"
-                  title="View gigs with unread messages"
-                >
-                  <MessageSquare className="h-5 w-5 text-ink" />
-                  {unreadMessages > 0 && (
-                    <span className="absolute top-0 right-0 h-4 w-4 bg-accent-coral text-ink font-mono text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-ink">
-                      {unreadMessages}
-                    </span>
-                  )}
-                </Link>
+                {/* Unread Messages Dropdown */}
+                <MessageDropdown
+                  unreadMessagesCount={unreadMessages}
+                  onUnreadChange={setUnreadMessages}
+                />
 
                 {/* Notifications Bell */}
                 <NotificationBell />
@@ -251,19 +244,10 @@ export const Navbar: React.FC = () => {
           <div className="flex md:hidden items-center space-x-2">
             {user && (
               <>
-                <Link
-                  to={user?.role === 'client' ? '/client-dashboard?tab=gigs' : '/freelancer-dashboard?tab=applications'}
-                  className="relative p-2 text-ink"
-                  title="Unread Messages"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <MessageSquare className="h-5 w-5 text-ink" />
-                  {unreadMessages > 0 && (
-                    <span className="absolute top-0.5 right-0.5 h-3.5 w-3.5 bg-accent-coral text-ink font-mono text-[8px] font-bold rounded-full flex items-center justify-center border border-ink">
-                      {unreadMessages}
-                    </span>
-                  )}
-                </Link>
+                <MessageDropdown
+                  unreadMessagesCount={unreadMessages}
+                  onUnreadChange={setUnreadMessages}
+                />
                 <NotificationBell />
               </>
             )}
