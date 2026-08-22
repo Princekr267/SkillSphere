@@ -235,7 +235,7 @@ export const ClientDashboard: React.FC = () => {
             <button
               key={tab}
               onClick={() => { setActiveTab(tab); if (tab === 'companies') loadMyCompanies(); }}
-              className={`px-3 sm:px-5 py-2.5 text-[10px] sm:text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all cursor-pointer flex-shrink-0 ${
+              className={`px-3 sm:px-5 py-2.5 text-[10px] sm:text-xs font-bold font-display uppercase tracking-wider border-2 border-b-0 border-ink transition-all duration-200 ease-in-out cursor-pointer flex-shrink-0 ${
                 activeTab === tab
                   ? 'bg-accent-teal text-ink shadow-none translate-y-[2px]'
                   : 'bg-cream text-ink hover:bg-accent-teal/10'
@@ -249,8 +249,9 @@ export const ClientDashboard: React.FC = () => {
       </div>
 
       {/* Tab: Gig Manager */}
-      {activeTab === 'gigs' ? (
-        <ClientGigManager />
+      <div key={activeTab} className="animate-fade-in-fast">
+        {activeTab === 'gigs' ? (
+          <ClientGigManager />
       ) : activeTab === 'calendar' ? (
         <Card className="text-left p-6">
           <h2 className="text-sm font-bold font-display text-ink uppercase tracking-wider mb-6 flex items-center space-x-2">
@@ -668,7 +669,7 @@ export const ClientDashboard: React.FC = () => {
           </div>
         </>
       )}
-
+      </div>
     </div>
   );
 };

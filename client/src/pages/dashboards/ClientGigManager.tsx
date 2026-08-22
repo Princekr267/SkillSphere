@@ -8,7 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 
 import {
-  Plus, Tag, DollarSign, MapPin, Users, ChevronDown,
+  Plus, Tag, DollarSign, MapPin, Users,
   ChevronRight, CheckCircle2, XCircle, Loader2, Trash2, X,
   Banknote, MessageSquare, User, ExternalLink
 } from 'lucide-react';
@@ -497,10 +497,11 @@ export const ClientGigManager: React.FC = () => {
                 >
                   <div className="flex items-center space-x-4 min-w-0">
                     <div>
-                      {expandedGig === gig._id
-                        ? <ChevronDown className="h-4 w-4 text-ink" />
-                        : <ChevronRight className="h-4 w-4 text-ink" />
-                      }
+                      <ChevronRight
+                        className={`h-4 w-4 text-ink transition-transform duration-300 ${
+                          expandedGig === gig._id ? 'rotate-90' : 'rotate-0'
+                        }`}
+                      />
                     </div>
                     <div className="min-w-0 text-left">
                       <h3 className="font-bold font-display text-ink text-sm uppercase tracking-tight truncate">{gig.title}</h3>
@@ -588,11 +589,12 @@ export const ClientGigManager: React.FC = () => {
                 </div>
 
                 {/* Expanded: Proposals */}
-                {expandedGig === gig._id && (
-                  <div className="p-5 space-y-4 bg-cream/40">
-                    <h4 className="text-[10px] font-bold font-display uppercase tracking-widest text-ink mb-4 text-left">
-                      Proposals Received ({gigProposals[gig._id]?.length || 0})
-                    </h4>
+                <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${expandedGig === gig._id ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                  <div className="overflow-hidden">
+                    <div className="p-5 space-y-4 bg-cream/40 border-t-2 border-ink">
+                      <h4 className="text-[10px] font-bold font-display uppercase tracking-widest text-ink mb-4 text-left">
+                        Proposals Received ({gigProposals[gig._id]?.length || 0})
+                      </h4>
                     {!gigProposals[gig._id] ? (
                       <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-accent-teal" /></div>
                     ) : gigProposals[gig._id].length === 0 ? (
@@ -653,7 +655,7 @@ export const ClientGigManager: React.FC = () => {
 
                             <div className="flex items-center justify-between mb-3 border-b border-ink/10 pb-3">
                               <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider">Direct Candidate</span>
-                              <Link to={`/gigs/${prop._id}/chat`} onClick={e => e.stopPropagation()}>
+                              <Link to={`/gigs/${prop._id}/chat`} state={{ from: '/client-dashboard?tab=gigs' }} onClick={e => e.stopPropagation()}>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -801,8 +803,9 @@ export const ClientGigManager: React.FC = () => {
                     </div>
                   )}
                 </div>
-              )}
-            </Card>
+              </div>
+            </div>
+          </Card>
           );
         })}
         </div>

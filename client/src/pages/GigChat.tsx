@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import api, { BACKEND_URL } from '../utils/api';
@@ -26,6 +26,7 @@ const SOCKET_URL = BACKEND_URL;
 export const GigChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { socket, connectionError } = useSocket();
 
@@ -223,12 +224,20 @@ export const GigChat: React.FC = () => {
     return ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext || '');
   };
 
+  const handleBack = () => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+    } else {
+      navigate(`/gigs/${id}`);
+    }
+  };
+
   return (
     <div className="flex flex-col flex-grow bg-cream animate-fade-in font-sans transition-colors duration-200" style={{ height: 'calc(100vh - 80px)' }}>
 
       {/* Header */}
       <div className="bg-cream border-b-2 border-ink px-4 py-3 flex items-center space-x-3 flex-shrink-0 text-left">
-        <button onClick={() => navigate(`/gigs/${id}`)} className="text-ink/60 hover:text-ink cursor-pointer">
+        <button onClick={handleBack} className="text-ink/60 hover:text-ink cursor-pointer" title="Go Back">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-grow">

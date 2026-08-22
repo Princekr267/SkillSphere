@@ -163,7 +163,7 @@ export const FreelancerApplications: React.FC = () => {
                   <div className="flex items-center space-x-3">
                     {app.myApplication?._id && (
                       <button
-                        onClick={() => navigate(`/gigs/${app.myApplication._id}/chat`)}
+                        onClick={() => navigate(`/gigs/${app.myApplication._id}/chat`, { state: { from: '/freelancer-dashboard?tab=applications' } })}
                         className="flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold font-display uppercase tracking-wider cursor-pointer"
                       >
                         <MessageSquare className="h-3.5 w-3.5" />

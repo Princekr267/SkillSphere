@@ -46,6 +46,7 @@ export default {
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out forwards',
+        'fade-in-fast': 'fadeIn 0.2s ease-out forwards',
         'slide-up': 'slideUp 0.5s ease-out forwards',
       },
       keyframes: {

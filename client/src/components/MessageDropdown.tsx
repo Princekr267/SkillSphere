@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -32,6 +32,7 @@ export const MessageDropdown: React.FC<MessageDropdownProps> = ({
   const { user, token } = useAuth();
   const { socket } = useSocket();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [conversations, setConversations] = useState<UnreadConversation[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -107,7 +108,8 @@ export const MessageDropdown: React.FC<MessageDropdownProps> = ({
       onUnreadChange(remainingCount);
     }
 
-    navigate(`/gigs/${conv.gigId}/chat`);
+    const currentPath = location.pathname + location.search;
+    navigate(`/gigs/${conv.gigId}/chat`, { state: { from: currentPath } });
   };
 
   return (

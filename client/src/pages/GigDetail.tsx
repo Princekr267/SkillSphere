@@ -812,6 +812,7 @@ export const GigDetail: React.FC = () => {
                     <>
                       <Link
                         to={`/gigs/${gig._id}/chat`}
+                        state={{ from: `/gigs/${gig._id}` }}
                         className="block w-full"
                       >
                         <Button variant="primary" className="w-full">

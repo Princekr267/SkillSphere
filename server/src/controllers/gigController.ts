@@ -336,7 +336,7 @@ export const getGigById = async (req: Request, res: Response) => {
                 type: 'gig_flagged',
                 title: 'Milestone Deadline Nearing',
                 body: `Reminder: The milestone "${m.title}" is due soon (in ${Math.round(hoursDiff)} hours)!`,
-                link: `/gig/${gig._id}`,
+                link: `/gigs/${gig._id}`,
               });
               sendNotification(gig.acceptedFreelancerId.toString(), notif);
             }
@@ -719,7 +719,7 @@ export const addMilestones = async (req: AuthRequest, res: Response): Promise<an
         type: 'new_application',
         title: 'Project Milestones Setup',
         body: `${req.user?.name} has added progress milestones tracking to "${gig.title.substring(0, 30)}"`,
-        link: `/gig/${gig._id}`,
+        link: `/gigs/${gig._id}`,
       });
       sendNotification(otherUserId.toString(), notif);
     }
@@ -789,7 +789,7 @@ export const updateMilestone = async (req: AuthRequest, res: Response): Promise<
       type: 'gig_flagged',
       title: 'Milestone Completed!',
       body: `${req.user?.name} completed "${milestone.title}". Deliverables are attached.`,
-      link: `/gig/${gig._id}`,
+      link: `/gigs/${gig._id}`,
     });
     sendNotification(gig.clientId.toString(), notif);
 
@@ -801,7 +801,7 @@ export const updateMilestone = async (req: AuthRequest, res: Response): Promise<
         type: 'gig_flagged',
         title: 'Release Escrow Funds',
         body: `All milestones completed for "${gig.title}". Review deliverables and release payment escrow.`,
-        link: `/gig/${gig._id}`,
+        link: `/gigs/${gig._id}`,
       });
       sendNotification(gig.clientId.toString(), releaseNotif);
     }
