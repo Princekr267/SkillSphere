@@ -46,7 +46,7 @@ interface AuthContextType {
   register: (userData: any) => Promise<void>;
   logout: () => void;
   updateProfile: (profileData: any) => Promise<void>;
-  updateUser: (updatedUser: IUser) => void;
+  updateUser: (updatedUser: Partial<IUser> | IUser) => void;
   verify2FA: (code: string, tempToken: string) => Promise<void>;
   googleLogin: (credential: string, role?: string, signupData?: any) => Promise<any>;
 }
@@ -136,8 +136,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const updateUser = (updatedUser: IUser) => {
-    setUser(updatedUser);
+  const updateUser = (updatedUser: Partial<IUser> | IUser) => {
+    setUser(prev => prev ? { ...prev, ...updatedUser } : (updatedUser as IUser));
   };
 
   const verify2FA = async (code: string, tempToken: string) => {

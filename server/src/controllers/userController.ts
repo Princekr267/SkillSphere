@@ -104,6 +104,10 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
         experience: updatedUser.experience,
         rating: updatedUser.rating,
         reviewCount: updatedUser.reviewCount,
+        avatar: updatedUser.avatar,
+        isVerified: updatedUser.isVerified,
+        twoFactorEnabled: updatedUser.twoFactorEnabled,
+        resume: updatedUser.resume,
       },
     });
   } catch (error) {
@@ -167,14 +171,19 @@ export const uploadAvatar = async (req: AuthRequest, res: Response) => {
         role: user.role,
         location: user.location,
         companyName: user.companyName,
+        businessName: user.businessName,
         bio: user.bio,
         skills: user.skills,
         portfolio: user.portfolio,
         hourlyRate: user.hourlyRate,
         certifications: user.certifications,
+        experience: user.experience,
         rating: user.rating,
         reviewCount: user.reviewCount,
         avatar: user.avatar,
+        isVerified: user.isVerified,
+        twoFactorEnabled: user.twoFactorEnabled,
+        resume: user.resume,
       },
     });
   } catch (error) {
@@ -360,11 +369,24 @@ export const deleteAvatar = async (req: AuthRequest, res: Response) => {
     await user.save();
 
     const userObj = {
-      _id: user._id, name: user.name, email: user.email, role: user.role,
-      location: user.location, companyName: user.companyName, bio: user.bio,
-      skills: user.skills, portfolio: user.portfolio, hourlyRate: user.hourlyRate,
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      location: user.location,
+      companyName: user.companyName,
+      businessName: user.businessName,
+      bio: user.bio,
+      skills: user.skills,
+      portfolio: user.portfolio,
+      hourlyRate: user.hourlyRate,
       certifications: user.certifications,
-      rating: user.rating, reviewCount: user.reviewCount, avatar: user.avatar,
+      experience: user.experience,
+      rating: user.rating,
+      reviewCount: user.reviewCount,
+      avatar: user.avatar,
+      isVerified: user.isVerified,
+      twoFactorEnabled: user.twoFactorEnabled,
       resume: user.resume,
     };
 
@@ -412,7 +434,7 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
       fileUrl = `${serverUrl}/uploads/${req.file.filename}`;
     }
 
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).select('-password');
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -447,7 +469,7 @@ export const uploadResume = async (req: AuthRequest, res: Response) => {
  */
 export const deleteResume = async (req: AuthRequest, res: Response) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).select('-password');
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }

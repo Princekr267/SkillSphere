@@ -492,10 +492,10 @@ export const ClientGigManager: React.FC = () => {
               >
                 {/* Gig header row */}
                 <div
-                  className="p-5 flex items-center justify-between cursor-pointer bg-cream border-b-2 border-ink hover:bg-accent-amber/10 transition-colors"
+                  className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 cursor-pointer bg-cream border-b-2 border-ink hover:bg-accent-amber/10 transition-colors"
                   onClick={() => handleToggleExpand(gig._id)}
                 >
-                  <div className="flex items-center space-x-4 min-w-0">
+                  <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 w-full sm:w-auto">
                     <div>
                       <ChevronRight
                         className={`h-4 w-4 text-ink transition-transform duration-300 ${
@@ -503,9 +503,9 @@ export const ClientGigManager: React.FC = () => {
                         }`}
                       />
                     </div>
-                    <div className="min-w-0 text-left">
+                    <div className="min-w-0 text-left flex-grow">
                       <h3 className="font-bold font-display text-ink text-sm uppercase tracking-tight truncate">{gig.title}</h3>
-                      <div className="flex items-center space-x-3 mt-1">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                         <span className="text-[10px] font-mono text-ink/60 flex items-center space-x-1">
                           <DollarSign className="h-3 w-3 text-accent-teal" />
                           <span>₹{(gig.finalAgreedAmount ?? gig.budget).toLocaleString()}/{gig.budgetType === 'hourly' ? 'hr' : 'project'}</span>
@@ -522,7 +522,7 @@ export const ClientGigManager: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3 flex-shrink-0">
+                  <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto">
                     <Badge variant="outline" className={`${STATUS_COLORS[gig.status] || STATUS_COLORS.open} shadow-none`}>
                       {gig.status.replace('_', ' ')}
                     </Badge>
@@ -532,7 +532,7 @@ export const ClientGigManager: React.FC = () => {
                       </Badge>
                     )}
                     {gig.status === 'in_progress' && (
-                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[9px] font-mono text-ink/60 hidden xl:inline">
                           Review progress before releasing funds:
                         </span>
@@ -551,7 +551,7 @@ export const ClientGigManager: React.FC = () => {
                           </Button>
                         </Link>
                         {gig.escrowStatus === 'funds_deposited' && (
-                          <div className="flex space-x-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button
                               onClick={e => { e.stopPropagation(); handleReleaseEscrow(gig._id); }}
                               disabled={!!actionLoading}
