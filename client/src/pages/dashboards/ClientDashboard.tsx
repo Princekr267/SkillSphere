@@ -242,7 +242,7 @@ export const ClientDashboard: React.FC = () => {
               }`}
               style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}
             >
-              {tab === 'profile' ? 'My Profile' : tab === 'gigs' ? 'Gig Manager' : tab === 'calendar' ? 'Calendar & Appointments' : 'Companies'}
+              {tab === 'profile' ? 'My Profile' : tab === 'gigs' ? 'Gig Manager' : tab === 'calendar' ? 'Calendar' : 'Companies'}
             </button>
           ))}
         </div>

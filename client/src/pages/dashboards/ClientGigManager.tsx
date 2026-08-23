@@ -314,10 +314,10 @@ export const ClientGigManager: React.FC = () => {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between border-b-2 border-ink pb-4 text-left">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-ink pb-4 text-left">
+        <div className="min-w-0">
           <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block">Active Station</span>
-          <h2 className="text-lg font-display font-black text-ink uppercase tracking-tight">Gig Manager</h2>
+          <h2 className="text-lg font-display font-black text-ink uppercase tracking-tight truncate">Gig Manager</h2>
         </div>
         <Button
           onClick={() => setShowPostForm(f => !f)}
@@ -653,9 +653,9 @@ export const ClientGigManager: React.FC = () => {
                               {prop.coverLetter}
                             </p>
 
-                            <div className="flex items-center justify-between mb-3 border-b border-ink/10 pb-3">
-                              <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider">Direct Candidate</span>
-                              <Link to={`/gigs/${prop._id}/chat`} state={{ from: '/client-dashboard?tab=gigs' }} onClick={e => e.stopPropagation()}>
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-ink/10 pb-3">
+                              <span className="text-[10px] font-mono text-ink/55 font-bold uppercase tracking-wider min-w-0 truncate">Direct Candidate</span>
+                              <Link to={`/gigs/${prop._id}/chat`} state={{ from: '/client-dashboard?tab=gigs' }} onClick={e => e.stopPropagation()} className="flex-shrink-0">
                                 <Button
                                   variant="outline"
                                   size="sm"
