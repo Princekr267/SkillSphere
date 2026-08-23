@@ -48,7 +48,7 @@ export const Footer: React.FC = () => {
       {/* Top: styling divider bar */}
       <div className="relative h-[4px] bg-ink/20 dark:bg-cream/15 border-b border-ink dark:border-cream" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
 
           {/* Brand */}

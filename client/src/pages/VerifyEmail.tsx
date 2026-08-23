@@ -59,19 +59,19 @@ export const VerifyEmail: React.FC = () => {
   }, [token]);
 
   return (
-    <div className="flex-grow flex items-center justify-center p-8 bg-cream relative transition-colors duration-200">
+    <div className="flex-grow flex items-center justify-center px-2.5 sm:px-8 py-8 bg-cream relative transition-colors duration-200 min-w-0">
       
       {/* Decorative vertical line */}
       <div className="absolute left-8 top-0 bottom-0 w-[4px] bg-ink/10 dark:bg-cream/15 border-x border-ink hidden md:block">
         <div className="absolute top-1/4 bottom-1/4 left-0 w-full bg-accent-amber"></div>
       </div>
 
-      <Card className="w-full max-w-md p-8 text-center relative z-10">
+      <Card className="w-full max-w-md p-4 sm:p-8 text-center relative z-10 min-w-0">
         <div className="h-12 w-12 bg-accent-teal flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg mx-auto mb-6 shadow-retro-sm">
           <ShieldCheck className="h-6 w-6" />
         </div>
 
-        <h2 className="text-2xl font-display font-black text-ink uppercase tracking-tight mb-2">
+        <h2 className="text-xl sm:text-2xl font-display font-black text-ink uppercase tracking-tight mb-2 truncate">
           Email Verification
         </h2>
 

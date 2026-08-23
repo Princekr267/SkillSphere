@@ -107,11 +107,11 @@ export const FreelancerApplications: React.FC = () => {
                 {/* Main Gig Details Box */}
                 <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3">
                   <div className="flex items-start justify-between gap-4">
-                    <div className="text-left">
-                      <h3 className="font-bold font-display text-ink uppercase tracking-tight text-sm leading-tight mb-1">
+                    <div className="text-left min-w-0">
+                      <h3 className="font-bold font-display text-ink uppercase tracking-tight text-sm leading-tight mb-1 truncate">
                         {app.title}
                       </h3>
-                      <p className="text-[11px] text-ink/60 font-sans font-bold">
+                      <p className="text-[11px] text-ink/60 font-sans font-bold truncate">
                         {app.clientId?.currentCompanyName || app.clientId?.name || 'Client'}
                       </p>
                     </div>
@@ -156,8 +156,8 @@ export const FreelancerApplications: React.FC = () => {
                 )}
 
                 {/* Applied at + view link */}
-                <div className="bg-cream border-2 border-ink rounded-xl p-3 shadow-retro-sm flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-ink/70 font-bold">
+                <div className="bg-cream border-2 border-ink rounded-xl p-3 shadow-retro-sm flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
+                  <span className="text-[10px] font-mono text-ink/70 font-bold min-w-0 truncate">
                     APPLIED: {new Date(app.myApplication?.appliedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </span>
                   <div className="flex items-center space-x-3">
@@ -171,7 +171,7 @@ export const FreelancerApplications: React.FC = () => {
                       </button>
                     )}
                     <button
-                      onClick={() => navigate(`/gigs/${app._id}`)}
+                      onClick={() => navigate(`/gigs/${app._id}`, { state: { from: '/freelancer-dashboard?tab=applications' } })}
                       className="flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold font-display uppercase tracking-wider cursor-pointer"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />

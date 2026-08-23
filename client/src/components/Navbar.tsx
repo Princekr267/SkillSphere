@@ -88,28 +88,30 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className="bg-cream border-b-2 border-ink fixed top-0 left-0 right-0 z-50 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           
           {/* Logo & Brand */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <Link 
               to="/" 
-              className="flex items-center space-x-2 group"
+              className="flex items-center space-x-1.5 sm:space-x-2 group flex-shrink-0"
               onClick={() => setMobileOpen(false)}
             >
-              <div className="h-9 w-9 bg-accent-amber flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg shadow-retro-sm">
-                <Globe className="h-4.5 w-4.5" />
+              <div className="h-8 w-8 sm:h-9 sm:w-9 bg-accent-amber flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg shadow-retro-sm flex-shrink-0">
+                <Globe className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <span className="text-base sm:text-xl font-display font-black tracking-tight text-ink uppercase">
+              <span className="text-sm sm:text-base md:text-xl font-display font-black tracking-tight text-ink uppercase whitespace-nowrap">
                 SkillSphere
               </span>
             </Link>
             
-            <Badge variant="teal" className="text-[8px] font-mono shadow-none uppercase font-black px-1.5 py-0.5 tracking-wider hidden lg:inline-flex items-center border-2 border-ink bg-accent-teal text-ink">
-              <span className="w-1.5 h-1.5 rounded-full bg-cream inline-block animate-pulse mr-1"></span>
-              <span>Live</span>
-            </Badge>
+            <span className="hidden lg:inline-flex">
+              <Badge variant="teal" className="text-[8px] font-mono shadow-none uppercase font-black px-1.5 py-0.5 tracking-wider items-center border-2 border-ink bg-accent-teal text-ink">
+                <span className="w-1.5 h-1.5 rounded-full bg-cream inline-block animate-pulse mr-1"></span>
+                <span>Live</span>
+              </Badge>
+            </span>
           </div>
 
           {/* Navigation Route Line (desktop only, authenticated users only) */}
@@ -270,8 +272,8 @@ export const Navbar: React.FC = () => {
             {user ? (
               <>
                 {/* User info strip with dark mode toggle inside */}
-                <div className="flex items-center justify-between pb-4 mb-2 border-b-2 border-ink">
-                  <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-between gap-2 pb-4 mb-2 border-b-2 border-ink min-w-0">
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
                     <div className="h-10 w-10 bg-cream border-2 border-ink flex items-center justify-center text-ink font-bold font-display uppercase text-sm overflow-hidden flex-shrink-0 rounded-lg">
                       {user.avatar ? (
                         <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
@@ -279,15 +281,15 @@ export const Navbar: React.FC = () => {
                         user.name.charAt(0)
                       )}
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-ink">{user.name}</p>
-                      <p className="text-[10px] font-mono text-ink/60 uppercase tracking-wider">{user.role} · {user.location.city}</p>
+                    <div className="min-w-0 flex-1 text-left">
+                      <p className="text-sm font-bold text-ink truncate">{user.name}</p>
+                      <p className="text-[10px] font-mono text-ink/60 uppercase tracking-wider truncate">{user.role} · {user.location.city}</p>
                     </div>
                   </div>
                   
                   <button
                     onClick={() => setDarkMode(!darkMode)}
-                    className="p-2 border-2 border-ink bg-cream text-ink rounded-lg shadow-retro-sm cursor-pointer active:translate-y-[1px]"
+                    className="p-2 border-2 border-ink bg-cream text-ink rounded-lg shadow-retro-sm cursor-pointer active:translate-y-[1px] flex-shrink-0"
                     title="Toggle Theme"
                   >
                     {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

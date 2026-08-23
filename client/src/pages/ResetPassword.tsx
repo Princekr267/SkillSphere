@@ -54,19 +54,19 @@ export const ResetPassword: React.FC = () => {
   };
 
   return (
-    <div className="flex-grow flex items-center justify-center p-8 bg-cream relative transition-colors duration-200">
+    <div className="flex-grow flex items-center justify-center px-2.5 sm:px-8 py-8 bg-cream relative transition-colors duration-200 min-w-0">
       
       {/* Decorative vertical line */}
       <div className="absolute left-8 top-0 bottom-0 w-[4px] bg-ink/10 dark:bg-cream/15 border-x border-ink hidden md:block">
         <div className="absolute top-1/4 bottom-1/4 left-0 w-full bg-accent-amber"></div>
       </div>
 
-      <Card className="w-full max-w-md p-8 relative z-10">
-        <div className="text-left mb-8 font-sans">
-          <div className="h-10 w-10 bg-accent-amber flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg mb-4 shadow-retro-sm">
+      <Card className="w-full max-w-md p-4 sm:p-8 relative z-10 min-w-0">
+        <div className="text-left mb-6 sm:mb-8 font-sans min-w-0">
+          <div className="h-10 w-10 bg-accent-amber flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg mb-4 shadow-retro-sm flex-shrink-0">
             <Lock className="h-5 w-5" />
           </div>
-          <h2 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Configure Password</h2>
+          <h2 className="text-xl sm:text-2xl font-display font-black text-ink uppercase tracking-tight truncate">Configure Password</h2>
           <p className="text-xs text-ink/60 mt-1">
             Specify a secure new password for your account.
           </p>

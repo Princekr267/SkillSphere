@@ -11,7 +11,8 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center font-display font-bold px-2.5 py-0.5 border-2 border-ink rounded-full text-[10px] uppercase tracking-wider';
+  const isCustomDisplay = className.includes('hidden') || className.includes('flex') || className.includes('block');
+  const baseStyles = `${isCustomDisplay ? '' : 'inline-flex'} items-center font-display font-bold px-2.5 py-0.5 border-2 border-ink rounded-full text-[10px] uppercase tracking-wider max-w-full truncate`;
   
   const variants = {
     amber: 'bg-accent-amber text-ink',
@@ -23,7 +24,7 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span
-      className={`${baseStyles} ${variants[variant]} ${className}`}
+      className={`${baseStyles} ${variants[variant]} ${className}`.trim()}
       {...props}
     >
       {children}

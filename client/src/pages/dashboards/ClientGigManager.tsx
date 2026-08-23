@@ -606,12 +606,12 @@ export const ClientGigManager: React.FC = () => {
                         {gigProposals[gig._id].map((prop) => (
                           <Card key={prop._id} className="p-4 shadow-retro-sm bg-cream">
                             <div className="flex items-start justify-between gap-4 mb-3">
-                              <div className="text-left">
+                              <div className="text-left min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <h5 className="text-sm font-display uppercase tracking-tight">
+                                  <h5 className="text-sm font-display uppercase tracking-tight min-w-0 truncate">
                                     <Link
                                       to={`/profile/${prop.freelancerId?._id}`}
-                                      className="font-bold text-ink hover:text-accent-teal hover:underline transition-colors"
+                                      className="font-bold text-ink hover:text-accent-teal hover:underline transition-colors truncate"
                                     >
                                       {prop.freelancerId?.name || 'Freelancer'}
                                     </Link>
@@ -763,11 +763,11 @@ export const ClientGigManager: React.FC = () => {
                           {recommendations[gig._id].map((rec) => (
                             <Card key={rec.freelancer._id} className="p-3 flex flex-col justify-between shadow-retro-sm">
                               <div>
-                                <div className="flex items-center justify-between">
-                                  <Link to={`/profile/${rec.freelancer._id}`} className="font-bold text-xs uppercase font-display text-ink hover:text-accent-teal hover:underline">
+                                <div className="flex items-center justify-between gap-2 min-w-0">
+                                  <Link to={`/profile/${rec.freelancer._id}`} className="font-bold text-xs uppercase font-display text-ink hover:text-accent-teal hover:underline min-w-0 truncate">
                                     {rec.freelancer.name}
                                   </Link>
-                                  <Badge variant="teal" className="text-[8px] font-mono shadow-none">
+                                  <Badge variant="teal" className="text-[8px] font-mono shadow-none flex-shrink-0">
                                     Score: {Math.round(rec.finalScore * 100)}%
                                   </Badge>
                                 </div>

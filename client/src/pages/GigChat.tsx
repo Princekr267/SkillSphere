@@ -236,23 +236,23 @@ export const GigChat: React.FC = () => {
     <div className="flex flex-col flex-grow bg-cream animate-fade-in font-sans transition-colors duration-200" style={{ height: 'calc(100vh - 80px)' }}>
 
       {/* Header */}
-      <div className="bg-cream border-b-2 border-ink px-4 py-3 flex items-center space-x-3 flex-shrink-0 text-left">
-        <button onClick={handleBack} className="text-ink/60 hover:text-ink cursor-pointer" title="Go Back">
+      <div className="flex-shrink-0 bg-cream border-b-2 border-ink px-2.5 sm:px-4 py-3 flex items-center space-x-2.5 sm:space-x-3 text-left min-w-0">
+        <button onClick={handleBack} className="text-ink/60 hover:text-ink cursor-pointer flex-shrink-0" title="Go Back">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex-grow">
-          <div className="flex items-center space-x-2">
-            <h2 className="font-bold text-sm text-ink truncate">{gigTitle}</h2>
+        <div className="flex-grow min-w-0">
+          <div className="flex items-center space-x-2 min-w-0">
+            <h2 className="font-bold text-sm text-ink truncate min-w-0 flex-1">{gigTitle}</h2>
             {isOtherUserOnline ? (
-              <span className="flex items-center space-x-1 text-[10px] text-accent-teal font-bold font-mono">
+              <span className="flex items-center space-x-1 text-[10px] text-accent-teal font-bold font-mono flex-shrink-0">
                 <span className="w-2 h-2 rounded-full bg-accent-teal animate-pulse"></span>
                 <span>ONLINE</span>
               </span>
             ) : (
-              <span className="text-[10px] text-ink/40 font-mono">OFFLINE</span>
+              <span className="text-[10px] text-ink/40 font-mono flex-shrink-0">OFFLINE</span>
             )}
           </div>
-          <p className="text-[10px] text-ink/60 font-mono">End-to-end encrypted direct socket channel</p>
+          <p className="text-[10px] text-ink/60 font-mono truncate">End-to-end encrypted direct socket channel</p>
         </div>
       </div>
 

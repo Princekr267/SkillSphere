@@ -32,16 +32,28 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const newSocket = io(SOCKET_URL, {
       auth: { token },
-      transports: ["websocket"],
+      transports: ["polling", "websocket"],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
 
     newSocket.on("connect", () => {
       setConnectionError(null);
     });
 
+    newSocket.on("reconnect", () => {
+      setConnectionError(null);
+    });
+
     newSocket.on("connect_error", (err) => {
       console.error("Socket connect_error:", err);
-      setConnectionError("Unable to connect to live services. Please refresh the page.");
+      // If we already connected before and are reconnecting, don't flash a permanent error immediately
+      if (!newSocket.connected && newSocket.active === false) {
+        setConnectionError("Unable to connect to live services. Please check your connection or refresh.");
+      }
     });
 
     socketRef.current = newSocket;

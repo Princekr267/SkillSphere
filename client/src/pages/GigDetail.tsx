@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { Card } from '../components/ui/Card';
@@ -60,6 +60,7 @@ interface IGigDetail {
 export const GigDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const [gig, setGig] = useState<IGigDetail | null>(null);
@@ -283,6 +284,25 @@ export const GigDetail: React.FC = () => {
     }
   };
 
+  const fromPath = (location.state as any)?.from;
+  const backLabel = fromPath?.includes('applications')
+    ? 'Back to Applications'
+    : fromPath?.includes('client-dashboard') || fromPath?.includes('tab=gigs')
+    ? 'Back to Gig Manager'
+    : fromPath?.includes('bookings') || fromPath?.includes('calendar')
+    ? 'Back to Calendar'
+    : fromPath?.includes('profile')
+    ? 'Back to Profile'
+    : 'Browse Gigs';
+
+  const handleBack = () => {
+    if (fromPath) {
+      navigate(fromPath);
+    } else {
+      navigate('/gigs');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex-grow bg-cream flex items-center justify-center min-h-[50vh]">
@@ -296,8 +316,8 @@ export const GigDetail: React.FC = () => {
       <div className="flex-grow bg-cream flex flex-col items-center justify-center space-y-3 min-h-[50vh] text-center px-4">
         <AlertCircle className="h-8 w-8 text-accent-coral" />
         <p className="text-sm font-sans text-ink">{error || 'Gig not found'}</p>
-        <button onClick={() => navigate('/gigs')} className="text-xs text-accent-teal hover:underline font-bold cursor-pointer">
-          ← Back to Browse
+        <button onClick={handleBack} className="text-xs text-accent-teal hover:underline font-bold cursor-pointer">
+          ← {backLabel}
         </button>
       </div>
     );
@@ -323,11 +343,11 @@ export const GigDetail: React.FC = () => {
       {/* Back button */}
       <div className="text-left">
         <button
-          onClick={() => navigate('/gigs')}
+          onClick={handleBack}
           className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-6 font-bold font-display uppercase tracking-wider cursor-pointer"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Browse Gigs</span>
+          <span>{backLabel}</span>
         </button>
       </div>
 
@@ -768,16 +788,16 @@ export const GigDetail: React.FC = () => {
           <Card variant="teal" className="text-left space-y-3">
             <h3 className="text-xs font-bold font-display text-ink uppercase tracking-widest pl-1">Posted By</h3>
             <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 bg-cream border-2 border-ink rounded-lg flex items-center justify-center text-ink font-black font-display text-lg uppercase shadow-retro-sm">
+              <div className="flex items-center space-x-3 min-w-0">
+                <div className="h-10 w-10 bg-cream border-2 border-ink rounded-lg flex items-center justify-center text-ink font-black font-display text-lg uppercase shadow-retro-sm flex-shrink-0">
                   {gig.clientId.name.charAt(0)}
                 </div>
-                <div>
-                  <h4 className="font-bold text-ink text-sm uppercase font-display tracking-tight leading-none mb-1 text-left">{gig.clientId.name}</h4>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-bold text-ink text-sm uppercase font-display tracking-tight leading-none mb-1 text-left truncate">{gig.clientId.name}</h4>
                   {gig.clientId.currentCompanyName && (
-                    <p className="text-xs text-ink/60 font-sans flex items-center space-x-1 font-bold text-left">
-                      <Building className="h-3 w-3 text-accent-teal" />
-                      <span>{gig.clientId.currentCompanyName}</span>
+                    <p className="text-xs text-ink/60 font-sans flex items-center space-x-1 font-bold text-left truncate">
+                      <Building className="h-3 w-3 text-accent-teal flex-shrink-0" />
+                      <span className="truncate">{gig.clientId.currentCompanyName}</span>
                     </p>
                   )}
                 </div>

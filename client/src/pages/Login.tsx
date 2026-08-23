@@ -93,15 +93,15 @@ export const Login: React.FC = () => {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-12 flex-grow bg-cream font-sans transition-colors duration-200">
+    <div className="max-w-lg mx-auto px-2.5 sm:px-4 py-8 sm:py-12 flex-grow bg-cream font-sans transition-colors duration-200 min-w-0">
 
-      <Card variant="amber" className="p-6 sm:p-8 text-left space-y-5">
-        <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex items-start space-x-3 text-left">
+      <Card variant="amber" className="p-4 sm:p-8 text-left space-y-5 min-w-0">
+        <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex items-start space-x-3 text-left min-w-0">
           <div className="h-10 w-10 bg-accent-amber flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg shadow-retro-sm flex-shrink-0">
             <Globe className="h-5 w-5" />
           </div>
-          <div>
-            <h2 className="text-xl font-display font-black text-ink uppercase tracking-tight">Welcome Back</h2>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-display font-black text-ink uppercase tracking-tight truncate">Welcome Back</h2>
             <p className="text-xs font-sans text-ink/65 mt-0.5 leading-relaxed">
               Log into your SkillSphere marketplace to manage gigs &amp; contracts.
             </p>

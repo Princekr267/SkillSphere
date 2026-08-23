@@ -413,7 +413,7 @@ export const FreelancerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-6 sm:py-10 flex-grow bg-cream font-sans transition-colors duration-200">
       
       {/* Unverified Email Alert Banner */}
       {user && !user.isVerified && (
@@ -494,19 +494,19 @@ export const FreelancerDashboard: React.FC = () => {
                 <Card key={b._id} className="p-5 shadow-retro-sm text-left">
                   <div className="space-y-4">
                     {/* Header: Gig Title & Status */}
-                    <div className="flex items-start justify-between border-b-2 border-ink/10 pb-3 gap-2">
-                      <div>
-                        <span className="text-[9px] font-mono text-ink/60 uppercase tracking-widest block font-bold">Appointment for Gig</span>
-                        <Link to={`/gigs/${b.gigId?._id}`} className="font-black text-ink text-sm font-display uppercase tracking-tight hover:text-accent-teal transition-colors line-clamp-1">
+                    <div className="flex items-start justify-between border-b-2 border-ink/10 pb-3 gap-2 min-w-0">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[9px] font-mono text-ink/60 uppercase tracking-widest block font-bold truncate">Appointment for Gig</span>
+                        <Link to={`/gigs/${b.gigId?._id}`} state={{ from: '/freelancer-dashboard?tab=bookings' }} className="font-black text-ink text-sm font-display uppercase tracking-tight hover:text-accent-teal transition-colors line-clamp-1 block truncate">
                           {b.gigId?.title || 'Active Gig Project'}
                         </Link>
                         {b.gigId?.budget && (
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="amber" className="text-[8px] shadow-none">
+                          <div className="flex items-center space-x-2 mt-1 min-w-0">
+                            <Badge variant="amber" className="text-[8px] shadow-none flex-shrink-0">
                               ₹{b.gigId.finalAgreedAmount ?? b.gigId.budget}
                             </Badge>
                             {b.gigId.category && (
-                              <span className="text-[9px] font-mono text-ink/60 uppercase font-bold">
+                              <span className="text-[9px] font-mono text-ink/60 uppercase font-bold truncate">
                                 {b.gigId.category}
                               </span>
                             )}
@@ -519,8 +519,8 @@ export const FreelancerDashboard: React.FC = () => {
                     </div>
 
                     {/* Client & Company Information */}
-                    <div className="bg-cream/60 border-2 border-ink p-3 rounded-lg space-y-2 font-sans text-xs">
-                      <div className="flex items-center space-x-3">
+                    <div className="bg-cream/60 border-2 border-ink p-3 rounded-lg space-y-2 font-sans text-xs min-w-0">
+                      <div className="flex items-center space-x-3 min-w-0">
                         <div className="h-9 w-9 bg-cream border-2 border-ink rounded-full overflow-hidden flex items-center justify-center font-bold text-ink font-display flex-shrink-0">
                           {b.clientId?.avatar ? (
                             <img src={b.clientId.avatar} alt={b.clientId.name} className="h-full w-full object-cover" />
@@ -528,28 +528,28 @@ export const FreelancerDashboard: React.FC = () => {
                             b.clientId?.name?.charAt(0) || 'C'
                           )}
                         </div>
-                        <div>
-                          <p className="font-bold text-ink font-display uppercase text-xs">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-ink font-display uppercase text-xs truncate">
                             {b.clientId?.name || 'Client'}
                           </p>
                           {b.clientId?.currentCompanyName && (
-                            <p className="text-[10px] text-ink/75 font-mono flex items-center space-x-1 font-bold">
-                              <Building className="h-3 w-3 text-accent-teal" />
-                              <span>{b.clientId.currentCompanyName}</span>
+                            <p className="text-[10px] text-ink/75 font-mono flex items-center space-x-1 font-bold truncate">
+                              <Building className="h-3 w-3 text-accent-teal flex-shrink-0" />
+                              <span className="truncate">{b.clientId.currentCompanyName}</span>
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-ink/10 text-[10px] font-mono text-ink/70">
+                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-ink/10 text-[10px] font-mono text-ink/70 min-w-0">
                         {b.clientId?.location?.city && (
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center space-x-1 min-w-0">
                             <MapPin className="h-3 w-3 text-accent-teal flex-shrink-0" />
-                            <span className="font-bold">{b.clientId.location.city}</span>
+                            <span className="font-bold truncate">{b.clientId.location.city}</span>
                           </div>
                         )}
                         {b.clientId?.email && (
-                          <div className="flex items-center space-x-1 truncate">
+                          <div className="flex items-center space-x-1 truncate min-w-0">
                             <Mail className="h-3 w-3 text-accent-teal flex-shrink-0" />
                             <span className="font-bold truncate">{b.clientId.email}</span>
                           </div>
@@ -558,13 +558,13 @@ export const FreelancerDashboard: React.FC = () => {
                     </div>
 
                     {/* Slot Date & Time */}
-                    <div className="flex items-center justify-between bg-cream border border-ink/20 p-2.5 rounded-lg text-xs font-mono">
-                      <div className="flex items-center space-x-1.5 text-ink">
-                        <Calendar className="h-3.5 w-3.5 text-accent-teal" />
-                        <span className="font-bold">{new Date(b.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-cream border border-ink/20 p-2.5 rounded-lg text-xs font-mono min-w-0">
+                      <div className="flex items-center space-x-1.5 text-ink min-w-0 truncate">
+                        <Calendar className="h-3.5 w-3.5 text-accent-teal flex-shrink-0" />
+                        <span className="font-bold truncate">{new Date(b.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
                       </div>
-                      <div className="flex items-center space-x-1.5 text-ink">
-                        <Clock className="h-3.5 w-3.5 text-accent-teal" />
+                      <div className="flex items-center space-x-1.5 text-ink min-w-0 flex-shrink-0">
+                        <Clock className="h-3.5 w-3.5 text-accent-teal flex-shrink-0" />
                         <span className="font-bold">{b.startTime || b.slot} - {b.endTime || 'End'}</span>
                       </div>
                     </div>
@@ -724,14 +724,14 @@ export const FreelancerDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Profile Card */}
-        <div className="space-y-8 lg:col-span-1">
+        <div className="space-y-8 lg:col-span-1 min-w-0">
           
           {/* Card 1: Avatar and main stats */}
           <Card variant="teal" className="space-y-4">
             
             {/* Identity Inner Card */}
-            <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex items-center space-x-4">
-              <div className="h-16 w-16 bg-cream border-2 border-ink flex items-center justify-center text-ink text-2xl font-black font-display uppercase rounded-lg overflow-hidden flex-shrink-0 shadow-retro-sm">
+            <div className="bg-cream border-2 border-ink rounded-xl p-3 sm:p-4 shadow-retro-sm flex items-center space-x-3 sm:space-x-4 min-w-0">
+              <div className="h-14 w-14 sm:h-16 sm:w-16 bg-cream border-2 border-ink flex items-center justify-center text-ink text-2xl font-black font-display uppercase rounded-lg overflow-hidden flex-shrink-0 shadow-retro-sm">
                 {user.avatar ? (
                   <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
                 ) : (
@@ -740,41 +740,41 @@ export const FreelancerDashboard: React.FC = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="text-base font-black text-ink uppercase font-display tracking-tight truncate">{user.name}</h2>
-                <Badge variant="teal" className="mt-1 shadow-none text-[9px] font-mono uppercase font-bold">
+                <Badge variant="teal" className="mt-1 shadow-none text-[9px] font-mono uppercase font-bold max-w-full truncate">
                   Verified Freelancer
                 </Badge>
               </div>
             </div>
             
             {/* Stats Inner Card */}
-            <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3 font-mono text-xs text-ink/70">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4 text-accent-teal" />
+            <div className="bg-cream border-2 border-ink rounded-xl p-3 sm:p-4 shadow-retro-sm space-y-3 font-mono text-xs text-ink/70 min-w-0">
+              <div className="flex items-center justify-between min-w-0 gap-2">
+                <span className="flex items-center space-x-2 flex-shrink-0">
+                  <DollarSign className="h-4 w-4 text-accent-teal flex-shrink-0" />
                   <span>RATE:</span>
                 </span>
-                <span className="font-bold text-ink text-sm">₹{user.hourlyRate || 0}/HR</span>
+                <span className="font-bold text-ink text-sm min-w-0 truncate text-right">₹{user.hourlyRate || 0}/HR</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-accent-teal" />
+              <div className="flex items-center justify-between min-w-0 gap-2">
+                <span className="flex items-center space-x-2 flex-shrink-0">
+                  <Mail className="h-4 w-4 text-accent-teal flex-shrink-0" />
                   <span>EMAIL:</span>
                 </span>
-                <span className="font-bold text-ink truncate max-w-[150px]" title={user.email}>{user.email}</span>
+                <span className="font-bold text-ink truncate min-w-0 max-w-[140px] sm:max-w-[180px] text-right" title={user.email}>{user.email}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-accent-teal" />
+              <div className="flex items-center justify-between min-w-0 gap-2">
+                <span className="flex items-center space-x-2 flex-shrink-0">
+                  <MapPin className="h-4 w-4 text-accent-teal flex-shrink-0" />
                   <span>CITY:</span>
                 </span>
-                <span className="text-ink font-bold uppercase">{user.location.city}</span>
+                <span className="text-ink font-bold uppercase min-w-0 truncate text-right">{user.location.city}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center space-x-2">
-                  <Award className="h-4 w-4 text-accent-amber" />
+              <div className="flex items-center justify-between min-w-0 gap-2">
+                <span className="flex items-center space-x-2 flex-shrink-0">
+                  <Award className="h-4 w-4 text-accent-amber flex-shrink-0" />
                   <span>RATING:</span>
                 </span>
-                <span className="font-bold text-ink">{user.rating.toFixed(1)} ★</span>
+                <span className="font-bold text-ink min-w-0 truncate text-right">{user.rating.toFixed(1)} ★</span>
               </div>
             </div>
 
@@ -988,11 +988,11 @@ export const FreelancerDashboard: React.FC = () => {
                 {portfolio.map((item, i) => (
                   <Card key={i} className="p-4 shadow-retro-sm bg-cream">
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <h4 className="font-bold text-ink text-xs uppercase tracking-tight truncate">{item.title}</h4>
+                      <div className="flex items-center justify-between mb-1.5 gap-2 min-w-0">
+                        <h4 className="font-bold text-ink text-xs uppercase tracking-tight truncate min-w-0 flex-1">{item.title}</h4>
                         <button
                           onClick={() => handleDeletePortfolio(i)}
-                          className="text-ink/60 hover:text-accent-coral transition-colors cursor-pointer"
+                          className="text-ink/60 hover:text-accent-coral transition-colors cursor-pointer flex-shrink-0"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -1004,10 +1004,10 @@ export const FreelancerDashboard: React.FC = () => {
                         href={item.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold"
+                        className="inline-flex items-center space-x-1 text-xs text-accent-teal hover:underline font-bold max-w-full truncate"
                       >
-                        <LinkIcon className="h-3 w-3" />
-                        <span>Visit Project</span>
+                        <LinkIcon className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">Visit Project</span>
                       </a>
                     )}
                   </Card>
@@ -1017,7 +1017,7 @@ export const FreelancerDashboard: React.FC = () => {
               <p className="text-xs text-ink/60 mb-6 italic font-sans pl-1">No portfolio items logged.</p>
             )}
 
-            <form onSubmit={handleAddPortfolio} className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3.5 font-sans text-left">
+            <form onSubmit={handleAddPortfolio} className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3.5 font-sans text-left min-w-0">
               <span className="text-[10px] font-bold font-display text-ink uppercase tracking-widest block pl-1">Add Portfolio Project</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
@@ -1060,15 +1060,15 @@ export const FreelancerDashboard: React.FC = () => {
             {certifications.length > 0 ? (
               <div className="space-y-2 mb-6 font-sans">
                 {certifications.map((cert, i) => (
-                  <div key={i} className="p-3 bg-cream border-2 border-ink text-xs flex items-center justify-between text-ink font-mono rounded-lg shadow-retro-sm">
-                    <span className="flex items-center space-x-2">
+                  <div key={i} className="p-3 bg-cream border-2 border-ink text-xs flex items-center justify-between text-ink font-mono rounded-lg shadow-retro-sm min-w-0 gap-2">
+                    <span className="flex items-center space-x-2 min-w-0 flex-1">
                       <Award className="h-4 w-4 text-accent-amber flex-shrink-0" />
-                      <span>{cert}</span>
+                      <span className="truncate">{cert}</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => handleDeleteCert(i)}
-                      className="text-ink/60 hover:text-accent-coral transition-colors cursor-pointer"
+                      className="text-ink/60 hover:text-accent-coral transition-colors cursor-pointer flex-shrink-0"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

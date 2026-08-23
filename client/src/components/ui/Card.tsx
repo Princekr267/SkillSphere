@@ -25,9 +25,11 @@ export const Card: React.FC<CardProps> = ({
   const bgClass = className.includes('bg-') ? '' : variantBgs[variant] || 'bg-cream';
   const liftStyles = hoverLift ? 'transition-all duration-200 hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-retro' : '';
 
+  const overflowClass = className.includes('overflow-') ? '' : 'overflow-hidden';
+
   return (
     <div
-      className={`${bgClass} border-2 border-ink rounded-xl p-6 shadow-retro text-ink text-left ${liftStyles} ${className}`}
+      className={`${bgClass} border-2 border-ink rounded-xl p-3.5 sm:p-6 shadow-retro text-ink text-left min-w-0 max-w-full ${overflowClass} ${liftStyles} ${className}`}
       {...props}
     >
       {children}
