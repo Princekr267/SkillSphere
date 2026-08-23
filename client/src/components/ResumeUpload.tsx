@@ -84,7 +84,7 @@ export const ResumeUpload: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-3 p-4 border-2 border-ink rounded-lg bg-cream w-full transition-colors duration-200 text-left">
+    <div className="flex flex-col items-center space-y-3 p-3.5 sm:p-4 border-2 border-ink rounded-lg bg-cream w-full min-w-0 max-w-full transition-colors duration-200 text-left">
       <div className="flex items-center space-x-3 w-full border-b border-ink/10 pb-3">
         <div className="h-10 w-10 rounded-lg bg-accent-teal/20 border-2 border-ink flex items-center justify-center text-ink flex-shrink-0 shadow-retro-sm">
           <FileText className="h-5 w-5 text-accent-teal" />

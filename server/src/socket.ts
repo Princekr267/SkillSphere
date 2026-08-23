@@ -44,20 +44,29 @@ let ioInstance: SocketServer | null = null;
 export function initSocket(httpServer: HttpServer): SocketServer {
   const allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
   if (process.env.FRONTEND_URL) {
-    allowedOrigins.push(process.env.FRONTEND_URL.trim());
+    allowedOrigins.push(process.env.FRONTEND_URL.trim().replace(/\/$/, ''));
   }
   if (process.env.ALLOWED_ORIGINS) {
-    const extraOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+    const extraOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim().replace(/\/$/, ''));
     allowedOrigins.push(...extraOrigins);
   }
 
   const io = new SocketServer(httpServer, {
     cors: {
       origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        if (!origin) return callback(null, true);
+        const cleanOrigin = origin.replace(/\/$/, '');
+        if (
+          allowedOrigins.includes(cleanOrigin) ||
+          allowedOrigins.includes('*') ||
+          cleanOrigin.endsWith('.vercel.app') ||
+          cleanOrigin.endsWith('.onrender.com') ||
+          cleanOrigin.endsWith('.netlify.app')
+        ) {
           callback(null, true);
         } else {
-          callback(new Error('Not allowed by CORS'));
+          console.warn(`Socket connection blocked by CORS: ${origin}`);
+          callback(new Error(`Not allowed by CORS: ${origin}`));
         }
       },
       methods: ['GET', 'POST'],

@@ -200,7 +200,7 @@ export const ClientDashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-6 sm:py-10 flex-grow bg-cream font-sans transition-colors duration-200">
       
       {/* Unverified Email Alert Banner */}
       {user && !user.isVerified && (
@@ -274,19 +274,19 @@ export const ClientDashboard: React.FC = () => {
                   <div className="space-y-4">
                     
                     {/* Header: Gig & Status */}
-                    <div className="flex items-start justify-between border-b-2 border-ink/10 pb-3 gap-2">
-                      <div>
-                        <span className="text-[9px] font-mono text-ink/60 uppercase tracking-widest block font-bold">Appointment Requested For</span>
-                        <Link to={`/gigs/${b.gigId?._id}`} className="font-black text-ink text-sm font-display uppercase tracking-tight hover:text-accent-teal transition-colors line-clamp-1">
+                    <div className="flex items-start justify-between border-b-2 border-ink/10 pb-3 gap-2 min-w-0">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[9px] font-mono text-ink/60 uppercase tracking-widest block font-bold truncate">Appointment Requested For</span>
+                        <Link to={`/gigs/${b.gigId?._id}`} state={{ from: '/client-dashboard?tab=calendar' }} className="font-black text-ink text-sm font-display uppercase tracking-tight hover:text-accent-teal transition-colors line-clamp-1 block truncate">
                           {b.gigId?.title || 'Gig Project'}
                         </Link>
                         {b.gigId?.budget && (
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="amber" className="text-[8px] shadow-none">
+                          <div className="flex items-center space-x-2 mt-1 min-w-0">
+                            <Badge variant="amber" className="text-[8px] shadow-none flex-shrink-0">
                               ₹{b.gigId.finalAgreedAmount ?? b.gigId.budget}
                             </Badge>
                             {b.gigId.category && (
-                              <span className="text-[9px] font-mono text-ink/60 uppercase font-bold">
+                              <span className="text-[9px] font-mono text-ink/60 uppercase font-bold truncate">
                                 {b.gigId.category}
                               </span>
                             )}
@@ -299,9 +299,9 @@ export const ClientDashboard: React.FC = () => {
                     </div>
 
                     {/* Candidate / Freelancer Full Profile Info */}
-                    <div className="bg-cream/60 border-2 border-ink p-3 rounded-lg space-y-3 font-sans text-xs">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
+                    <div className="bg-cream/60 border-2 border-ink p-3 rounded-lg space-y-3 font-sans text-xs min-w-0">
+                      <div className="flex items-center justify-between min-w-0 gap-2">
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
                           <div className="h-10 w-10 bg-cream border-2 border-ink rounded-full overflow-hidden flex items-center justify-center font-bold text-ink font-display flex-shrink-0">
                             {b.freelancerId?.avatar ? (
                               <img src={b.freelancerId.avatar} alt={b.freelancerId.name} className="h-full w-full object-cover" />
@@ -309,13 +309,13 @@ export const ClientDashboard: React.FC = () => {
                               b.freelancerId?.name?.charAt(0) || 'F'
                             )}
                           </div>
-                          <div>
-                            <p className="font-bold text-ink font-display uppercase text-xs">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-ink font-display uppercase text-xs truncate">
                               {b.freelancerId?.name || 'Candidate'}
                             </p>
-                            <div className="flex items-center space-x-2 mt-0.5">
+                            <div className="flex items-center space-x-2 mt-0.5 min-w-0">
                               <StarRating value={b.freelancerId?.rating || 5} size="sm" />
-                              <span className="text-[10px] font-mono font-bold text-ink/60">
+                              <span className="text-[10px] font-mono font-bold text-ink/60 truncate">
                                 ({b.freelancerId?.reviewCount || 0})
                               </span>
                             </div>
@@ -323,7 +323,7 @@ export const ClientDashboard: React.FC = () => {
                         </div>
 
                         {b.freelancerId?.hourlyRate !== undefined && (
-                          <div className="text-right">
+                          <div className="text-right flex-shrink-0">
                             <span className="text-[9px] font-mono text-ink/60 block font-bold">RATE</span>
                             <span className="text-xs font-bold text-accent-teal font-mono">
                               ₹{b.freelancerId.hourlyRate}/hr
@@ -353,23 +353,23 @@ export const ClientDashboard: React.FC = () => {
                         <div className="pt-2 border-t border-ink/10 text-right">
                           <Link
                             to={`/freelancer/${b.freelancerId._id}`}
-                            className="inline-flex items-center space-x-1 text-[10px] font-mono text-accent-teal hover:underline font-bold uppercase"
+                            className="inline-flex items-center space-x-1 text-[10px] font-mono text-accent-teal hover:underline font-bold uppercase max-w-full truncate"
                           >
-                            <span>View Full Candidate Profile</span>
-                            <ExternalLink className="h-3 w-3" />
+                            <span className="truncate">View Full Candidate Profile</span>
+                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
                           </Link>
                         </div>
                       )}
                     </div>
 
                     {/* Slot Date & Time */}
-                    <div className="flex items-center justify-between bg-cream border border-ink/20 p-2.5 rounded-lg text-xs font-mono">
-                      <div className="flex items-center space-x-1.5 text-ink">
-                        <Calendar className="h-3.5 w-3.5 text-accent-teal" />
-                        <span className="font-bold">{new Date(b.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-cream border border-ink/20 p-2.5 rounded-lg text-xs font-mono min-w-0">
+                      <div className="flex items-center space-x-1.5 text-ink min-w-0 truncate">
+                        <Calendar className="h-3.5 w-3.5 text-accent-teal flex-shrink-0" />
+                        <span className="font-bold truncate">{new Date(b.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
                       </div>
-                      <div className="flex items-center space-x-1.5 text-ink">
-                        <Clock className="h-3.5 w-3.5 text-accent-teal" />
+                      <div className="flex items-center space-x-1.5 text-ink min-w-0 flex-shrink-0">
+                        <Clock className="h-3.5 w-3.5 text-accent-teal flex-shrink-0" />
                         <span className="font-bold">{b.startTime || b.slot} - {b.endTime || 'End'}</span>
                       </div>
                     </div>
@@ -479,33 +479,33 @@ export const ClientDashboard: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             {/* Left Column: Client profile */}
-            <div className="space-y-6 lg:col-span-1">
+            <div className="space-y-6 lg:col-span-1 min-w-0">
               <Card variant="teal" className="space-y-4">
-                <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex flex-col items-center text-center">
+                <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex flex-col items-center text-center min-w-0">
                   <AvatarUpload />
 
-                  <div className="mt-3 border-t-2 border-ink w-full pt-3">
-                    <h3 className="text-base font-black font-display text-ink uppercase tracking-tight">{user.name}</h3>
-                    <Badge variant="teal" className="mt-1 shadow-none font-mono text-[9px] uppercase font-bold">
+                  <div className="mt-3 border-t-2 border-ink w-full pt-3 min-w-0">
+                    <h3 className="text-base font-black font-display text-ink uppercase tracking-tight truncate">{user.name}</h3>
+                    <Badge variant="teal" className="mt-1 shadow-none font-mono text-[9px] uppercase font-bold max-w-full truncate">
                       Verified Client
                     </Badge>
                   </div>
                 </div>
 
-                <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3 text-left font-sans text-xs">
+                <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm space-y-3 text-left font-sans text-xs min-w-0">
                   {(() => {
                     const primaryCompany = myCompanies[0]?.company;
                     const displayedCompanyName = primaryCompany?.name || user.businessName || user.currentCompanyName;
 
                     return (
-                      <div className="flex items-start space-x-2 text-ink/70">
+                      <div className="flex items-start space-x-2 text-ink/70 min-w-0">
                         <Building className="h-4 w-4 text-accent-teal flex-shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-bold text-ink">{displayedCompanyName || 'Individual Client'}</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="font-bold text-ink truncate block">{displayedCompanyName || 'Individual Client'}</span>
                           {!displayedCompanyName && myCompanies.length === 0 && (
                             <Link
                               to="/register-company"
-                              className="block text-[10px] text-accent-teal hover:underline font-bold mt-0.5"
+                              className="block text-[10px] text-accent-teal hover:underline font-bold mt-0.5 truncate"
                             >
                               + Register your company
                             </Link>
@@ -514,11 +514,11 @@ export const ClientDashboard: React.FC = () => {
                       </div>
                     );
                   })()}
-                  <div className="flex items-center space-x-2 text-ink/70">
+                  <div className="flex items-center space-x-2 text-ink/70 min-w-0">
                     <MapPin className="h-4 w-4 text-accent-teal flex-shrink-0" />
-                    <span className="font-bold text-ink">{user.location.city}</span>
+                    <span className="font-bold text-ink truncate">{user.location.city}</span>
                   </div>
-                  <div className="flex items-center space-x-2 text-ink/70">
+                  <div className="flex items-center space-x-2 text-ink/70 min-w-0">
                     <Mail className="h-4 w-4 text-accent-teal flex-shrink-0" />
                     <span className="font-bold text-ink truncate max-w-[170px]" title={user.email}>{user.email}</span>
                   </div>

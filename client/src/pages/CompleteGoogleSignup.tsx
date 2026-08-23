@@ -151,13 +151,13 @@ export const CompleteGoogleSignup: React.FC = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-12 flex-grow bg-cream font-sans transition-colors duration-200">
-      <Card className="p-8 text-left">
-        <div className="text-left mb-8">
-          <div className="h-10 w-10 bg-accent-teal flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg mb-4 shadow-retro-sm">
+    <div className="max-w-lg mx-auto px-2.5 sm:px-4 py-8 sm:py-12 flex-grow bg-cream font-sans transition-colors duration-200 min-w-0">
+      <Card className="p-4 sm:p-8 text-left min-w-0">
+        <div className="text-left mb-6 sm:mb-8 min-w-0">
+          <div className="h-10 w-10 bg-accent-teal flex items-center justify-center text-ink font-bold border-2 border-ink rounded-lg mb-4 shadow-retro-sm flex-shrink-0">
             <Globe className="h-5 w-5" />
           </div>
-          <h2 className="text-2xl font-display font-black text-ink uppercase tracking-tight">Complete Google Registration</h2>
+          <h2 className="text-xl sm:text-2xl font-display font-black text-ink uppercase tracking-tight truncate">Complete Google Registration</h2>
           <p className="text-xs font-sans text-ink/60 mt-1.5 leading-relaxed">
             Please supply your account role and city location to complete your profile setup.
           </p>

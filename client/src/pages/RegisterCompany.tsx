@@ -80,18 +80,18 @@ export const RegisterCompany: React.FC = () => {
   };
 
   return (
-    <div className="flex-grow flex items-center justify-center px-4 sm:px-12 py-16 bg-cream transition-colors duration-200">
-      <Card variant="teal" className="w-full max-w-xl p-6 sm:p-8 animate-slide-up space-y-5">
+    <div className="flex-grow flex items-center justify-center px-2.5 sm:px-12 py-8 sm:py-16 bg-cream transition-colors duration-200 min-w-0">
+      <Card variant="teal" className="w-full max-w-xl p-4 sm:p-8 animate-slide-up space-y-5 min-w-0">
 
         {/* Header */}
-        <div className="bg-cream border-2 border-ink rounded-xl p-5 shadow-retro-sm text-left">
-          <div className="flex items-center space-x-3 mb-2">
+        <div className="bg-cream border-2 border-ink rounded-xl p-4 sm:p-5 shadow-retro-sm text-left min-w-0">
+          <div className="flex items-center space-x-3 mb-2 min-w-0">
             <div className="h-9 w-9 bg-accent-teal border-2 border-ink flex items-center justify-center rounded-lg shadow-retro-sm flex-shrink-0">
               <Building className="h-4.5 w-4.5 text-ink" />
             </div>
-            <div>
-              <p className="text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">New Organization</p>
-              <h1 className="text-xl font-display font-black text-ink uppercase tracking-tight">Register Company</h1>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold truncate">New Organization</p>
+              <h1 className="text-lg sm:text-xl font-display font-black text-ink uppercase tracking-tight truncate">Register Company</h1>
             </div>
           </div>
           <p className="text-xs text-ink/65 font-sans leading-relaxed font-medium">

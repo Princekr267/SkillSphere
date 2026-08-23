@@ -76,7 +76,7 @@ export const AvatarUpload: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-3 p-4 border-2 border-ink rounded-lg bg-cream w-full transition-colors duration-200">
+    <div className="flex flex-col items-center space-y-3 p-3.5 sm:p-4 border-2 border-ink rounded-lg bg-cream w-full min-w-0 max-w-full transition-colors duration-200">
       <div className="relative group">
         {/* Profile Circle */}
         <div className="h-20 w-20 rounded-full bg-cream border-2 border-ink overflow-hidden flex items-center justify-center font-display text-2xl font-black text-ink uppercase shadow-retro-sm">

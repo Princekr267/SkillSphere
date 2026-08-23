@@ -255,14 +255,14 @@ export const Register: React.FC = () => {
   }
 
   return (
-    <div className="flex-grow flex items-center justify-start px-4 sm:px-12 md:px-24 py-16 bg-cream relative transition-colors duration-200">
+    <div className="flex-grow flex items-center justify-start px-2.5 sm:px-12 md:px-24 py-8 sm:py-16 bg-cream relative transition-colors duration-200 min-w-0">
       
       {/* Decorative vertical line */}
       <div className="absolute left-8 top-0 bottom-0 w-[4px] bg-ink/10 dark:bg-cream/15 border-x border-ink hidden md:block">
         <div className="absolute top-1/4 bottom-1/4 left-0 w-full bg-accent-amber"></div>
       </div>
 
-      <Card className="w-full max-w-lg p-8 relative z-10 animate-slide-up ml-0 md:ml-12">
+      <Card className="w-full max-w-lg p-4 sm:p-8 relative z-10 animate-slide-up ml-0 md:ml-12 min-w-0">
         
         {/* Step Indicator - Stepper stylized as a route map line */}
         <div className="mb-10 relative">

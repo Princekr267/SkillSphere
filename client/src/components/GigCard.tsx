@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MapPin, DollarSign, Tag, Users } from 'lucide-react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
@@ -49,21 +49,22 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton = true, compact = false }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const catColor = CATEGORY_COLORS[gig.category] || CATEGORY_COLORS['Other'];
 
   return (
     <Card
-      onClick={() => navigate(`/gigs/${gig._id}`)}
+      onClick={() => navigate(`/gigs/${gig._id}`, { state: { from: location.pathname + location.search } })}
       className="transition-all flex flex-col group cursor-pointer h-full text-left"
     >
       {/* Top row: category + distance */}
-      <div className="flex items-center justify-between mb-3 w-full">
-        <Badge variant="outline" className={`${catColor} shadow-none`}>
+      <div className="flex items-center justify-between gap-2 mb-3 w-full min-w-0">
+        <Badge variant="outline" className={`${catColor} shadow-none flex-shrink-0`}>
           <Tag className="h-3 w-3 mr-1" />
           <span>{gig.category}</span>
         </Badge>
         {gig.distanceKm !== undefined && (
-          <Badge variant="outline" className="font-mono shadow-none text-ink bg-cream">
+          <Badge variant="outline" className="font-mono shadow-none text-ink bg-cream flex-shrink-0">
             {gig.distanceKm < 1 ? `${(gig.distanceKm * 1000).toFixed(0)}m` : `${gig.distanceKm.toFixed(1)}km`} AWAY
           </Badge>
         )}
@@ -75,7 +76,7 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
       </h3>
 
       {/* Client info with avatar */}
-      <div className="flex items-center space-x-2 mb-3">
+      <div className="flex items-center space-x-2 mb-3 min-w-0">
         <div className="h-5 w-5 bg-cream border border-ink rounded overflow-hidden flex items-center justify-center font-display text-[9px] font-black text-ink uppercase flex-shrink-0 shadow-retro-sm">
           {gig.clientId?.avatar ? (
             <img src={gig.clientId.avatar} alt={gig.clientId.name} className="h-full w-full object-cover" />
@@ -83,7 +84,7 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
             (gig.clientId?.currentCompanyName || gig.clientId?.name || '?').charAt(0)
           )}
         </div>
-        <span className="text-[11px] text-ink/75 font-sans font-bold truncate">
+        <span className="text-[11px] text-ink/75 font-sans font-bold truncate min-w-0 flex-1">
           {gig.clientId?.currentCompanyName || gig.clientId?.name || 'Unknown Client'}
         </span>
       </div>
@@ -111,18 +112,18 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
       )}
 
       {/* Footer: budget + city + applicants */}
-      <div className="flex items-center justify-between pt-3 border-t border-ink/10 mt-auto w-full">
-        <div className="flex items-center space-x-3">
-          <span className="flex items-center space-x-0.5 font-mono text-xs font-bold text-ink">
-            <DollarSign className="h-3.5 w-3.5 text-accent-teal" />
-            <span>₹{(gig.finalAgreedAmount ?? gig.budget).toLocaleString()}{gig.budgetType === 'hourly' ? '/hr' : ''}</span>
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-ink/10 mt-auto w-full min-w-0">
+        <div className="flex items-center space-x-3 min-w-0">
+          <span className="flex items-center space-x-0.5 font-mono text-xs font-bold text-ink truncate">
+            <DollarSign className="h-3.5 w-3.5 text-accent-teal flex-shrink-0" />
+            <span className="truncate">₹{(gig.finalAgreedAmount ?? gig.budget).toLocaleString()}{gig.budgetType === 'hourly' ? '/hr' : ''}</span>
           </span>
-          <span className="flex items-center space-x-1 text-[10px] font-mono text-ink/60">
-            <MapPin className="h-3 w-3" />
-            <span>{gig.location.city}</span>
+          <span className="flex items-center space-x-1 text-[10px] font-mono text-ink/60 truncate">
+            <MapPin className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{gig.location.city}</span>
           </span>
         </div>
-        <span className="flex items-center space-x-1 text-[10px] font-mono text-ink/60">
+        <span className="flex items-center space-x-1 text-[10px] font-mono text-ink/60 flex-shrink-0">
           <Users className="h-3 w-3" />
           <span>{gig.applicants?.length || 0} applied</span>
         </span>

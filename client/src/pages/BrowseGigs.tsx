@@ -136,8 +136,8 @@ export const BrowseGigs: React.FC = () => {
     <div className="flex-grow bg-cream flex flex-col animate-fade-in font-sans transition-colors duration-200" style={{ minHeight: 0 }}>
       
       {/* Top toolbar */}
-      <div className="border-b-2 border-ink bg-cream px-4 py-3 flex items-center space-x-3 text-left">
-        <div className="flex items-center space-x-2 flex-grow max-w-md relative">
+      <div className="border-b-2 border-ink bg-cream px-2.5 sm:px-4 py-3 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 text-left min-w-0">
+        <div className="flex items-center space-x-2 flex-grow max-w-full sm:max-w-md relative min-w-0">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
           <Input
             type="text"
@@ -157,32 +157,33 @@ export const BrowseGigs: React.FC = () => {
           onClick={() => setShowFilters(f => !f)}
           variant="outline"
           size="md"
+          className="flex-shrink-0"
         >
           <SlidersHorizontal className="h-4 w-4 mr-1" />
           <span>Filters</span>
         </Button>
 
-        <span className="text-[10px] font-mono text-ink/60 ml-auto font-bold uppercase">
+        <span className="text-[10px] font-mono text-ink/60 sm:ml-auto font-bold uppercase flex-shrink-0">
           {loading ? '...' : `${gigs.length} GIGS FOUND`}
         </span>
       </div>
 
       {/* Filter panel (collapsible) */}
       {showFilters && (
-        <div className="bg-cream border-b-2 border-ink px-6 py-6 flex flex-wrap items-end gap-4 relative z-10 text-left animate-fade-in">
-          <div className="space-y-1 text-left">
+        <div className="bg-cream border-b-2 border-ink px-3 sm:px-6 py-4 sm:py-6 flex flex-wrap items-end gap-3 sm:gap-4 relative z-10 text-left animate-fade-in min-w-0">
+          <div className="space-y-1 text-left w-full sm:w-auto">
             <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Category</label>
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans cursor-pointer"
+              className="w-full sm:w-auto px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans cursor-pointer"
             >
               <option value="" className="bg-cream text-ink">All Categories</option>
               {GIG_CATEGORIES.map(c => <option key={c} value={c} className="bg-cream text-ink">{c}</option>)}
             </select>
           </div>
 
-          <div className="space-y-1 min-w-[170px] text-left">
+          <div className="space-y-1 w-full sm:w-auto sm:min-w-[170px] text-left">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">
                 Radius: <span className="font-mono text-accent-teal font-bold">{radius >= 3000 ? 'All India' : `${radius}km`}</span>
@@ -207,7 +208,7 @@ export const BrowseGigs: React.FC = () => {
             />
           </div>
 
-          <div className="space-y-1 flex-grow min-w-[150px] text-left">
+          <div className="space-y-1 flex-grow w-full sm:w-auto sm:min-w-[150px] text-left">
             <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Skills (comma-separated)</label>
             <Input
               type="text"

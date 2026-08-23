@@ -38,22 +38,22 @@ export const LeaveReview: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-12 flex-grow bg-cream font-sans animate-fade-in transition-colors duration-200">
+    <div className="max-w-xl mx-auto px-2.5 sm:px-4 py-8 sm:py-12 flex-grow bg-cream font-sans animate-fade-in transition-colors duration-200 min-w-0">
       
       {/* Back button */}
       <div className="text-left">
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-8 font-bold font-display uppercase tracking-wider cursor-pointer"
+          className="inline-flex items-center space-x-1.5 text-xs text-ink/60 hover:text-ink transition-colors mb-6 sm:mb-8 font-bold font-display uppercase tracking-wider cursor-pointer"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back</span>
         </button>
       </div>
 
-      <Card className="p-8 text-left">
+      <Card className="p-4 sm:p-8 text-left min-w-0">
         <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest block mb-1">Post-Gig Feedback</span>
-        <h1 className="text-xl font-black font-display text-ink uppercase tracking-tight mb-6">
+        <h1 className="text-xl font-black font-display text-ink uppercase tracking-tight mb-6 truncate">
           Leave a Review
         </h1>
 

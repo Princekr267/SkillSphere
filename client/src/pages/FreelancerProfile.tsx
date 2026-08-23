@@ -414,7 +414,7 @@ export const FreelancerProfile: React.FC = () => {
                           <span className="text-[10px] font-mono font-bold text-ink/60">₹{gig.budget} ({gig.budgetType})</span>
                         </div>
                       </div>
-                      <Link to={`/gigs/${gig._id}`} className="flex-shrink-0">
+                      <Link to={`/gigs/${gig._id}`} state={{ from: location.pathname + location.search }} className="flex-shrink-0">
                         <Button variant="outline" size="sm">
                           View Gig
                         </Button>
@@ -437,7 +437,7 @@ export const FreelancerProfile: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-6 sm:py-10 flex-grow bg-cream font-sans transition-colors duration-200 min-w-0">
       
       {/* Back button */}
       <div className="text-left">
@@ -453,12 +453,12 @@ export const FreelancerProfile: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Summary and Availability Scheduler */}
-        <div className="space-y-6 lg:col-span-1">
+        <div className="space-y-6 lg:col-span-1 min-w-0">
           <Card variant="teal" className="space-y-4">
             
             {/* Identity Inner Card */}
-            <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex flex-col items-center text-center">
-              <div className="h-20 w-20 bg-cream border-2 border-ink overflow-hidden flex items-center justify-center font-display text-2xl font-black text-ink uppercase mb-3 rounded-lg shadow-retro">
+            <div className="bg-cream border-2 border-ink rounded-xl p-4 shadow-retro-sm flex flex-col items-center text-center min-w-0">
+              <div className="h-20 w-20 bg-cream border-2 border-ink overflow-hidden flex items-center justify-center font-display text-2xl font-black text-ink uppercase mb-3 rounded-lg shadow-retro flex-shrink-0">
                 {freelancer.avatar ? (
                   <img src={freelancer.avatar} alt={freelancer.name} className="h-full w-full object-cover" />
                 ) : (
@@ -466,11 +466,11 @@ export const FreelancerProfile: React.FC = () => {
                 )}
               </div>
 
-              <h1 className="text-lg font-black font-display text-ink uppercase tracking-tight">
+              <h1 className="text-lg font-black font-display text-ink uppercase tracking-tight truncate max-w-full">
                 {freelancer.name}
               </h1>
 
-              <Badge variant="teal" className="mt-1 shadow-none text-[9px] font-mono uppercase font-bold">
+              <Badge variant="teal" className="mt-1 shadow-none text-[9px] font-mono uppercase font-bold max-w-full truncate">
                 {freelancer.role}
               </Badge>
             </div>

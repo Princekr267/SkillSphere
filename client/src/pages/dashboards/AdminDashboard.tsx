@@ -313,7 +313,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow bg-cream font-sans transition-colors duration-200">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-6 sm:py-10 flex-grow bg-cream font-sans transition-colors duration-200">
 
       {/* Header */}
       <div className="mb-8 border-b-2 border-ink pb-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -682,17 +682,17 @@ export const AdminDashboard: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {companies.map((c) => (
                     <Card key={c._id} className="p-5 space-y-3 text-left">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3">
+                      <div className="flex items-start justify-between gap-3 min-w-0">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
                           <div className="h-10 w-10 flex-shrink-0 bg-accent-teal/20 border-2 border-ink rounded-lg flex items-center justify-center">
                             <Building className="h-5 w-5 text-ink" />
                           </div>
-                          <div>
-                            <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight">{c.name}</h3>
-                            <p className="text-[10px] text-ink/60 font-sans">{c.industry}</p>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-sm font-display font-black text-ink uppercase tracking-tight truncate">{c.name}</h3>
+                            <p className="text-[10px] text-ink/60 font-sans truncate">{c.industry}</p>
                           </div>
                         </div>
-                        <Badge variant="teal" className="shadow-none font-mono text-[9px]">
+                        <Badge variant="teal" className="shadow-none font-mono text-[9px] flex-shrink-0">
                           {c.memberCount || 1} Member{(c.memberCount || 1) !== 1 ? 's' : ''}
                         </Badge>
                       </div>

@@ -178,7 +178,7 @@ export const CompanyDashboard: React.FC = () => {
   }
 
   return (
-    <div className="flex-grow bg-cream px-4 sm:px-8 py-8 max-w-5xl mx-auto w-full space-y-6">
+    <div className="flex-grow bg-cream px-2.5 sm:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full space-y-6">
 
       {/* ── Company Switcher ─────────────────────────────────────────────── */}
       {myCompanies.length > 1 && (
@@ -217,16 +217,16 @@ export const CompanyDashboard: React.FC = () => {
       )}
 
       {/* ── Header Card ──────────────────────────────────────────────────── */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-4 min-w-0">
             <div className="h-12 w-12 flex-shrink-0 bg-accent-teal border-2 border-ink rounded-xl flex items-center justify-center shadow-retro-sm">
               <Building className="h-6 w-6 text-ink" />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-display font-black text-ink uppercase tracking-tight">{company.name}</h1>
-                <Badge variant={orgRole === 'owner' ? 'coral' : 'teal'} className="font-mono text-[9px] shadow-none capitalize">
+                <h1 className="text-xl font-display font-black text-ink uppercase tracking-tight truncate">{company.name}</h1>
+                <Badge variant={orgRole === 'owner' ? 'coral' : 'teal'} className="font-mono text-[9px] shadow-none capitalize max-w-full truncate">
                   {orgRole}
                 </Badge>
               </div>

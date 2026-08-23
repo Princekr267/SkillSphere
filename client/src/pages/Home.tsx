@@ -289,20 +289,20 @@ export const Home: React.FC = () => {
     <div className="w-full bg-cream font-sans text-ink transition-colors duration-200">
 
       {/* ── HERO SECTION ────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-10 pb-16 md:pt-16 md:pb-24 border-b-4 border-ink">
+      <section className="relative overflow-hidden pt-6 sm:pt-10 pb-12 sm:pb-16 md:pt-16 md:pb-24 border-b-4 border-ink">
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-left">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10 text-left">
           
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-accent-amber/20 border-2 border-ink rounded-full text-xs font-mono font-black text-ink mb-6 shadow-retro-sm animate-pulse-glow">
-            <span className="w-2.5 h-2.5 rounded-full bg-accent-teal border border-ink animate-ping" />
-            <span className="uppercase tracking-wider">HYPERLOCAL FREELANCE MARKETPLACE · INDIA</span>
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 sm:py-1.5 bg-accent-amber/20 border-2 border-ink rounded-full text-[9px] sm:text-xs font-mono font-black text-ink mb-6 shadow-retro-sm max-w-full">
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent-teal border border-ink animate-ping flex-shrink-0" />
+            <span className="uppercase tracking-wider truncate">HYPERLOCAL FREELANCE MARKETPLACE · INDIA</span>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
             {/* Left Hero Text */}
             <div className="lg:col-span-7 space-y-6">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black font-display uppercase tracking-tight text-ink leading-[1.05]">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-black font-display uppercase tracking-tight text-ink leading-[1.08] break-words">
                 Hire Local Talent. <br />
                 <span className="bg-accent-amber px-2 py-0.5 border-2 border-ink shadow-retro inline-block my-1 text-ink transform -rotate-1 hover:rotate-0 transition-transform cursor-pointer">
                   Guaranteed
@@ -310,16 +310,16 @@ export const Home: React.FC = () => {
                 Escrow Pay.
               </h1>
 
-              <p className="text-sm sm:text-base text-ink/75 font-sans leading-relaxed max-w-2xl font-bold">
+              <p className="text-xs sm:text-base text-ink/75 font-sans leading-relaxed max-w-2xl font-bold">
                 Connect with verified freelance experts in your neighborhood or across India.
                 Fast bids, real-time socket chat, custom calendar booking, and 100% escrow protection.
               </p>
 
               {/* Action Buttons with Micro-interactions */}
-              <div className="flex flex-wrap gap-4 pt-2">
+              <div className="flex flex-wrap gap-2.5 sm:gap-4 pt-2">
                 {token && user ? (
                   <Link to={dashboardRoute}>
-                    <Button variant="primary" size="lg" className="shadow-retro hover:translate-x-1 hover:translate-y-1 hover:shadow-retro-sm transition-all py-3.5 px-6 font-display font-black text-sm uppercase">
+                    <Button variant="primary" size="lg" className="shadow-retro hover:translate-x-1 hover:translate-y-1 hover:shadow-retro-sm transition-all py-3 px-4 sm:py-3.5 sm:px-6 font-display font-black text-xs sm:text-sm uppercase">
                       <span>Go to Your Dashboard</span>
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
@@ -327,19 +327,19 @@ export const Home: React.FC = () => {
                 ) : (
                   <>
                     <Link to="/register?role=client">
-                      <Button variant="coral" size="lg" className="shadow-retro hover:translate-x-1 hover:translate-y-1 hover:shadow-retro-sm transition-all py-3.5 px-6 font-display font-black text-sm uppercase">
+                      <Button variant="coral" size="lg" className="shadow-retro hover:translate-x-1 hover:translate-y-1 hover:shadow-retro-sm transition-all py-3 px-4 sm:py-3.5 sm:px-6 font-display font-black text-xs sm:text-sm uppercase">
                         <span>Post a Gig</span>
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </Button>
                     </Link>
                     <Link to="/register?role=freelancer">
-                      <Button variant="primary" size="lg" className="shadow-retro hover:translate-x-1 hover:translate-y-1 hover:shadow-retro-sm transition-all py-3.5 px-6 font-display font-black text-sm uppercase">
+                      <Button variant="primary" size="lg" className="shadow-retro hover:translate-x-1 hover:translate-y-1 hover:shadow-retro-sm transition-all py-3 px-4 sm:py-3.5 sm:px-6 font-display font-black text-xs sm:text-sm uppercase">
                         <span>Join as Freelancer</span>
                         <Sparkles className="h-4 w-4 ml-2" />
                       </Button>
                     </Link>
                     <Link to="/login">
-                      <Button variant="outline" size="lg" className="py-3.5 px-5 font-display font-bold text-sm uppercase bg-cream hover:bg-accent-amber/20 transition-colors">
+                      <Button variant="outline" size="lg" className="py-3 px-4 sm:py-3.5 sm:px-5 font-display font-bold text-xs sm:text-sm uppercase bg-cream hover:bg-accent-amber/20 transition-colors">
                         <span>Sign In</span>
                       </Button>
                     </Link>
@@ -348,22 +348,22 @@ export const Home: React.FC = () => {
               </div>
 
               {/* Key Trust Signals */}
-              <div className="pt-6 border-t-2 border-ink/15 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
-                <div className="p-2.5 bg-cream border-2 border-ink rounded-xl shadow-retro-sm hover:shadow-retro transition-shadow">
-                  <span className="text-xl sm:text-2xl font-black font-mono text-ink block">₹0</span>
-                  <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">Platform Fee</span>
+              <div className="pt-6 border-t-2 border-ink/15 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-left">
+                <div className="p-2 sm:p-2.5 bg-cream border-2 border-ink rounded-xl shadow-retro-sm hover:shadow-retro transition-shadow">
+                  <span className="text-lg sm:text-2xl font-black font-mono text-ink block">₹0</span>
+                  <span className="text-[9px] sm:text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">Platform Fee</span>
                 </div>
-                <div className="p-2.5 bg-cream border-2 border-ink rounded-xl shadow-retro-sm hover:shadow-retro transition-shadow">
-                  <span className="text-xl sm:text-2xl font-black font-mono text-accent-teal block">100%</span>
-                  <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">Escrow Guard</span>
+                <div className="p-2 sm:p-2.5 bg-cream border-2 border-ink rounded-xl shadow-retro-sm hover:shadow-retro transition-shadow">
+                  <span className="text-lg sm:text-2xl font-black font-mono text-accent-teal block">100%</span>
+                  <span className="text-[9px] sm:text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">Escrow Guard</span>
                 </div>
-                <div className="p-2.5 bg-cream border-2 border-ink rounded-xl shadow-retro-sm hover:shadow-retro transition-shadow">
-                  <span className="text-xl sm:text-2xl font-black font-mono text-accent-coral block">&lt; 15m</span>
-                  <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">Local Response</span>
+                <div className="p-2 sm:p-2.5 bg-cream border-2 border-ink rounded-xl shadow-retro-sm hover:shadow-retro transition-shadow">
+                  <span className="text-lg sm:text-2xl font-black font-mono text-accent-coral block">&lt; 15m</span>
+                  <span className="text-[9px] sm:text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">Local Response</span>
                 </div>
-                <div className="p-2.5 bg-cream border-2 border-ink rounded-xl shadow-retro-sm hover:shadow-retro transition-shadow">
-                  <span className="text-xl sm:text-2xl font-black font-mono text-ink block">25km+</span>
-                  <span className="text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">Geo Matching</span>
+                <div className="p-2 sm:p-2.5 bg-cream border-2 border-ink rounded-xl shadow-retro-sm hover:shadow-retro transition-shadow">
+                  <span className="text-lg sm:text-2xl font-black font-mono text-ink block">25km+</span>
+                  <span className="text-[9px] sm:text-[10px] font-mono text-ink/60 uppercase tracking-widest font-bold">Geo Matching</span>
                 </div>
               </div>
             </div>

@@ -35,13 +35,15 @@ export const ReviewList: React.FC<ReviewListProps> = ({ userId, limit = 5 }) => 
     <div className="space-y-3">
       {reviews.map(r => (
         <div key={r._id} className="border border-line-gray rounded-sm p-3 bg-paper/30">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center space-x-2">
-              <User className="h-3 w-3 text-slate" />
-              <span className="text-[11px] font-bold text-ink uppercase font-display">{r.reviewerId?.name}</span>
-              <span className="text-[10px] font-mono text-slate">· {r.reviewerId?.role}</span>
+          <div className="flex items-center justify-between mb-1 gap-2 min-w-0">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              <User className="h-3 w-3 text-slate flex-shrink-0" />
+              <span className="text-[11px] font-bold text-ink uppercase font-display truncate">{r.reviewerId?.name}</span>
+              <span className="text-[10px] font-mono text-slate flex-shrink-0">· {r.reviewerId?.role}</span>
             </div>
-            <StarRating value={r.rating} size="sm" />
+            <div className="flex-shrink-0">
+              <StarRating value={r.rating} size="sm" />
+            </div>
           </div>
           {r.comment && (
             <p className="text-xs text-ink font-sans leading-relaxed flex items-start space-x-1.5 mt-1">
