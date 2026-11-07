@@ -110,7 +110,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
     // Send verification email in background without blocking response
     sendVerificationEmail(user.email, verificationToken).catch((emailErr) => {
-      console.error('Nodemailer verification email dispatch failed:', emailErr?.message || emailErr);
+      console.error('Verification email dispatch failed:', emailErr?.message || emailErr);
     });
 
     // 6. Generate Token and send response
@@ -359,7 +359,7 @@ export const resendVerificationEmail = async (req: AuthRequest, res: Response) =
 
     // Send verification email in background without blocking response
     sendVerificationEmail(user.email, verificationToken).catch((emailErr) => {
-      console.error('Nodemailer verification email dispatch failed:', emailErr?.message || emailErr);
+      console.error('Verification email dispatch failed:', emailErr?.message || emailErr);
     });
 
     res.status(200).json({
