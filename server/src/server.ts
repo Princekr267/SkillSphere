@@ -32,6 +32,9 @@ import { initSocket } from './socket';
 // Initialize express application
 const app = express();
 
+// Trust reverse proxy (Render, Vercel, Nginx, Cloudflare) so req.ip and rate limiters work accurately
+app.set('trust proxy', 1);
+
 // Connect to MongoDB Database
 connectDB();
 
