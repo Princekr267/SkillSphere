@@ -196,19 +196,25 @@ export const loginUser = async (req: Request, res: Response) => {
 
     // 4. Check 2FA
     if (user.twoFactorEnabled) {
-      // Generate OTP Code
-      const otpCode = speakeasy.totp({
-        secret: user.twoFactorSecret || 'default_secret',
-        encoding: 'base32',
-      });
+      // Generate OTP Code for optional email backup
+      try {
+        const otpCode = speakeasy.totp({
+          secret: user.twoFactorSecret || 'default_secret',
+          encoding: 'base32',
+        });
 
-      // Send Code to Email
-      await sendOTPEmail(user.email, otpCode);
+        // Send backup OTP to email non-blocking so email delivery failure never blocks login!
+        sendOTPEmail(user.email, otpCode).catch((emailErr) => {
+          console.warn('⚠️ OTP email backup failed to dispatch (user can still use Google Authenticator):', emailErr?.message);
+        });
+      } catch (otpErr: any) {
+        console.warn('OTP generation warning:', otpErr?.message);
+      }
 
       const tempToken = jwt.sign(
-        { tempUserId: user._id.toString() },
+        { tempUserId: user._id.toString(), id: user._id.toString(), type: '2fa_pending' },
         getJwtSecret(),
-        { expiresIn: '5m' }
+        { expiresIn: '10m' }
       );
       return res.status(200).json({
         success: true,
@@ -497,11 +503,13 @@ export const enable2FA = async (req: AuthRequest, res: Response) => {
     if (!user) return res.status(401).json({ success: false, message: 'Not authorized' });
     if (!code) return res.status(400).json({ success: false, message: 'Please provide code' });
 
+    const cleanCode = code.toString().trim().replace(/\s+/g, '');
+
     const verified = speakeasy.totp.verify({
       secret: user.twoFactorSecret || '',
       encoding: 'base32',
-      token: code,
-      window: 1, // allow +/- 30 seconds offset
+      token: cleanCode,
+      window: 2, // allow +/- 60 seconds offset
     });
 
     if (!verified) {
@@ -562,20 +570,28 @@ export const verify2FACode = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
     }
 
-    const user = await User.findById(decoded.tempUserId);
+    // Support both tempUserId (password login) and id (Google OAuth login)
+    const userId = decoded.tempUserId || decoded.id || decoded.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Invalid session token payload. Please log in again.' });
+    }
+
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    const cleanCode = code.toString().trim().replace(/\s+/g, '');
+
     const verified = speakeasy.totp.verify({
       secret: user.twoFactorSecret || '',
       encoding: 'base32',
-      token: code,
-      window: 1,
+      token: cleanCode,
+      window: 2, // Allow +/- 60 seconds clock drift between server and phone
     });
 
     if (!verified) {
-      return res.status(400).json({ success: false, message: 'Invalid 2FA code' });
+      return res.status(400).json({ success: false, message: 'Invalid 2FA code. Please check your Authenticator app.' });
     }
 
     // Auth succeeded! Return complete token
@@ -706,8 +722,23 @@ export const googleLogin = async (req: Request, res: Response) => {
     }
 
     if (user.twoFactorEnabled) {
+      // Generate OTP Code for optional email backup
+      try {
+        const otpCode = speakeasy.totp({
+          secret: user.twoFactorSecret || 'default_secret',
+          encoding: 'base32',
+        });
+
+        // Send backup OTP to email non-blocking so email delivery failure never blocks login!
+        sendOTPEmail(user.email, otpCode).catch((emailErr) => {
+          console.warn('⚠️ Google login OTP email backup failed to dispatch (user can still use Google Authenticator):', emailErr?.message);
+        });
+      } catch (otpErr: any) {
+        console.warn('OTP generation warning:', otpErr?.message);
+      }
+
       const tempToken = jwt.sign(
-        { id: user._id, type: '2fa_pending' },
+        { tempUserId: user._id.toString(), id: user._id.toString(), type: '2fa_pending' },
         getJwtSecret(),
         { expiresIn: '10m' }
       );
