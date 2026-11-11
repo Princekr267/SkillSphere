@@ -1,13 +1,57 @@
-node_modules*
-node_modules
-/node_modules
+# ==============================================================================
+# Dependencies
+# ==============================================================================
+node_modules/
+*/node_modules/
 
+# ==============================================================================
+# Production & Build Artifacts
+# ==============================================================================
+dist/
+*/dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+.vite/
+client/.vite/
+
+# ==============================================================================
+# Environment Variables & Secrets
+# (Never commit actual credentials; use .env.example files instead)
+# ==============================================================================
 .env
-.env.local
-.env.*.local
+.env.*
+*.env
 !.env.example
 !**/.env.example
 
-/dist
-dist
-dist*
+# ==============================================================================
+# User Uploads & Media Storage
+# ==============================================================================
+server/uploads/*
+!server/uploads/.gitkeep
+
+# ==============================================================================
+# Runtime Logs & Debugging
+# ==============================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==============================================================================
+# Operating System & IDE Files
+# ==============================================================================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
