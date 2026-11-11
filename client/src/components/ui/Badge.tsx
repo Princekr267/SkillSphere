@@ -11,8 +11,8 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
   ...props
 }) => {
-  const isCustomDisplay = className.includes('hidden') || className.includes('flex') || className.includes('block');
-  const baseStyles = `${isCustomDisplay ? '' : 'inline-flex'} items-center font-display font-bold px-2.5 py-0.5 border-2 border-ink rounded-full text-[10px] uppercase tracking-wider max-w-full truncate`;
+  const isCustomDisplay = /(?:^|\s)(hidden|flex|inline-flex|block|inline-block|inline|grid)(?:\s|$)/.test(className);
+  const baseStyles = `${isCustomDisplay ? '' : 'inline-flex'} items-center font-display font-bold px-2.5 py-0.5 border-2 border-ink rounded-full text-[10px] uppercase tracking-wider max-w-full overflow-hidden whitespace-nowrap`;
   
   const variants = {
     amber: 'bg-accent-amber text-ink',
