@@ -135,7 +135,6 @@ skillsphere/
 │   │   ├── services/           # Email dispatch engine, moderation service
 │   │   ├── socket.ts           # Socket.IO connection & event handlers
 │   │   └── server.ts           # Express server entry point
-│   ├── uploads/                # Local development upload directory
 │   ├── .env.example            # Server environment template
 │   └── package.json
 │
