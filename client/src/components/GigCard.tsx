@@ -54,24 +54,25 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
 
   return (
     <Card
+      hoverLift
       onClick={() => navigate(`/gigs/${gig._id}`, { state: { from: location.pathname + location.search } })}
-      className="transition-all flex flex-col group cursor-pointer h-full text-left"
+      className="flex flex-col group cursor-pointer h-full text-left p-4 sm:p-5"
     >
       {/* Top row: category + distance */}
-      <div className="flex items-center justify-between gap-2 mb-3 w-full min-w-0">
-        <Badge variant="outline" className={`${catColor} shadow-none flex-shrink-0`}>
-          <Tag className="h-3 w-3 mr-1" />
-          <span>{gig.category}</span>
+      <div className="flex flex-wrap items-center justify-between gap-1.5 mb-3 w-full min-w-0">
+        <Badge variant="outline" className={`${catColor} shadow-none min-w-0 max-w-full`}>
+          <Tag className="h-3 w-3 mr-1 flex-shrink-0" />
+          <span className="truncate">{gig.category}</span>
         </Badge>
         {gig.distanceKm !== undefined && (
-          <Badge variant="outline" className="font-mono shadow-none text-ink bg-cream flex-shrink-0">
-            {gig.distanceKm < 1 ? `${(gig.distanceKm * 1000).toFixed(0)}m` : `${gig.distanceKm.toFixed(1)}km`} AWAY
+          <Badge variant="outline" className="font-mono shadow-none text-ink bg-cream flex-shrink-0 whitespace-nowrap">
+            {gig.distanceKm < 1 ? `${(gig.distanceKm * 1000).toFixed(0)}m` : `${gig.distanceKm.toFixed(1)}km`} away
           </Badge>
         )}
       </div>
 
       {/* Title */}
-      <h3 className="font-black font-display text-ink uppercase tracking-tight text-sm leading-snug group-hover:text-accent-teal transition-colors mb-1 line-clamp-2">
+      <h3 className="font-black font-display text-ink uppercase tracking-tight text-sm leading-snug group-hover:text-accent-teal transition-colors mb-1 line-clamp-2 break-words">
         {gig.title}
       </h3>
 
@@ -90,16 +91,16 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
       </div>
 
       {!compact && (
-        <p className="text-xs text-ink/70 font-sans leading-relaxed mb-4 line-clamp-3 flex-grow">
+        <p className="text-xs text-ink/70 font-sans leading-relaxed mb-4 line-clamp-3 flex-grow break-words">
           {gig.description}
         </p>
       )}
 
       {/* Skills */}
       {gig.skillsRequired.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-1.5 mb-4 min-w-0">
           {gig.skillsRequired.slice(0, 4).map((skill, i) => (
-            <Badge key={i} variant="outline" className="text-[9px] font-mono shadow-none bg-cream border-ink/40">
+            <Badge key={i} variant="outline" className="text-[9px] font-mono shadow-none bg-cream border-ink/40 max-w-full truncate">
               {skill}
             </Badge>
           ))}
@@ -112,13 +113,13 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onApply, showApplyButton 
       )}
 
       {/* Footer: budget + city + applicants */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-ink/10 mt-auto w-full min-w-0">
-        <div className="flex items-center space-x-3 min-w-0">
-          <span className="flex items-center space-x-0.5 font-mono text-xs font-bold text-ink truncate">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 pt-3 border-t border-ink/10 mt-auto w-full min-w-0">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0 max-w-full">
+          <span className="flex items-center space-x-0.5 font-mono text-xs font-bold text-ink min-w-0">
             <DollarSign className="h-3.5 w-3.5 text-accent-teal flex-shrink-0" />
             <span className="truncate">₹{(gig.finalAgreedAmount ?? gig.budget).toLocaleString()}{gig.budgetType === 'hourly' ? '/hr' : ''}</span>
           </span>
-          <span className="flex items-center space-x-1 text-[10px] font-mono text-ink/60 truncate">
+          <span className="flex items-center space-x-1 text-[10px] font-mono text-ink/60 min-w-0 max-w-full">
             <MapPin className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">{gig.location.city}</span>
           </span>

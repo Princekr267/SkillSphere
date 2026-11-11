@@ -5,11 +5,9 @@ import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
 import { GigCard, type GigCardData } from '../components/GigCard';
 import api from '../utils/api';
-import { Search, SlidersHorizontal, MapPin, Loader2, X } from 'lucide-react';
-import { Card } from '../components/ui/Card';
+import { Search, SlidersHorizontal, MapPin, Map as MapIcon, Loader2, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Badge } from '../components/ui/Badge';
 
 // Fix Leaflet default icon path issue with Vite bundler
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -45,10 +43,16 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Auto-centers map when center prop changes
-const MapCentre: React.FC<{ center: [number, number]; zoom: number }> = ({ center, zoom }) => {
+// Auto-centers map when center prop changes and recalculates dimensions on toggle
+const MapCentre: React.FC<{ center: [number, number]; zoom: number; visible?: boolean }> = ({ center, zoom, visible }) => {
   const map = useMap();
-  useEffect(() => { map.setView(center, zoom); }, [center, zoom]);
+  useEffect(() => { map.setView(center, zoom); }, [center, zoom, map]);
+  useEffect(() => {
+    if (visible) {
+      const t = setTimeout(() => map.invalidateSize(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [visible, map]);
   return null;
 };
 
@@ -85,6 +89,7 @@ export const BrowseGigs: React.FC = () => {
   // UI state
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showMobileMap, setShowMobileMap] = useState(true);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const fetchGigs = useCallback(async (searchVal: string, cat: string, rad: number, skills: string, minP: string, maxP: string, minR: string) => {
@@ -136,8 +141,8 @@ export const BrowseGigs: React.FC = () => {
     <div className="flex-grow bg-cream flex flex-col animate-fade-in font-sans transition-colors duration-200" style={{ minHeight: 0 }}>
       
       {/* Top toolbar */}
-      <div className="border-b-2 border-ink bg-cream px-2.5 sm:px-4 py-3 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 text-left min-w-0">
-        <div className="flex items-center space-x-2 flex-grow max-w-full sm:max-w-md relative min-w-0">
+      <div className="border-b-2 border-ink bg-cream px-3 sm:px-4 py-3 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 text-left min-w-0">
+        <div className="flex items-center space-x-2 w-full sm:w-auto sm:flex-1 sm:max-w-md relative min-w-0">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/50 z-10" />
           <Input
             type="text"
@@ -153,24 +158,38 @@ export const BrowseGigs: React.FC = () => {
           )}
         </div>
 
-        <Button
-          onClick={() => setShowFilters(f => !f)}
-          variant="outline"
-          size="md"
-          className="flex-shrink-0"
-        >
-          <SlidersHorizontal className="h-4 w-4 mr-1" />
-          <span>Filters</span>
-        </Button>
+        <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto sm:flex-grow min-w-0">
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowFilters(f => !f)}
+              variant="outline"
+              size="md"
+              className="flex-shrink-0"
+            >
+              <SlidersHorizontal className="h-4 w-4 mr-1" />
+              <span>Filters</span>
+            </Button>
 
-        <span className="text-[10px] font-mono text-ink/60 sm:ml-auto font-bold uppercase flex-shrink-0">
-          {loading ? '...' : `${gigs.length} GIGS FOUND`}
-        </span>
+            <Button
+              onClick={() => setShowMobileMap(m => !m)}
+              variant="outline"
+              size="md"
+              className="lg:hidden flex-shrink-0"
+            >
+              <MapIcon className="h-4 w-4 mr-1" />
+              <span>{showMobileMap ? 'Hide Map' : 'Map'}</span>
+            </Button>
+          </div>
+
+          <span className="text-[10px] font-mono text-ink/60 sm:ml-auto font-bold uppercase flex-shrink-0">
+            {loading ? '...' : `${gigs.length} GIGS FOUND`}
+          </span>
+        </div>
       </div>
 
       {/* Filter panel (collapsible) */}
       {showFilters && (
-        <div className="bg-cream border-b-2 border-ink px-3 sm:px-6 py-4 sm:py-6 flex flex-wrap items-end gap-3 sm:gap-4 relative z-10 text-left animate-fade-in min-w-0">
+        <div className="bg-cream border-b-2 border-ink px-3 sm:px-6 py-4 sm:py-5 flex flex-wrap items-end gap-3 sm:gap-4 relative z-10 text-left animate-fade-in min-w-0">
           <div className="space-y-1 text-left w-full sm:w-auto">
             <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Category</label>
             <select
@@ -219,34 +238,36 @@ export const BrowseGigs: React.FC = () => {
             />
           </div>
 
-          <div className="space-y-1 text-left">
-            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Min Price (₹)</label>
-            <Input
-              type="number"
-              value={minPrice}
-              onChange={e => setMinPrice(e.target.value)}
-              placeholder="Min budget"
-              className="w-24 py-1.5 font-mono"
-            />
+          <div className="grid grid-cols-2 gap-3 w-full sm:w-auto sm:flex sm:gap-3">
+            <div className="space-y-1 text-left">
+              <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Min Price (₹)</label>
+              <Input
+                type="number"
+                value={minPrice}
+                onChange={e => setMinPrice(e.target.value)}
+                placeholder="Min"
+                className="w-full sm:w-24 py-1.5 font-mono"
+              />
+            </div>
+
+            <div className="space-y-1 text-left">
+              <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Max Price (₹)</label>
+              <Input
+                type="number"
+                value={maxPrice}
+                onChange={e => setMaxPrice(e.target.value)}
+                placeholder="Max"
+                className="w-full sm:w-24 py-1.5 font-mono"
+              />
+            </div>
           </div>
 
-          <div className="space-y-1 text-left">
-            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Max Price (₹)</label>
-            <Input
-              type="number"
-              value={maxPrice}
-              onChange={e => setMaxPrice(e.target.value)}
-              placeholder="Max budget"
-              className="w-24 py-1.5 font-mono"
-            />
-          </div>
-
-          <div className="space-y-1 text-left">
-            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1">Min Rating</label>
+          <div className="space-y-1 text-left w-full sm:w-auto">
+            <label className="text-[10px] font-bold font-display uppercase tracking-wider text-ink pl-1 block">Min Rating</label>
             <select
               value={minRating}
               onChange={e => setMinRating(e.target.value)}
-              className="px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans cursor-pointer"
+              className="w-full sm:w-auto px-3 py-2 bg-cream border-2 border-ink rounded-lg text-ink text-xs focus:outline-none focus:bg-accent-amber/10 focus:border-accent-amber font-sans cursor-pointer"
             >
               <option value="" className="bg-cream text-ink">Any Rating</option>
               <option value="3" className="bg-cream text-ink">3.0+ ★</option>
@@ -258,7 +279,7 @@ export const BrowseGigs: React.FC = () => {
           <Button
             onClick={handleFilterApply}
             variant="coral"
-            className="py-2"
+            className="w-full sm:w-auto py-2"
           >
             Apply Filters
           </Button>
@@ -266,10 +287,10 @@ export const BrowseGigs: React.FC = () => {
       )}
 
       {/* Main split view: map left, list right */}
-      <div className="flex flex-col lg:flex-row flex-grow overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-grow min-w-0">
         
         {/* Map Panel */}
-        <div className="lg:w-[45%] h-64 lg:h-auto border-b-2 lg:border-b-0 lg:border-r-2 border-ink relative flex-shrink-0 z-0">
+        <div className={`${showMobileMap ? 'block' : 'hidden'} lg:block lg:w-[42%] xl:w-[44%] h-56 sm:h-64 lg:h-[calc(100vh-5rem)] lg:sticky lg:top-20 border-b-2 lg:border-b-0 lg:border-r-2 border-ink relative flex-shrink-0 z-0`}>
           <MapContainer
             center={[userLat, userLng]}
             zoom={11}
@@ -280,7 +301,7 @@ export const BrowseGigs: React.FC = () => {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapCentre center={[userLat, userLng]} zoom={11} />
+            <MapCentre center={[userLat, userLng]} zoom={11} visible={showMobileMap} />
 
             {/* User's location */}
             <Marker position={[userLat, userLng]} icon={userIcon}>
@@ -327,7 +348,7 @@ export const BrowseGigs: React.FC = () => {
         </div>
 
         {/* List Panel */}
-        <div className="flex-grow overflow-y-auto p-4 lg:p-6 bg-cream">
+        <div className="flex-1 min-w-0 p-3 sm:p-5 lg:p-6 bg-cream">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-48 space-y-3">
               <Loader2 className="h-7 w-7 text-accent-teal animate-spin" />
@@ -344,10 +365,11 @@ export const BrowseGigs: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 min-[1700px]:grid-cols-3 gap-4 items-stretch">
               {gigs.map(gig => (
                 <div
                   key={gig._id}
+                  className="min-w-0 h-full"
                   onMouseEnter={() => setHighlightedId(gig._id)}
                   onMouseLeave={() => setHighlightedId(null)}
                 >
